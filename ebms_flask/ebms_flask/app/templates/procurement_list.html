@@ -31,7 +31,11 @@
                     <td>{{ p.method }}</td>
                     <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
                     <td>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else '—' }}</td>
-                    <td><a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                    <td>
+                        <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="procurement-access-btn">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Access
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

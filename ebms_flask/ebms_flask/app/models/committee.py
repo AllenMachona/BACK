@@ -34,6 +34,22 @@ class CommitteeMember(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def is_access_active(self):
+        if not self.access_granted:
+            return False
+        if not self.confidentiality_signed:
+            return False
+        if self.access_revoked_at:
+            return False
+        now = datetime.utcnow()
+        if self.access_valid_from and now < self.access_valid_from:
+            return False
+        if self.access_valid_until and now > self.access_valid_until:
+            return False
+        if self.conflict_of_interest_declared:
+            return False
+        return True
+
     def __repr__(self):
         return f'<CommitteeMember {self.role}>'
 

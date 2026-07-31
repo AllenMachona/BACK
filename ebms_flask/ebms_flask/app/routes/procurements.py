@@ -86,6 +86,28 @@ def create():
             flash('A valid estimated value is required.', 'danger')
             return render_template('procurement_create.html')
 
+        direct_threshold = float(request.form.get('direct_procurement_threshold', 500000) or 500000)
+        governance = Procurement(
+            tender_number='TBD',
+            title=request.form['title'],
+            description=request.form.get('description'),
+            category=request.form['category'],
+            ppra_code=request.form.get('ppra_code'),
+            method=request.form['method'],
+            evaluation_method=request.form.get('evaluation_method'),
+            envelope_type=request.form.get('envelope_type', 'single'),
+            estimated_value=estimated_value,
+            user_department=request.form.get('user_department'),
+            status='draft',
+        ).check_governance_rules(direct_threshold=direct_threshold, open_threshold=direct_threshold)
+
+        if governance['errors']:
+            flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')
+            return render_template('procurement_create.html')
+
+        if governance['warnings']:
+            flash('Governance check noted a review risk: lot splitting or high-value procedure review required.', 'warning')
+
         deadline_raw = request.form.get('submission_deadline')
         deadline = datetime.fromisoformat(deadline_raw) if deadline_raw else None
 
@@ -123,6 +145,8 @@ def detail(procurement_id):
     if current_user.has_role('bidder'):
         if procurement.status in ('draft', 'internal_review', 'approved_for_publication'):
             abort(404)
+    elif not current_user.can_access_procurement(procurement):
+        abort(403)
 
     committee = procurement.committee_members.all()
     communications = procurement.communications.order_by(Communication.created_at.desc()).limit(10).all()

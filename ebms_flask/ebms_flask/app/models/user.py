@@ -1,5 +1,10 @@
+import base64
+import hashlib
+import hmac
 import json
 import secrets
+import struct
+import time
 import uuid
 from datetime import datetime, timedelta
 from flask_login import UserMixin
@@ -177,18 +182,52 @@ class User(UserMixin, db.Model):
         return datetime.utcnow() > expiry
 
     def has_role(self, role_code):
-        return self.role and self.role.code == role_code
+        return bool(self.role and self.role.code == role_code)
+
+    def can_access_procurement(self, procurement):
+        if not procurement:
+            return False
+
         if self.has_role('system_admin'):
             return True
-        if self.has_role('accounting_officer') and procurement.estimated_value <= (self.delegation_limit or 0):
+        if self.has_role('procurement_oversight') or self.has_role('procurement_unit'):
             return True
-        if self.has_role('procurement_oversight'):
-            return True
-        if self.has_role('procurement_unit'):
-            return True
-        if self.has_role('user_department') and procurement.user_department == self.department:
-            return True
+        if self.has_role('accounting_officer'):
+            try:
+                estimated_value = float(procurement.estimated_value or 0)
+            except (TypeError, ValueError):
+                estimated_value = 0
+            limit = float(self.delegation_limit or 0)
+            return estimated_value <= limit
+        if self.has_role('user_department'):
+            return getattr(procurement, 'user_department', None) == self.department
         return False
+
+    def _totp_code(self):
+        if not self.mfa_secret:
+            return None
+        key = base64.b32decode(self.mfa_secret + '=' * ((8 - len(self.mfa_secret) % 8) % 8), casefold=True)
+        counter = int(time.time() // 30)
+        msg = struct.pack('>Q', counter)
+        digest = hmac.new(key, msg, hashlib.sha1).digest()
+        offset = digest[-1] & 0x0F
+        binary = ((digest[offset] & 0x7F) << 24) | ((digest[offset + 1] & 0xFF) << 16) | ((digest[offset + 2] & 0xFF) << 8) | (digest[offset + 3] & 0xFF)
+        code = binary % 1_000_000
+        return str(code).zfill(6)
+
+    def generate_mfa_secret(self):
+        secret = base64.b32encode(secrets.token_bytes(20)).decode('utf-8').rstrip('=')
+        self.mfa_secret = secret
+        self.mfa_enabled = True
+        return secret
+
+    def verify_mfa_code(self, code):
+        if not self.mfa_secret or not code:
+            return False
+        expected = self._totp_code()
+        if not expected:
+            return False
+        return str(code).strip() == expected
 
     def full_name(self):
         return f"{self.first_name} {self.last_name}"

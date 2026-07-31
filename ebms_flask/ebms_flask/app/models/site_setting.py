@@ -32,6 +32,9 @@ class SiteSetting(db.Model):
             'maintenance_mode': ('Maintenance Mode', 'false'),
             'allow_registration': ('Allow Registration', 'true'),
             'deadline_reminder_days': ('Reminder Days', '3'),
+            'direct_procurement_threshold': ('Direct Procurement Threshold', '500000'),
+            'open_procurement_threshold': ('Open Procurement Threshold', '500000'),
+            'lot_splitting_warning_threshold': ('Lot Splitting Warning Threshold', '500000'),
         }
 
         for key, (label, value) in defaults.items():

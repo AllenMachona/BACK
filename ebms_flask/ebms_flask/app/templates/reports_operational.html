@@ -3,82 +3,154 @@
 {% block content %}
 {% set active_nav = 'reports' %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-graph-up me-2"></i>Operational Reports</h2>
-</div>
+<div class="report-shell">
+    <div class="report-hero card">
+        <div class="report-hero-content">
+            <div>
+                <span class="eyebrow-text">Procurement intelligence</span>
+                <h2 class="mb-2"><i class="bi bi-graph-up me-2"></i>Operational Reports</h2>
+            </div>
+            <span class="company-badge"><i class="bi bi-clock-history me-2"></i>Live snapshot</span>
+        </div>
+    </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center"><div class="card-body"><h1 class="text-primary">{{ open_tenders }}</h1><p class="text-muted mb-0">Open Tenders</p></div></div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center"><div class="card-body"><h1 class="text-warning">{{ closing_soon }}</h1><p class="text-muted mb-0">Closing Soon (&lt; 7 days)</p></div></div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center"><div class="card-body"><h1 class="text-success">{{ total_submissions }}</h1><p class="text-muted mb-0">Total Submissions</p></div></div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center"><div class="card-body"><h1 class="text-danger">{{ active_complaints }}</h1><p class="text-muted mb-0">Active Complaints</p></div></div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white"><h5 class="mb-0">Procurements by Category</h5></div>
-            <div class="card-body">
-                {% if by_category %}
-                <table class="table">
-                    <thead class="table-light"><tr><th>Category</th><th>Count</th><th>Value (BWP)</th></tr></thead>
-                    <tbody>
-                        {% for category, count, value in by_category %}
-                        <tr><td>{{ category.title() }}</td><td>{{ count }}</td><td>{{ '{:,.2f}'.format(value) }}</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="text-muted mb-0">No procurements recorded yet.</p>
-                {% endif %}
+    <div class="row mb-4 report-kpi-grid">
+        <div class="col-md-3">
+            <div class="report-kpi mini-blue">
+                <div class="report-kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+                <div>
+                    <small>Open Tenders</small>
+                    <strong>{{ open_tenders }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-kpi mini-gold">
+                <div class="report-kpi-icon"><i class="bi bi-alarm"></i></div>
+                <div>
+                    <small>Closing Soon</small>
+                    <strong>{{ closing_soon }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-kpi mini-green">
+                <div class="report-kpi-icon"><i class="bi bi-inboxes"></i></div>
+                <div>
+                    <small>Total Submissions</small>
+                    <strong>{{ total_submissions }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-kpi mini-slate">
+                <div class="report-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <small>Active Complaints</small>
+                    <strong>{{ active_complaints }}</strong>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white"><h5 class="mb-0">Procurements by Method</h5></div>
-            <div class="card-body">
-                {% if by_method %}
-                <table class="table">
-                    <thead class="table-light"><tr><th>Method</th><th>Count</th><th>%</th></tr></thead>
-                    <tbody>
-                        {% for method, count, pct in by_method %}
-                        <tr><td>{{ method.replace('_',' ').title() }}</td><td>{{ count }}</td><td>{{ pct }}%</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="text-muted mb-0">No procurements recorded yet.</p>
-                {% endif %}
+
+    <div class="row report-panels">
+        <div class="col-md-6">
+            <div class="card report-panel">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Procurements by Category</h5></div>
+                <div class="card-body">
+                    {% if by_category %}
+                    <table class="table report-table">
+                        <thead><tr><th>Category</th><th>Count</th><th>Value (BWP)</th></tr></thead>
+                        <tbody>
+                            {% for category, count, value in by_category %}
+                            <tr>
+                                <td><span class="report-label">{{ category.title() }}</span></td>
+                                <td>{{ count }}</td>
+                                <td>{{ '{:,.2f}'.format(value) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-0">No procurements recorded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card report-panel">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Procurements by Method</h5></div>
+                <div class="card-body">
+                    {% if by_method %}
+                    <table class="table report-table">
+                        <thead><tr><th>Method</th><th>Count</th><th>%</th></tr></thead>
+                        <tbody>
+                            {% for method, count, pct in by_method %}
+                            <tr>
+                                <td><span class="report-label">{{ method.replace('_',' ').title() }}</span></td>
+                                <td>{{ count }}</td>
+                                <td>
+                                    <div class="progress-pill">
+                                        <span>{{ pct }}%</span>
+                                        <div class="progress-track"><div class="progress-fill" style="width: {{ pct }}%;"></div></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-0">No procurements recorded yet.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="card mt-4">
-    <div class="card-header bg-white"><h5 class="mb-0">Compliance Snapshot</h5></div>
-    <div class="card-body">
-        <table class="table table-hover">
-            <thead class="table-light"><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td>Tenders past closing, still open</td><td>{{ overdue_closing }}</td>
-                    <td>{% if overdue_closing == 0 %}<span class="badge badge-success">On Track</span>{% else %}<span class="badge badge-danger">Attention</span>{% endif %}</td>
-                </tr>
-                <tr>
-                    <td>Cancelled Procurements</td><td>{{ cancelled_count }}</td>
-                    <td><span class="badge badge-secondary">Info</span></td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="card report-panel mt-4">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Compliance Snapshot</h5></div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="metric-block">
+                        <div>
+                            <span class="metric-label">Tenders past closing, still open</span>
+                            <strong>{{ overdue_closing }}</strong>
+                        </div>
+                        {% if overdue_closing == 0 %}
+                            <span class="badge badge-success">On track</span>
+                        {% else %}
+                            <span class="badge badge-danger">Attention</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="metric-block">
+                        <div>
+                            <span class="metric-label">Cancelled procurements</span>
+                            <strong>{{ cancelled_count }}</strong>
+                        </div>
+                        <span class="badge badge-secondary">Info</span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-hover report-table mt-3">
+                <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>Submission deadlines approaching</td>
+                        <td>{{ closing_soon }}</td>
+                        <td>{% if closing_soon == 0 %}<span class="badge badge-success">Stable</span>{% else %}<span class="badge badge-warning">Watch</span>{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Open procurement pipeline</td>
+                        <td>{{ open_tenders }}</td>
+                        <td><span class="badge badge-primary">Active</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

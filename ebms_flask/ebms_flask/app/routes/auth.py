@@ -176,6 +176,21 @@ def user_settings():
         current_user.set_preference('compact_view', request.form.get('compact_view') == 'on')
         current_user.set_preference('show_tips', request.form.get('show_tips') == 'on')
 
+        mfa_requested = request.form.get('enable_mfa') == 'on'
+        if mfa_requested and not current_user.mfa_secret:
+            current_user.generate_mfa_secret()
+            flash('MFA was enabled. Save the secret below in your authenticator app.', 'success')
+        if not mfa_requested:
+            current_user.mfa_enabled = False
+            current_user.mfa_secret = None
+
+        mfa_code = request.form.get('mfa_code', '').strip()
+        if mfa_code and current_user.mfa_secret and not current_user.verify_mfa_code(mfa_code):
+            flash('The MFA code you entered is not valid. Please try again.', 'danger')
+            return redirect(url_for('auth.user_settings'))
+        if mfa_requested and current_user.mfa_secret and not current_user.mfa_enabled:
+            current_user.mfa_enabled = True
+
         new_password = request.form.get('new_password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
         if new_password:
@@ -188,6 +203,7 @@ def user_settings():
             current_user.set_password(new_password)
             flash('Password updated successfully.', 'success')
 
+        current_user.mfa_enabled = bool(current_user.mfa_secret) and current_user.mfa_enabled
         db.session.commit()
         log_action('USER_SETTINGS_UPDATED', entity_type='User', entity_id=current_user.id, new_value=current_user.get_preferences())
         flash('Your personal settings were saved.', 'success')

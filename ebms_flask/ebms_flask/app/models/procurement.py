@@ -52,6 +52,49 @@ class Procurement(db.Model):
     def committee_chair(self):
         return self.committee_members.filter_by(role='chair').first()
 
+    def can_committee_member_access(self, committee_member):
+        return bool(committee_member and committee_member.is_access_active())
+
+    def can_transition_to_contract(self):
+        if self.status not in ('award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract'):
+            return False
+
+        if self.award and self.award.cooling_off_active():
+            return False
+
+        active_complaints = list(self.complaints) if hasattr(self, 'complaints') else []
+        unresolved = [
+            complaint for complaint in active_complaints
+            if getattr(complaint, 'status', None) in ('received', 'under_review', 'escalated')
+        ]
+        return not unresolved
+
+    def check_governance_rules(self, direct_threshold=500000, open_threshold=500000):
+        result = {'errors': [], 'warnings': []}
+        total_value = float(self.estimated_value or 0)
+
+        lots = list(self.lots) if hasattr(self, 'lots') else []
+        lot_total = 0.0
+        for lot in lots:
+            try:
+                lot_total += float(lot.estimated_value or 0)
+            except (TypeError, ValueError):
+                continue
+
+        if self.method == 'direct' and total_value > direct_threshold:
+            result['errors'].append('direct_procurement_exceeds_threshold')
+
+        if self.method in ('open_domestic', 'open_international', 'rfp', 'rfq') and total_value > open_threshold:
+            result['warnings'].append('open_procurement_high_value_review')
+
+        if len(lots) > 1 and total_value >= open_threshold:
+            result['warnings'].append('lot_splitting_risk')
+
+        if len(lots) > 1 and lot_total >= direct_threshold:
+            result['warnings'].append('lot_splitting_risk')
+
+        return result
+
     def __repr__(self):
         return f'<Procurement {self.tender_number}>'
 
