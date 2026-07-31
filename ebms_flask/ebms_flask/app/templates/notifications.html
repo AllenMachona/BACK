@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Notifications - EBMS Botswana{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-bell me-2"></i>Notifications</h2>
+
+<div class="card">
+    <div class="card-body">
+        {% if notifications %}
+        {% for n in notifications %}
+        <div class="alert {{ 'alert-info' if not n.is_read else '' }}" style="{{ '' if not n.is_read else 'background:#f8f9fa;border:1px solid #eee;' }}">
+            <div class="d-flex justify-content-between">
+                <strong>{{ n.title }}</strong>
+                <span class="text-muted small">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <p class="mb-1">{{ n.body }}</p>
+            {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as read</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted mb-0">No notifications yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

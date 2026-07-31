@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EBMS Botswana{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body{% if not current_user.is_authenticated %} style="background: #f5f6fa;"{% endif %}>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar">
+        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}"><i class="bi bi-shield-lock me-2"></i>EBMS | Botswana PPRA</a>
+        <div class="navbar-user">
+            <span><i class="bi bi-person-circle me-1"></i>{{ current_user.full_name() }}
+                <small style="opacity:0.75;">({{ current_user.role.name }})</small></span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <nav class="col-md-2 sidebar">
+            {% if not current_user.has_role('bidder') %}
+            <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+            <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder me-2"></i>Procurements</a>
+            {% if current_user.role.can_evaluate %}
+            <a class="nav-link {{ 'active' if active_nav == 'evaluations' else '' }}" href="{{ url_for('evaluations.index') }}"><i class="bi bi-clipboard-check me-2"></i>Evaluations</a>
+            {% endif %}
+            {% endif %}
+            {% if current_user.has_role('bidder') %}
+            <a class="nav-link {{ 'active' if active_nav == 'bidders' else '' }}" href="{{ url_for('bidders.portal') }}"><i class="bi bi-shop me-2"></i>Bidder Portal</a>
+            {% endif %}
+            {% if current_user.role.can_view_all_records %}
+            <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="{{ url_for('reports.operational') }}"><i class="bi bi-graph-up me-2"></i>Reports</a>
+            {% endif %}
+            {% if current_user.role.can_admin_system %}
+            <a class="nav-link {{ 'active' if active_nav == 'admin' else '' }}" href="{{ url_for('admin.users') }}"><i class="bi bi-gear me-2"></i>Administration</a>
+            {% endif %}
+        </nav>
+        <main class="col-md-10 main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+        {% block guest_content %}{% endblock %}
+    {% endif %}
+</body>
+</html>

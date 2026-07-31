@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Create Procurement - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'procurements' %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">New Procurement</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('procurements.create') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select name="category" class="form-select" required>
+                                <option value="">Select...</option>
+                                <option value="works">Works</option>
+                                <option value="services">Services</option>
+                                <option value="consultancy">Consultancy Services</option>
+                                <option value="supplies">Supplies</option>
+                                <option value="combination">Combination</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">PPRA Code</label>
+                            <input type="text" name="ppra_code" class="form-control" placeholder="e.g. WRK-001">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" name="title" class="form-control" placeholder="Enter procurement title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Describe the procurement requirements..."></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Procurement Method *</label>
+                            <select name="method" class="form-select" required>
+                                <option value="open_domestic">Open Domestic Bidding</option>
+                                <option value="open_international">Open International Bidding</option>
+                                <option value="restricted">Restricted Bidding</option>
+                                <option value="rfq">Request for Quotations</option>
+                                <option value="direct">Direct Procurement</option>
+                                <option value="rfp">Request for Proposals</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Evaluation Method *</label>
+                            <select name="evaluation_method" class="form-select" required>
+                                <option value="pass_fail">Pass/Fail</option>
+                                <option value="scored">Scored</option>
+                                <option value="weighted">Weighted</option>
+                                <option value="least_cost">Least Cost</option>
+                                <option value="quality_cost">Quality &amp; Cost</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Envelope Type *</label>
+                            <select name="envelope_type" class="form-select" required>
+                                <option value="single">Single Envelope</option>
+                                <option value="dual">Dual Envelope</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Value (BWP) *</label>
+                            <input type="number" step="0.01" name="estimated_value" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Submission Deadline</label>
+                            <input type="datetime-local" name="submission_deadline" class="form-control">
+                            <small class="text-muted">Can also be set later, when moving to Submission Open.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">User Department</label>
+                        <input type="text" name="user_department" class="form-control" placeholder="e.g. Ministry of Health">
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('procurements.list_procurements') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Procurement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

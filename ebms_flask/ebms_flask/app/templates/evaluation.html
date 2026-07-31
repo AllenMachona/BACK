@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Evaluation - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'evaluations' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clipboard-check me-2"></i>Evaluation</h2>
+    <span class="badge badge-primary">{{ procurement.tender_number }} - {{ procurement.title }}</span>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Confidential:</strong> Evaluation data is restricted to appointed committee members only. All actions are logged.
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ bids_received }}</h3><p class="text-muted mb-0">Bids Received</p></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ compliant }}</h3><p class="text-muted mb-0">Compliant</p></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ non_compliant }}</h3><p class="text-muted mb-0">Non-Compliant</p></div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center"><div class="card-body"><h3>{{ committee_count }}</h3><p class="text-muted mb-0">Committee Members</p></div></div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white"><h5 class="mb-0">Evaluation Criteria</h5></div>
+    <div class="card-body">
+        {% if criteria %}
+        <table class="table table-hover">
+            <thead class="table-light"><tr><th>Type</th><th>Criteria</th><th>Weight</th><th>Max Score</th><th>Method</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for c in criteria %}
+                <tr>
+                    <td><span class="badge badge-secondary">{{ c.criteria_type.title() }}</span></td>
+                    <td>{{ c.name }}</td>
+                    <td>{{ '{}%'.format(c.weight) if c.weight else '-' }}</td>
+                    <td>{{ c.max_score or '-' }}</td>
+                    <td>{{ c.scoring_method.replace('_',' ').title() if c.scoring_method else '-' }}</td>
+                    <td><span class="badge {{ 'badge-success' if c.locked else 'badge-warning' }}">{{ 'Locked' if c.locked else 'Pending Opening' }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-0">No evaluation criteria have been defined for this procurement yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.role.can_evaluate %}
+<div class="card mb-4">
+    <div class="card-header bg-white"><h5 class="mb-0">Submit a Score</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('evaluations.submit_score', procurement_id=procurement.id) }}" class="row" style="gap: 0.75rem;">
+            <div class="col-md-3">
+                <label class="form-label small">Bidder ID</label>
+                <input type="number" name="bidder_id" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Stage</label>
+                <select name="stage" class="form-select">
+                    <option value="compliance">Compliance</option>
+                    <option value="technical">Technical</option>
+                    <option value="financial">Financial</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Score</label>
+                <input type="number" step="0.01" name="score" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Pass/Fail</label>
+                <select name="passed" class="form-select">
+                    <option value="true">Pass</option>
+                    <option value="false">Fail</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Comments</label>
+                <input type="text" name="comments" class="form-control">
+            </div>
+            <div class="col-md-12 mt-2">
+                <button type="submit" class="btn btn-primary btn-sm">Submit Independent Score</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Bidder Scoring Matrix</h5>
+        <span class="badge badge-info">Independent Scoring Phase</span>
+    </div>
+    <div class="card-body">
+        {% if matrix %}
+        <table class="table table-hover">
+            <thead class="table-light"><tr><th>Bidder</th><th>Compliance</th><th>Technical Scores Recorded</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for bidder, row in matrix.items() %}
+                <tr>
+                    <td class="fw-bold">{{ bidder.company_name }}</td>
+                    <td>
+                        {% if row.compliance == 'Pass' %}<span class="badge badge-success">Pass</span>
+                        {% elif row.compliance == 'Fail' %}<span class="badge badge-danger">Fail</span>
+                        {% else %}<span class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td>{{ row.technical_scores|length }} score(s)</td>
+                    <td>
+                        {% if row.status == 'Eliminated' %}<span class="badge badge-danger">Eliminated</span>
+                        {% elif row.status == 'Qualified' %}<span class="badge badge-success">Qualified</span>
+                        {% else %}<span class="badge badge-secondary">Pending</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-0">No scores have been submitted yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'dashboard' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Procurement Dashboard</h2>
+    {% if current_user.role.can_create_procurement %}
+    <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Procurement
+    </a>
+    {% endif %}
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Active Tenders</h5>
+                <h2>{{ active_tenders }}</h2>
+                <small>Published &amp; Open for submission</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending Evaluations</h5>
+                <h2>{{ pending_evaluations }}</h2>
+                <small>Awaiting committee action</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Registered Bidders</h5>
+                <h2>{{ registered_bidders }}</h2>
+                <small>Total in system</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Recent Submissions</h5>
+                <h2>{{ recent_submissions }}</h2>
+                <small>Last 24 hours</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recently Updated Procurements</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_procurements %}
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr><th>Tender Number</th><th>Title</th><th>Status</th><th>Updated</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_procurements %}
+                        <tr>
+                            <td class="fw-bold">{{ p.tender_number }}</td>
+                            <td>{{ p.title }}</td>
+                            <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
+                            <td>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td><a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted mb-0">No procurements yet. Create one to get started.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

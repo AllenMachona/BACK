@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ procurement.tender_number }} - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'procurements' %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ procurement.tender_number }}</h5>
+                <span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span>
+            </div>
+            <div class="card-body">
+                <h4>{{ procurement.title }}</h4>
+                <p class="text-muted">{{ procurement.description or 'No description provided.' }}</p>
+
+                {% if procurement.cancelled %}
+                <div class="alert alert-danger">
+                    <strong>Cancelled:</strong> {{ procurement.cancelled_reason }}
+                    ({{ procurement.cancelled_at.strftime('%Y-%m-%d %H:%M') if procurement.cancelled_at }})
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Category:</strong> {{ procurement.category.title() }}</p>
+                        <p><strong>PPRA Code:</strong> {{ procurement.ppra_code or '—' }}</p>
+                        <p><strong>Method:</strong> {{ procurement.method.replace('_', ' ').title() }}</p>
+                        <p><strong>Envelope:</strong> {{ 'Dual Envelope' if procurement.envelope_type == 'dual' else 'Single Envelope' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Estimated Value:</strong> BWP {{ '{:,.2f}'.format(procurement.estimated_value) }}</p>
+                        <p><strong>Department:</strong> {{ procurement.user_department or '—' }}</p>
+                        <p><strong>Deadline:</strong> {{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') if procurement.submission_deadline else 'Not set' }}</p>
+                        <p><strong>Created:</strong> {{ procurement.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Submissions &amp; Communications</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ submission_count }}</strong> sealed submission(s) received.</p>
+                {% if communications %}
+                <h6 class="mt-3">Recent Communications</h6>
+                <ul class="list-group">
+                    {% for c in communications %}
+                    <li class="list-group-item">
+                        <span class="badge badge-secondary me-2">{{ c.type }}</span>{{ c.content[:120] }}{{ '…' if c.content|length > 120 }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No communications posted yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if complaints %}
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Complaints</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light"><tr><th>Bidder</th><th>Status</th><th>Filed</th></tr></thead>
+                    <tbody>
+                        {% for c in complaints %}
+                        <tr><td>{{ c.bidder.company_name }}</td><td>{{ c.status.replace('_',' ').title() }}</td><td>{{ c.created_at.strftime('%Y-%m-%d') }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        {% if current_user.role.can_approve_procurement or current_user.role.can_publish or current_user.role.can_admin_system %}
+        <div class="card mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Workflow Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if next_status %}
+                <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mb-2">
+                    <input type="hidden" name="to_status" value="{{ next_status }}">
+                    {% if next_status == 'submission_open' and not procurement.submission_deadline %}
+                    <label class="form-label small">Submission deadline (required)</label>
+                    <input type="datetime-local" name="submission_deadline" class="form-control mb-2" required>
+                    {% endif %}
+                    <button type="submit" class="btn btn-success btn-sm w-100">
+                        Advance → {{ next_status.replace('_', ' ').title() }}
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if procurement.status not in ('cancelled', 'archived') %}
+                <details>
+                    <summary class="text-danger small" style="cursor:pointer;">Cancel Procurement</summary>
+                    <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mt-2">
+                        <input type="hidden" name="to_status" value="cancelled">
+                        <textarea name="cancelled_reason" class="form-control mb-2" rows="2" placeholder="Cancellation reason (required)" required></textarea>
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">Confirm Cancellation</button>
+                    </form>
+                </details>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Committee Members</h6>
+            </div>
+            <div class="card-body small">
+                {% if committee %}
+                    {% for m in committee %}
+                    <p class="mb-1"><strong>{{ m.role.replace('_', ' ').title() }}:</strong> {{ m.user.full_name() }}</p>
+                    {% endfor %}
+                {% else %}
+                <p class="text-muted mb-0">No committee appointed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Audit</h6>
+            </div>
+            <div class="card-body small text-muted">
+                <p class="mb-1">Created by: {{ procurement.creator.full_name() }}</p>
+                <p class="mb-0">Last updated: {{ procurement.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
