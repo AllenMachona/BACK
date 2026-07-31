@@ -1,8 +1,10 @@
+import json
+import uuid
 from datetime import datetime, timedelta
 from flask_login import UserMixin
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
-import uuid
 
 
 class User(UserMixin, db.Model):
@@ -42,6 +44,9 @@ class User(UserMixin, db.Model):
     locked_until = db.Column(db.DateTime)
     password_changed_at = db.Column(db.DateTime, default=datetime.utcnow)
     password_expiry_days = db.Column(db.Integer, default=90)
+
+    # Personalization / user settings
+    preferences = db.Column(db.Text, default='{}')
 
     # Federation (SOAR SEC-002)
     federation_id = db.Column(db.String(256))
@@ -87,6 +92,59 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def get_preferences(self):
+        try:
+            data = json.loads(self.preferences or '{}')
+            if isinstance(data, dict):
+                return data
+        except (TypeError, ValueError):
+            pass
+        return {}
+
+    def set_preference(self, key, value):
+        prefs = self.get_preferences()
+        prefs[key] = value
+        self.preferences = json.dumps(prefs, ensure_ascii=False)
+
+    def get_preference(self, key, default=None):
+        return self.get_preferences().get(key, default)
+
+    def theme_style(self):
+        prefs = self.get_preferences()
+        theme = prefs.get('theme', 'light')
+        font_family = prefs.get('font_family', 'Segoe UI')
+        accent = prefs.get('accent_color', '#2563eb')
+
+        if theme == 'dark':
+            bg = '#0b1220'
+            surface = '#111827'
+            card = '#172033'
+            text = '#e5eefc'
+            muted = '#9fb3d1'
+            border = 'rgba(148, 163, 184, 0.22)'
+        else:
+            bg = '#f3f6fb'
+            surface = '#ffffff'
+            card = '#ffffff'
+            text = '#0f172a'
+            muted = '#475569'
+            border = 'rgba(148, 163, 184, 0.18)'
+
+        return (
+            f"font-family: '{font_family}', sans-serif; "
+            f"--app-bg: {bg}; --app-surface: {surface}; --app-card: {card}; "
+            f"--app-text: {text}; --app-muted: {muted}; --app-border: {border}; "
+            f"--app-accent: {accent}; --app-accent-soft: {accent}22;"
+        )
+
+    @classmethod
+    def ensure_preferences_column(cls):
+        try:
+            db.session.execute(text('SELECT preferences FROM users LIMIT 1'))
+        except Exception:
+            db.session.execute(text('ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"'))
+            db.session.commit()
+
     def is_password_expired(self):
         if not self.password_changed_at:
             return True
@@ -95,9 +153,6 @@ class User(UserMixin, db.Model):
 
     def has_role(self, role_code):
         return self.role and self.role.code == role_code
-
-    def can_access_procurement(self, procurement):
-        """Check if user can access a specific procurement based on role and delegation."""
         if self.has_role('system_admin'):
             return True
         if self.has_role('accounting_officer') and procurement.estimated_value <= (self.delegation_limit or 0):

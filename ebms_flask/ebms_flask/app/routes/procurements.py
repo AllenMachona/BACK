@@ -1,11 +1,12 @@
 import random
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_from_directory
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.communication import Communication
 from app.models.complaint import Complaint
+from app.models.submission import Submission
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
 from app.utils.notify import notify_bidders_on_procurement
@@ -126,6 +127,7 @@ def detail(procurement_id):
     committee = procurement.committee_members.all()
     communications = procurement.communications.order_by(Communication.created_at.desc()).limit(10).all()
     complaints = procurement.complaints.order_by(Complaint.created_at.desc()).all()
+    submissions = procurement.submissions.order_by(Submission.submitted_at.desc()).all()
     submission_count = procurement.submissions.filter_by(status='submitted').count()
     next_status = TRANSITIONS.get(procurement.status, [None])[0] if TRANSITIONS.get(procurement.status) else None
 
@@ -135,9 +137,27 @@ def detail(procurement_id):
         committee=committee,
         communications=communications,
         complaints=complaints,
+        submissions=submissions,
         submission_count=submission_count,
         next_status=next_status,
     )
+
+
+@procurements_bp.route('/<int:procurement_id>/submission/<int:submission_id>/download')
+@login_required
+def download_submission(procurement_id, submission_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    submission = Submission.query.filter_by(id=submission_id, procurement_id=procurement.id).first_or_404()
+
+    if current_user.has_role('bidder') and submission.bidder_id != current_user.bidder_id:
+        abort(403)
+
+    if not submission.file_path or not submission.original_filename:
+        abort(404)
+
+    directory = submission.file_path.rsplit('/', 1)[0] if '/' in submission.file_path else '.'
+    filename = submission.file_path.rsplit('/', 1)[-1]
+    return send_from_directory(directory, filename, as_attachment=True, download_name=submission.original_filename)
 
 
 @procurements_bp.route('/<int:procurement_id>/transition', methods=['POST'])

@@ -18,8 +18,13 @@ def create_app(config_class=Config):
     # Import models here (not at module top) so they register with SQLAlchemy
     # only once the app + db are both initialized — avoids circular imports.
     from app import models  # noqa: F401
+    from app.models.site_setting import SiteSetting
 
-    from app.models.user import User
+    with app.app_context():
+        db.create_all()
+        SiteSetting.ensure_defaults()
+        from app.models.user import User
+        User.ensure_preferences_column()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -33,6 +38,7 @@ def create_app(config_class=Config):
     from app.routes.admin import admin_bp
     from app.routes.reports import reports_bp
     from app.routes.notifications import notifications_bp
+    from app.models.site_setting import SiteSetting
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -46,6 +52,9 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_globals():
         from datetime import datetime
-        return {'now': datetime.utcnow()}
+        return {
+            'now': datetime.utcnow(),
+            'site_settings': SiteSetting.as_dict(),
+        }
 
     return app

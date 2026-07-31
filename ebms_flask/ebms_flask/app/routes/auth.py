@@ -56,6 +56,36 @@ def login():
     return render_template('login.html')
 
 
+@auth_bp.route('/account/settings', methods=['GET', 'POST'])
+@login_required
+def user_settings():
+    if request.method == 'POST':
+        current_user.set_preference('theme', request.form.get('theme', current_user.get_preference('theme', 'light')))
+        current_user.set_preference('font_family', request.form.get('font_family', current_user.get_preference('font_family', 'Segoe UI')))
+        current_user.set_preference('accent_color', request.form.get('accent_color', current_user.get_preference('accent_color', '#2563eb')))
+        current_user.set_preference('compact_view', request.form.get('compact_view') == 'on')
+        current_user.set_preference('show_tips', request.form.get('show_tips') == 'on')
+
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        if new_password:
+            if len(new_password) < 8:
+                flash('Password must be at least 8 characters long.', 'danger')
+                return redirect(url_for('auth.user_settings'))
+            if new_password != confirm_password:
+                flash('New password and confirmation do not match.', 'danger')
+                return redirect(url_for('auth.user_settings'))
+            current_user.set_password(new_password)
+            flash('Password updated successfully.', 'success')
+
+        db.session.commit()
+        log_action('USER_SETTINGS_UPDATED', entity_type='User', entity_id=current_user.id, new_value=current_user.get_preferences())
+        flash('Your personal settings were saved.', 'success')
+        return redirect(url_for('auth.user_settings'))
+
+    return render_template('user_settings.html', user=current_user)
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():

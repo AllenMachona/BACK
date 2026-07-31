@@ -1,11 +1,37 @@
 import os
+import secrets
 from datetime import timedelta
+
+from cryptography.fernet import Fernet
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
+def _is_production():
+    return os.environ.get('APP_ENV', os.environ.get('FLASK_ENV', 'development')).lower() == 'production'
+
+
+def _required_env(name, dev_default=None):
+    value = os.environ.get(name)
+    if value and value.strip():
+        return value
+    if _is_production():
+        raise RuntimeError(f"Missing required environment variable: {name}. Set it in the environment or .env before starting the app.")
+    if dev_default is not None:
+        return dev_default
+    return ''
+
+
+if _is_production():
+    SECRET_KEY = _required_env('SECRET_KEY')
+    SUBMISSION_ENCRYPTION_KEY = _required_env('SUBMISSION_ENCRYPTION_KEY')
+else:
+    SECRET_KEY = _required_env('SECRET_KEY', secrets.token_hex(32))
+    SUBMISSION_ENCRYPTION_KEY = _required_env('SUBMISSION_ENCRYPTION_KEY', Fernet.generate_key().decode())
+
+
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-before-deployment'
+    SECRET_KEY = SECRET_KEY
 
     # Defaults to a local SQLite file so the project runs with zero external
     # setup. Point DATABASE_URL at Postgres for anything beyond a demo.
@@ -20,7 +46,7 @@ class Config:
 
     # AES key for sealed-bid encryption at rest (Fernet, base64 urlsafe 32-byte
     # key). Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    SUBMISSION_ENCRYPTION_KEY = os.environ.get('SUBMISSION_ENCRYPTION_KEY')
+    SUBMISSION_ENCRYPTION_KEY = SUBMISSION_ENCRYPTION_KEY
 
     OPENING_QUORUM = int(os.environ.get('OPENING_QUORUM') or 2)
     COOLING_OFF_DAYS = int(os.environ.get('COOLING_OFF_DAYS') or 10)
@@ -34,4 +60,4 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'no-reply@ebms.gov.bw'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'no-reply@your-domain.example'

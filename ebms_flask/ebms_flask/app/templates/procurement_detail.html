@@ -46,8 +46,30 @@
             </div>
             <div class="card-body">
                 <p><strong>{{ submission_count }}</strong> sealed submission(s) received.</p>
+
+                {% if submissions %}
+                <div class="submission-list mt-3">
+                    {% for s in submissions %}
+                    <div class="submission-item">
+                        <div>
+                            <div class="fw-bold">{{ s.bidder.company_name }}</div>
+                            <small class="text-muted">{{ s.envelope_type.title() }} envelope • {{ s.receipt_code }} • {{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <div class="submission-actions">
+                            <span class="badge badge-{{ 'success' if s.status == 'submitted' else 'secondary' }}">{{ s.status.replace('_', ' ').title() }}</span>
+                            {% if s.file_path %}
+                            <a href="{{ url_for('procurements.download_submission', procurement_id=procurement.id, submission_id=s.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>View Document</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No submitted bids are available yet.</p>
+                {% endif %}
+
                 {% if communications %}
-                <h6 class="mt-3">Recent Communications</h6>
+                <h6 class="mt-4">Recent Communications</h6>
                 <ul class="list-group">
                     {% for c in communications %}
                     <li class="list-group-item">

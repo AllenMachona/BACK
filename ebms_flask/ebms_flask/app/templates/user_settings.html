@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}My Settings - EBMS{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="modern-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="eyebrow-text">Profile control</span>
+                <h2 class="mb-0"><i class="bi bi-sliders me-2"></i>My Settings</h2>
+            </div>
+            <span class="company-badge"><i class="bi bi-person-check me-2"></i>{{ user.full_name() }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="user-settings-grid">
+    <div class="settings-panel">
+        <h4 class="mb-3"><i class="bi bi-palette me-2"></i>Appearance</h4>
+        <form method="POST" action="{{ url_for('auth.user_settings') }}">
+            <div class="preference-row">
+                <label>Theme</label>
+                <div class="d-flex gap-2">
+                    <button type="button" class="theme-option light {% if user.get_preference('theme', 'light') == 'light' %}active{% endif %}" title="Light" data-theme="light"><i class="bi bi-sun"></i></button>
+                    <button type="button" class="theme-option dark {% if user.get_preference('theme', 'light') == 'dark' %}active{% endif %}" title="Dark" data-theme="dark"><i class="bi bi-moon-stars"></i></button>
+                    <button type="button" class="theme-option blue {% if user.get_preference('theme', 'light') == 'blue' %}active{% endif %}" title="Blue" data-theme="blue"><i class="bi bi-droplet-half"></i></button>
+                </div>
+                <input type="hidden" name="theme" id="theme-input" value="{{ user.get_preference('theme', 'light') }}">
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="font_family">Font style</label>
+                    <select class="form-select" id="font_family" name="font_family">
+                        <option value="Segoe UI" {% if user.get_preference('font_family', 'Segoe UI') == 'Segoe UI' %}selected{% endif %}>Segoe UI</option>
+                        <option value="Arial" {% if user.get_preference('font_family', 'Segoe UI') == 'Arial' %}selected{% endif %}>Arial</option>
+                        <option value="Georgia" {% if user.get_preference('font_family', 'Segoe UI') == 'Georgia' %}selected{% endif %}>Georgia</option>
+                        <option value="Tahoma" {% if user.get_preference('font_family', 'Segoe UI') == 'Tahoma' %}selected{% endif %}>Tahoma</option>
+                        <option value="Verdana" {% if user.get_preference('font_family', 'Segoe UI') == 'Verdana' %}selected{% endif %}>Verdana</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="accent_color">Accent color</label>
+                    <input class="form-control" type="color" id="accent_color" name="accent_color" value="{{ user.get_preference('accent_color', '#2563eb') }}">
+                </div>
+            </div>
+
+            <div class="preference-row">
+                <label for="compact_view">Compact mode</label>
+                <input type="checkbox" id="compact_view" name="compact_view" {% if user.get_preference('compact_view', False) %}checked{% endif %}>
+            </div>
+
+            <div class="preference-row">
+                <label for="show_tips">Show assistant tips</label>
+                <input type="checkbox" id="show_tips" name="show_tips" {% if user.get_preference('show_tips', True) %}checked{% endif %}>
+            </div>
+
+            <hr class="my-4">
+
+            <h4 class="mb-3"><i class="bi bi-key me-2"></i>Security</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label" for="new_password">New password</label>
+                    <input class="form-control" type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="confirm_password">Confirm new password</label>
+                    <input class="form-control" type="password" id="confirm_password" name="confirm_password" placeholder="Confirm password">
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Last changed: {{ user.password_changed_at.strftime('%d %b %Y') if user.password_changed_at else 'Not set' }}</span>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save Settings</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="settings-panel">
+        <h4 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>Account overview</h4>
+        <ul class="list-group">
+            <li class="list-group-item"><span>Username</span><strong>{{ user.username }}</strong></li>
+            <li class="list-group-item"><span>Email</span><strong>{{ user.email }}</strong></li>
+            <li class="list-group-item"><span>Department</span><strong>{{ user.department or 'Not assigned' }}</strong></li>
+            <li class="list-group-item"><span>Designation</span><strong>{{ user.designation or 'Not assigned' }}</strong></li>
+            <li class="list-group-item"><span>Role</span><strong>{{ user.role.name }}</strong></li>
+            <li class="list-group-item"><span>Account status</span><strong>{% if user.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Disabled</span>{% endif %}</strong></li>
+        </ul>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <strong>Quick tips</strong>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Use dark mode for better night viewing.</li>
+                    <li>Change the accent color to match your department brand.</li>
+                    <li>Update your password regularly to maintain account security.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const themeInput = document.getElementById('theme-input');
+    document.querySelectorAll('.theme-option').forEach(function (button) {
+      button.addEventListener('click', function () {
+        document.querySelectorAll('.theme-option').forEach((b) => b.classList.remove('active'));
+        button.classList.add('active');
+        themeInput.value = button.dataset.theme;
+      });
+    });
+  });
+</script>
+{% endblock %}

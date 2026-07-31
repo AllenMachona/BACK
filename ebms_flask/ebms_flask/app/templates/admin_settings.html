@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Settings - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'admin' %}
+
+<div class="page-header modern-header mb-4">
+    <div>
+        <span class="eyebrow-text">System configuration</span>
+        <h2 class="mb-0"><i class="bi bi-sliders me-2"></i>Application Settings</h2>
+    </div>
+</div>
+
+<div class="card advanced-card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Basic platform settings</h5>
+        <span class="badge badge-success">Live</span>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.settings') }}" class="settings-form">
+            <div class="row g-3">
+                {% for setting in settings_rows %}
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ setting.key }}">{{ setting.label }}</label>
+                    {% if setting.key in ['maintenance_mode', 'allow_registration'] %}
+                    <select name="{{ setting.key }}" id="{{ setting.key }}" class="form-select">
+                        <option value="true" {% if setting.value == 'true' %}selected{% endif %}>Enabled</option>
+                        <option value="false" {% if setting.value == 'false' %}selected{% endif %}>Disabled</option>
+                    </select>
+                    {% else %}
+                    <input type="text" name="{{ setting.key }}" id="{{ setting.key }}" class="form-control" value="{{ setting.value }}">
+                    {% endif %}
+                    {% if setting.description %}
+                    <small class="text-muted d-block mt-1">{{ setting.description }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="text-muted small">These values control the core app identity and operational defaults.</div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

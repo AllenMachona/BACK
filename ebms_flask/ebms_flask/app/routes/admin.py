@@ -6,8 +6,30 @@ from app.models.user import User
 from app.models.role import Role
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
+from app.models.site_setting import SiteSetting
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+
+@admin_bp.route('/settings', methods=['GET', 'POST'])
+@login_required
+@permission_required('can_admin_system')
+def settings():
+    SiteSetting.ensure_defaults()
+    settings_rows = SiteSetting.query.order_by(SiteSetting.label).all()
+
+    if request.method == 'POST':
+        for key, value in request.form.items():
+            if key == 'csrf_token':
+                continue
+            setting = SiteSetting.query.filter_by(key=key).first()
+            if setting:
+                setting.value = value
+        db.session.commit()
+        flash('System settings updated successfully.', 'success')
+        return redirect(url_for('admin.settings'))
+
+    return render_template('admin_settings.html', settings_rows=settings_rows)
 
 
 @admin_bp.route('/users')

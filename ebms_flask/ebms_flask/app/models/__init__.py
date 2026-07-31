@@ -13,9 +13,10 @@ from app.models.complaint import Complaint
 from app.models.communication import Communication
 from app.models.audit import AuditLog
 from app.models.notification import Notification
+from app.models.site_setting import SiteSetting
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
     'CommitteeMember', 'EvaluationCriteria', 'Evaluation', 'ScoreSheet',
-    'Award', 'Complaint', 'Communication', 'AuditLog', 'Notification',
+    'Award', 'Complaint', 'Communication', 'AuditLog', 'Notification', 'SiteSetting',
 ]
