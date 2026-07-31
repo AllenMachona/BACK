@@ -24,7 +24,7 @@ def create_app(config_class=Config):
         db.create_all()
         SiteSetting.ensure_defaults()
         from app.models.user import User
-        User.ensure_preferences_column()
+        User.ensure_auth_columns()
 
     @login_manager.user_loader
     def load_user(user_id):

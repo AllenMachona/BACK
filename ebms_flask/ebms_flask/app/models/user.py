@@ -1,4 +1,5 @@
 import json
+import secrets
 import uuid
 from datetime import datetime, timedelta
 from flask_login import UserMixin
@@ -44,6 +45,8 @@ class User(UserMixin, db.Model):
     locked_until = db.Column(db.DateTime)
     password_changed_at = db.Column(db.DateTime, default=datetime.utcnow)
     password_expiry_days = db.Column(db.Integer, default=90)
+    reset_token = db.Column(db.String(255))
+    reset_token_expires_at = db.Column(db.DateTime)
 
     # Personalization / user settings
     preferences = db.Column(db.Text, default='{}')
@@ -144,6 +147,28 @@ class User(UserMixin, db.Model):
         except Exception:
             db.session.execute(text('ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"'))
             db.session.commit()
+
+    @classmethod
+    def ensure_auth_columns(cls):
+        for column_name, column_sql in {
+            'preferences': 'ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"',
+            'reset_token': 'ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)',
+            'reset_token_expires_at': 'ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME',
+        }.items():
+            try:
+                db.session.execute(text(f'SELECT {column_name} FROM users LIMIT 1'))
+            except Exception:
+                db.session.execute(text(column_sql))
+        db.session.commit()
+
+    def generate_reset_token(self):
+        self.reset_token = secrets.token_urlsafe(32)
+        self.reset_token_expires_at = datetime.utcnow() + timedelta(hours=1)
+        return self.reset_token
+
+    def clear_reset_token(self):
+        self.reset_token = None
+        self.reset_token_expires_at = None
 
     def is_password_expired(self):
         if not self.password_changed_at:

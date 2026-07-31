@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Register - EBMS Botswana{% endblock %}
+{% block guest_content %}
+<div class="guest-shell">
+    <div class="guest-orb orb-one"></div>
+    <div class="guest-orb orb-two"></div>
+    <div class="guest-orb orb-three"></div>
+
+    <div class="auth-card auth-card-wide">
+        <div class="auth-brand-panel">
+            <div class="brand-badge"><i class="bi bi-person-plus"></i> Join EBMS</div>
+            <h1>Create your secure access.</h1>
+            <p>Register to join the procurement workspace, submit bids, and collaborate with your team.</p>
+            <div class="brand-list">
+                <span><i class="bi bi-check-circle"></i> Instant onboarding</span>
+                <span><i class="bi bi-check-circle"></i> Secure approvals</span>
+                <span><i class="bi bi-check-circle"></i> Access to procurement tools</span>
+            </div>
+        </div>
+
+        <div class="auth-form-panel">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-header text-center">
+                <h2>Create account</h2>
+                <p>Set up your profile</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First name</label>
+                        <input type="text" name="first_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last name</label>
+                        <input type="text" name="last_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email address</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Department</label>
+                        <input type="text" name="department" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Designation</label>
+                        <input type="text" name="designation" class="form-control">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" name="role_code">
+                        <option value="user_department">User Department</option>
+                        <option value="procurement_unit">Procurement Unit</option>
+                        <option value="committee_secretary">Committee Secretary</option>
+                        <option value="committee_chair">Committee Chair</option>
+                        <option value="evaluator">Evaluator</option>
+                        <option value="bidder">Bidder</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm password</label>
+                    <input type="password" name="confirm_password" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Create account</button>
+            </form>
+
+            <div class="auth-divider"><span>or</span></div>
+
+            <div class="text-center small-text">
+                Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
