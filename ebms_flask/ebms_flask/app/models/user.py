@@ -200,7 +200,8 @@ class User(UserMixin, db.Model):
             limit = float(self.delegation_limit or 0)
             return estimated_value <= limit
         if self.has_role('user_department'):
-            return getattr(procurement, 'user_department', None) == self.department
+            procurement_entity = getattr(procurement, 'procurement_entity', None) or getattr(procurement, 'user_department', None)
+            return procurement_entity == self.department
         return False
 
     def _totp_code(self):

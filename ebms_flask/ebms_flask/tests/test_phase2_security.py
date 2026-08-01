@@ -1,6 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
+from app.models.procurement import Procurement
 from app.models.role import Role
 from app.models.user import User
 
@@ -25,6 +26,17 @@ class Phase2SecurityTests(unittest.TestCase):
         secret = user.generate_mfa_secret()
         self.assertIsInstance(secret, str)
         self.assertGreater(len(secret), 10)
+
+    def test_user_can_access_procurement_by_procurement_entity(self):
+        user = User(role=Role(code='user_department'), department='Ministry of Health')
+        procurement = SimpleNamespace(procurement_entity='Ministry of Health', user_department='Ministry of Health', estimated_value=4000)
+        self.assertTrue(user.can_access_procurement(procurement))
+
+    def test_ppra_code_options_include_main_codes_and_subcodes(self):
+        options = Procurement.ppra_code_options()
+        self.assertIn('100', options)
+        self.assertIn('101', options)
+        self.assertIn('100-01', options)
 
 
 if __name__ == '__main__':

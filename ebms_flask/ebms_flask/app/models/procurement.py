@@ -10,7 +10,9 @@ class Procurement(db.Model):
     title = db.Column(db.String(300), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(30), nullable=False)  # works, services, consultancy, supplies, combination
+    procurement_entity = db.Column(db.String(200))
     ppra_code = db.Column(db.String(50))
+    ppra_sub_code = db.Column(db.String(20))
     method = db.Column(db.String(30), nullable=False)  # open_domestic, open_international, restricted, rfq, direct, rfp...
     evaluation_method = db.Column(db.String(30))        # pass_fail, scored, weighted, least_cost, quality_cost
     envelope_type = db.Column(db.String(10), default='single')  # single, dual
@@ -18,6 +20,7 @@ class Procurement(db.Model):
     user_department = db.Column(db.String(150))
 
     submission_deadline = db.Column(db.DateTime)
+    clarification_deadline = db.Column(db.DateTime)
     opening_scheduled_at = db.Column(db.DateTime)
 
     # Status follows SOAR Appendix C's bid status lifecycle.
@@ -42,6 +45,22 @@ class Procurement(db.Model):
     complaints = db.relationship('Complaint', backref='procurement', lazy='dynamic')
     award = db.relationship('Award', backref='procurement', uselist=False)
     replacement = db.relationship('Procurement', remote_side=[id], backref='replaced_by')
+
+    @staticmethod
+    def ppra_code_options():
+        return ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110']
+
+    @staticmethod
+    def ppra_sub_code_options():
+        return ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+
+    def full_ppra_code(self):
+        code = (self.ppra_code or '').strip()
+        if self.ppra_sub_code and self.ppra_sub_code not in ('00', 'none'):
+            if code and not code.endswith(f'-{self.ppra_sub_code}'):
+                return f'{code}-{self.ppra_sub_code}'
+            return self.ppra_sub_code if not code else code
+        return code
 
     def status_label(self):
         return self.status.replace('_', ' ').title()
@@ -94,6 +113,20 @@ class Procurement(db.Model):
             result['warnings'].append('lot_splitting_risk')
 
         return result
+
+    @classmethod
+    def ensure_schema_columns(cls):
+        from sqlalchemy import text
+        for column_name, column_sql in {
+            'procurement_entity': 'ALTER TABLE procurements ADD COLUMN procurement_entity VARCHAR(200)',
+            'ppra_sub_code': 'ALTER TABLE procurements ADD COLUMN ppra_sub_code VARCHAR(20)',
+            'clarification_deadline': 'ALTER TABLE procurements ADD COLUMN clarification_deadline DATETIME',
+        }.items():
+            try:
+                db.session.execute(text(f'SELECT {column_name} FROM procurements LIMIT 1'))
+            except Exception:
+                db.session.execute(text(column_sql))
+        db.session.commit()
 
     def __repr__(self):
         return f'<Procurement {self.tender_number}>'

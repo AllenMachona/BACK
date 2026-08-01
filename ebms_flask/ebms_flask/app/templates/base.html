@@ -32,6 +32,7 @@
                     <small>{{ current_user.role.name }}</small>
                 </div>
             </div>
+            <a class="nav-link {{ 'active' if active_nav == 'search' else '' }}" href="{{ url_for('procurements.search') }}"><i class="bi bi-search"></i>Search</a>
             {% if not current_user.has_role('bidder') %}
             <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
             <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder2-open"></i>Procurements</a>

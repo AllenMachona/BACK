@@ -1,12 +1,17 @@
+import os
 import random
+import secrets
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_from_directory, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import or_
+from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.communication import Communication
 from app.models.complaint import Complaint
 from app.models.submission import Submission
+from app.models.user import User
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
 from app.utils.notify import notify_bidders_on_procurement
@@ -79,12 +84,31 @@ def list_procurements():
 @login_required
 @permission_required('can_create_procurement')
 def create():
+    ppra_codes = Procurement.ppra_code_options()
+    ppra_sub_codes = Procurement.ppra_sub_code_options()
+
     if request.method == 'POST':
         try:
             estimated_value = float(request.form['estimated_value'])
         except (KeyError, ValueError):
             flash('A valid estimated value is required.', 'danger')
-            return render_template('procurement_create.html')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+
+        procurement_entity = request.form.get('procurement_entity') or request.form.get('user_department')
+        if not procurement_entity:
+            flash('A procurement entity is required.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+
+        advertisement = request.files.get('advertisement_document')
+        if not advertisement or not advertisement.filename:
+            flash('An advertisement document is required before creating the procurement.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+
+        ppra_base = request.form.get('ppra_code', '').strip()
+        ppra_sub_code = request.form.get('ppra_sub_code', '').strip()
+        ppra_code = ppra_base
+        if ppra_sub_code and ppra_sub_code not in ('00', 'none'):
+            ppra_code = f'{ppra_base}-{ppra_sub_code}'
 
         direct_threshold = float(request.form.get('direct_procurement_threshold', 500000) or 500000)
         governance = Procurement(
@@ -92,41 +116,64 @@ def create():
             title=request.form['title'],
             description=request.form.get('description'),
             category=request.form['category'],
-            ppra_code=request.form.get('ppra_code'),
+            procurement_entity=procurement_entity,
+            ppra_code=ppra_code,
+            ppra_sub_code=ppra_sub_code if ppra_sub_code and ppra_sub_code not in ('00', 'none') else None,
             method=request.form['method'],
             evaluation_method=request.form.get('evaluation_method'),
             envelope_type=request.form.get('envelope_type', 'single'),
             estimated_value=estimated_value,
-            user_department=request.form.get('user_department'),
+            user_department=procurement_entity,
             status='draft',
         ).check_governance_rules(direct_threshold=direct_threshold, open_threshold=direct_threshold)
 
         if governance['errors']:
             flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')
-            return render_template('procurement_create.html')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
 
         if governance['warnings']:
             flash('Governance check noted a review risk: lot splitting or high-value procedure review required.', 'warning')
 
         deadline_raw = request.form.get('submission_deadline')
+        clarification_deadline_raw = request.form.get('clarification_deadline')
         deadline = datetime.fromisoformat(deadline_raw) if deadline_raw else None
+        clarification_deadline = datetime.fromisoformat(clarification_deadline_raw) if clarification_deadline_raw else None
 
         procurement = Procurement(
             tender_number=generate_tender_number(),
             title=request.form['title'],
             description=request.form.get('description'),
             category=request.form['category'],
-            ppra_code=request.form.get('ppra_code'),
+            procurement_entity=procurement_entity,
+            ppra_code=ppra_code,
+            ppra_sub_code=ppra_sub_code if ppra_sub_code and ppra_sub_code not in ('00', 'none') else None,
             method=request.form['method'],
             evaluation_method=request.form.get('evaluation_method'),
             envelope_type=request.form.get('envelope_type', 'single'),
             estimated_value=estimated_value,
-            user_department=request.form.get('user_department'),
+            user_department=procurement_entity,
             submission_deadline=deadline,
+            clarification_deadline=clarification_deadline,
             created_by_id=current_user.id,
             status='draft',
         )
         db.session.add(procurement)
+        db.session.commit()
+
+        filename = secure_filename(f"{procurement.tender_number}_{secrets.token_hex(4)}_{advertisement.filename}")
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        advertisement.save(filepath)
+
+        doc = Communication(
+            procurement_id=procurement.id,
+            type='advertisement',
+            content=f'Advertisement document for {procurement.title}',
+            file_path=filepath,
+            original_filename=advertisement.filename,
+            is_public=True,
+            from_user_id=current_user.id,
+        )
+        db.session.add(doc)
         db.session.commit()
 
         log_action('PROCUREMENT_CREATED', entity_type='Procurement', entity_id=procurement.id,
@@ -134,7 +181,36 @@ def create():
         flash(f'Procurement {procurement.tender_number} created as Draft.', 'success')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
-    return render_template('procurement_create.html')
+    return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+
+
+@procurements_bp.route('/search')
+@login_required
+def search():
+    query = (request.args.get('q') or '').strip()
+    procurements = []
+    users = []
+    if query:
+        pattern = f'%{query}%'
+        procurements = Procurement.query.filter(
+            or_(
+                Procurement.title.ilike(pattern),
+                Procurement.tender_number.ilike(pattern),
+                Procurement.description.ilike(pattern),
+                Procurement.procurement_entity.ilike(pattern),
+                Procurement.user_department.ilike(pattern),
+                Procurement.ppra_code.ilike(pattern),
+            )
+        ).order_by(Procurement.created_at.desc()).all()
+        users = User.query.filter(
+            or_(
+                User.first_name.ilike(pattern),
+                User.last_name.ilike(pattern),
+                User.email.ilike(pattern),
+                User.department.ilike(pattern),
+            )
+        ).order_by(User.first_name.asc()).limit(20).all()
+    return render_template('global_search.html', query=query, procurements=procurements, users=users)
 
 
 @procurements_bp.route('/<int:procurement_id>')
@@ -165,6 +241,20 @@ def detail(procurement_id):
         submission_count=submission_count,
         next_status=next_status,
     )
+
+
+@procurements_bp.route('/<int:procurement_id>/documents/<int:communication_id>/download')
+@login_required
+def download_document(procurement_id, communication_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    document = Communication.query.filter_by(id=communication_id, procurement_id=procurement.id).first_or_404()
+
+    if not document.file_path or not document.original_filename:
+        abort(404)
+
+    directory = document.file_path.rsplit('/', 1)[0] if '/' in document.file_path else '.'
+    filename = document.file_path.rsplit('/', 1)[-1]
+    return send_from_directory(directory, filename, as_attachment=True, download_name=document.original_filename)
 
 
 @procurements_bp.route('/<int:procurement_id>/submission/<int:submission_id>/download')
@@ -214,6 +304,14 @@ def transition(procurement_id):
             procurement.submission_deadline = datetime.fromisoformat(deadline_raw)
         elif not procurement.submission_deadline:
             flash('Set a submission deadline before opening submissions.', 'danger')
+            return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    if to_status == 'clarification_period':
+        deadline_raw = request.form.get('clarification_deadline')
+        if deadline_raw:
+            procurement.clarification_deadline = datetime.fromisoformat(deadline_raw)
+        elif not procurement.clarification_deadline:
+            flash('Set a clarification deadline before moving to clarification period.', 'danger')
             return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
     previous_status = procurement.status

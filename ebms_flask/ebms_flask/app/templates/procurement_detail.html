@@ -38,7 +38,7 @@
                     <div class="col-md-6">
                         <div class="p-2 border rounded bg-light">
                             <span class="text-muted small d-block">PPRA Code</span>
-                            <strong class="text-dark">{{ procurement.ppra_code or '—' }}</strong>
+                            <strong class="text-dark">{{ procurement.full_ppra_code() or '—' }}</strong>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -61,14 +61,20 @@
                     </div>
                     <div class="col-md-6">
                         <div class="p-2 border rounded bg-light">
-                            <span class="text-muted small d-block">Managing Department</span>
-                            <strong class="text-dark">{{ procurement.user_department or '—' }}</strong>
+                            <span class="text-muted small d-block">Managing Department / Entity</span>
+                            <strong class="text-dark">{{ procurement.procurement_entity or procurement.user_department or '—' }}</strong>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="p-2 border rounded bg-light">
                             <span class="text-muted small d-block">Submission Deadline</span>
                             <strong class="text-dark">{{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') if procurement.submission_deadline else 'Not set' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Clarification Deadline</span>
+                            <strong class="text-dark">{{ procurement.clarification_deadline.strftime('%Y-%m-%d %H:%M') if procurement.clarification_deadline else 'Not set' }}</strong>
                         </div>
                     </div>
                 </div>
@@ -156,6 +162,10 @@
                     {% if next_status == 'submission_open' and not procurement.submission_deadline %}
                     <label class="form-label small fw-bold">Submission deadline (required)</label>
                     <input type="datetime-local" name="submission_deadline" class="form-control mb-2" required>
+                    {% endif %}
+                    {% if next_status == 'clarification_period' and not procurement.clarification_deadline %}
+                    <label class="form-label small fw-bold">Clarification deadline (required)</label>
+                    <input type="datetime-local" name="clarification_deadline" class="form-control mb-2" required>
                     {% endif %}
                     <button type="submit" class="btn btn-success w-100 py-2">
                         <i class="bi bi-arrow-right-circle me-1"></i>Advance → {{ next_status.replace('_', ' ').title() }}

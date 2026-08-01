@@ -15,7 +15,7 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-9">
-        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form">
+        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data">
 
             <!-- Section 1: Identity -->
             <div class="card mb-4">
@@ -37,10 +37,23 @@
                             </select>
                             <div class="form-text">PPRA Act procurement category classification.</div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label fw-bold">PPRA Code</label>
-                            <input type="text" name="ppra_code" class="form-control" placeholder="e.g. WRK-2025-001">
-                            <div class="form-text">Optional internal PPRA reference code.</div>
+                            <select name="ppra_code" class="form-select" required>
+                                <option value="">Select code...</option>
+                                {% for code in ppra_codes %}
+                                <option value="{{ code }}">{{ code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">PPRA Sub Code</label>
+                            <select name="ppra_sub_code" class="form-select">
+                                <option value="">No sub-code</option>
+                                {% for code in ppra_sub_codes %}
+                                <option value="{{ code }}">{{ code }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Procurement Title <span class="text-danger">*</span></label>
@@ -51,8 +64,8 @@
                             <textarea name="description" class="form-control" rows="4" placeholder="Describe the scope, requirements, and expected deliverables of this procurement..."></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">User Department / Entity</label>
-                            <input type="text" name="user_department" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness">
+                            <label class="form-label fw-bold">Procurement Entity</label>
+                            <input type="text" name="procurement_entity" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness" required>
                             <div class="form-text">The entity requesting this procurement.</div>
                         </div>
                     </div>
@@ -119,6 +132,16 @@
                             <label class="form-label fw-bold">Submission Deadline</label>
                             <input type="datetime-local" name="submission_deadline" class="form-control form-control-lg">
                             <div class="form-text">Can be set later when moving to Submission Open status.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Clarification Deadline</label>
+                            <input type="datetime-local" name="clarification_deadline" class="form-control form-control-lg">
+                            <div class="form-text">Deadline for bidder clarification submissions.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Advertisement Document <span class="text-danger">*</span></label>
+                            <input type="file" name="advertisement_document" class="form-control form-control-lg" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx" required>
+                            <div class="form-text">This file is published to bidders as the advertising notice.</div>
                         </div>
                     </div>
                 </div>

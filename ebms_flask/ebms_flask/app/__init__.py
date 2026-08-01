@@ -25,6 +25,10 @@ def create_app(config_class=Config):
         SiteSetting.ensure_defaults()
         from app.models.user import User
         User.ensure_auth_columns()
+        from app.models.procurement import Procurement
+        Procurement.ensure_schema_columns()
+        from app.models.communication import Communication
+        Communication.ensure_schema_columns()
         from app.models.role import Role
         if Role.query.count() == 0:
             try:

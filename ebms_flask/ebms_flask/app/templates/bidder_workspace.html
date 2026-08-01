@@ -131,6 +131,23 @@
                 {% else %}
                 <p class="text-muted mb-0 text-center py-2">No clarifications have been published yet.</p>
                 {% endif %}
+
+                <hr class="my-3">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-file-earmark-arrow-down me-1 text-primary"></i>Advertisement Document</h6>
+                {% set ad_doc = procurement.communications.filter_by(type='advertisement').order_by(Communication.created_at.desc()).first() %}
+                {% if ad_doc and ad_doc.file_path %}
+                    <div class="d-flex justify-content-between align-items-center border rounded p-3 bg-light">
+                        <div>
+                            <div class="fw-bold text-dark">{{ ad_doc.original_filename or 'Tender advertisement' }}</div>
+                            <div class="small text-muted">Published {{ ad_doc.created_at.strftime('%Y-%m-%d %H:%M') if ad_doc.created_at else '' }}</div>
+                        </div>
+                        <a href="{{ url_for('procurements.download_document', procurement_id=procurement.id, communication_id=ad_doc.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-download me-1"></i>Download
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0 text-center py-2">No advertisement document is attached yet.</p>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Global Search - EBMS Botswana{% endblock %}
+{% block content %}
+{% set active_nav = 'search' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="eyebrow">Search</span>
+        <h2 class="mb-0"><i class="bi bi-search me-2 text-primary"></i>Global Search</h2>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('procurements.search') }}" class="row g-2 align-items-center">
+            <div class="col-md-10">
+                <input type="search" name="q" class="form-control form-control-lg" value="{{ query }}" placeholder="Search procurements, departments, users..." aria-label="Search" required>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-search me-1"></i>Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if query %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Procurement Results</h5>
+                </div>
+                <div class="card-body">
+                    {% if procurements %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead><tr><th>Tender</th><th>Title</th><th>Entity</th><th>Status</th></tr></thead>
+                            <tbody>
+                                {% for p in procurements %}
+                                <tr>
+                                    <td class="fw-bold text-primary"><a href="{{ url_for('procurements.detail', procurement_id=p.id) }}">{{ p.tender_number }}</a></td>
+                                    <td>{{ p.title }}</td>
+                                    <td>{{ p.procurement_entity or p.user_department or '—' }}</td>
+                                    <td><span class="badge badge-secondary">{{ p.status_label() }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 py-3 text-center">No procurement matches found for “{{ query }}”.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>User Results</h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                    <ul class="list-group list-group-flush">
+                        {% for user in users %}
+                        <li class="list-group-item px-0">
+                            <div class="fw-bold">{{ user.full_name() }}</div>
+                            <div class="small text-muted">{{ user.email }} · {{ user.department or 'No department' }}</div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0 py-3 text-center">No users matched your search.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-secondary">Enter a keyword to search across procurements and users.</div>
+{% endif %}
+{% endblock %}
