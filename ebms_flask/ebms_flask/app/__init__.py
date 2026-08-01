@@ -25,6 +25,13 @@ def create_app(config_class=Config):
         SiteSetting.ensure_defaults()
         from app.models.user import User
         User.ensure_auth_columns()
+        from app.models.role import Role
+        if Role.query.count() == 0:
+            try:
+                import seed
+                seed.run()
+            except Exception as e:
+                app.logger.warning(f"Auto-seed notification: {e}")
 
     @login_manager.user_loader
     def load_user(user_id):
