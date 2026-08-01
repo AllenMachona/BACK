@@ -17,90 +17,82 @@
         {% endif %}
     </div>
 
-    <div class="row mb-4 stat-grid">
-        <div class="col-md-3">
-            <div class="stat-card stat-card-primary animated-card">
-                <div class="stat-card__icon">
-                    <i class="bi bi-file-earmark-text"></i>
-                </div>
-                <div class="stat-card__body">
-                    <span class="stat-label">Active Tenders</span>
-                    <h2>{{ active_tenders }}</h2>
-                    <small>Published &amp; Open for submission</small>
-                </div>
+    <div class="stat-grid mb-4">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card__icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div class="stat-card__body">
+                <span class="stat-label">Active Tenders</span>
+                <h2>{{ active_tenders }}</h2>
+                <small>Published &amp; open for submission</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-card-warning animated-card">
-                <div class="stat-card__icon">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-                <div class="stat-card__body">
-                    <span class="stat-label">Pending Evaluations</span>
-                    <h2>{{ pending_evaluations }}</h2>
-                    <small>Awaiting committee action</small>
-                </div>
+        <div class="stat-card stat-card-warning">
+            <div class="stat-card__icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-card__body">
+                <span class="stat-label">Pending Evaluations</span>
+                <h2>{{ pending_evaluations }}</h2>
+                <small>Awaiting committee action</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-card-success animated-card">
-                <div class="stat-card__icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <div class="stat-card__body">
-                    <span class="stat-label">Registered Bidders</span>
-                    <h2>{{ registered_bidders }}</h2>
-                    <small>Total in system</small>
-                </div>
+        <div class="stat-card stat-card-success">
+            <div class="stat-card__icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-card__body">
+                <span class="stat-label">Registered Bidders</span>
+                <h2>{{ registered_bidders }}</h2>
+                <small>Total in system</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-card-info animated-card">
-                <div class="stat-card__icon">
-                    <i class="bi bi-cloud-upload"></i>
-                </div>
-                <div class="stat-card__body">
-                    <span class="stat-label">Recent Submissions</span>
-                    <h2>{{ recent_submissions }}</h2>
-                    <small>Last 24 hours</small>
-                </div>
+        <div class="stat-card stat-card-info">
+            <div class="stat-card__icon">
+                <i class="bi bi-cloud-upload"></i>
+            </div>
+            <div class="stat-card__body">
+                <span class="stat-label">Recent Submissions</span>
+                <h2>{{ recent_submissions }}</h2>
+                <small>Last 24 hours</small>
             </div>
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-12">
-            <div class="panel-card animated-card">
+            <div class="panel-card">
                 <div class="panel-card__header">
                     <div>
                         <span class="panel-kicker">Latest activity</span>
                         <h5 class="mb-0">Recently Updated Procurements</h5>
                     </div>
-                    <span class="panel-pill">Live</span>
+                    <span class="status-badge status-published"><i class="bi bi-broadcast me-1"></i>Live</span>
                 </div>
                 <div class="panel-card__body">
                     {% if recent_procurements %}
-                    <div class="table-wrap">
-                        <table class="table dashboard-table table-hover align-middle">
-                            <thead class="table-light">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
                                 <tr>
                                     <th>Tender Number</th>
                                     <th>Title</th>
                                     <th>Status</th>
                                     <th>Updated</th>
-                                    <th class="text-right">Action</th>
+                                    <th class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for p in recent_procurements %}
                                 <tr>
-                                    <td class="fw-bold">{{ p.tender_number }}</td>
+                                    <td class="fw-bold text-primary">{{ p.tender_number }}</td>
                                     <td>{{ p.title }}</td>
                                     <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
-                                    <td>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td class="text-right">
-                                        <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary dashboard-view-btn">
-                                            <i class="bi bi-eye"></i>
+                                    <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>View
                                         </a>
                                     </td>
                                 </tr>
@@ -109,9 +101,9 @@
                         </table>
                     </div>
                     {% else %}
-                    <div class="empty-state">
-                        <i class="bi bi-inboxes"></i>
-                        <p class="text-muted mb-0">No procurements yet. Create one to get started.</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-inboxes text-muted fs-1 mb-2"></i>
+                        <p class="text-muted mb-0">No procurements recorded yet. Create one to get started.</p>
                     </div>
                     {% endif %}
                 </div>
