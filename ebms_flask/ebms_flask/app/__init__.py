@@ -29,7 +29,7 @@ def create_app(config_class=Config):
         if Role.query.count() == 0:
             try:
                 import seed
-                seed.run()
+                seed.seed_data()
             except Exception as e:
                 app.logger.warning(f"Auto-seed notification: {e}")
 
