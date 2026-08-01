@@ -130,11 +130,14 @@ def workspace(procurement_id):
     clarifications = procurement.communications.filter_by(type='clarification', is_public=True).order_by(
         Communication.created_at.desc()
     ).all()
+    advertisement = procurement.communications.filter_by(type='advertisement').order_by(
+        Communication.created_at.desc()
+    ).first()
     my_submissions = Submission.query.filter_by(
         procurement_id=procurement.id, bidder_id=current_user.bidder_id
     ).all()
 
     return render_template(
         'bidder_workspace.html', procurement=procurement, documents=documents,
-        clarifications=clarifications, my_submissions=my_submissions,
+        clarifications=clarifications, advertisement=advertisement, my_submissions=my_submissions,
     )
