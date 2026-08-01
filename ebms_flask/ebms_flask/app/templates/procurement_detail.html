@@ -3,100 +3,141 @@
 {% block content %}
 {% set active_nav = 'procurements' %}
 
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="eyebrow">Tender Detail</span>
+        <h2 class="mb-0"><i class="bi bi-file-earmark-richtext me-2 text-primary"></i>{{ procurement.tender_number }}</h2>
+    </div>
+    <span class="status-badge status-{{ procurement.status }} fs-6">{{ procurement.status_label() }}</span>
+</div>
+
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">{{ procurement.tender_number }}</h5>
-                <span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span>
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>Tender Specifications</h5>
+                <span class="badge badge-info">{{ procurement.category.title() }}</span>
             </div>
             <div class="card-body">
-                <h4>{{ procurement.title }}</h4>
-                <p class="text-muted">{{ procurement.description or 'No description provided.' }}</p>
+                <h4 class="text-dark mb-2">{{ procurement.title }}</h4>
+                <p class="text-muted fs-6">{{ procurement.description or 'No description provided.' }}</p>
 
                 {% if procurement.cancelled %}
-                <div class="alert alert-danger">
-                    <strong>Cancelled:</strong> {{ procurement.cancelled_reason }}
-                    ({{ procurement.cancelled_at.strftime('%Y-%m-%d %H:%M') if procurement.cancelled_at }})
+                <div class="alert alert-danger my-3">
+                    <i class="bi bi-x-circle me-2 fs-5"></i>
+                    <div>
+                        <strong>Procurement Cancelled:</strong> {{ procurement.cancelled_reason }}
+                        <small class="d-block text-muted">Date: {{ procurement.cancelled_at.strftime('%Y-%m-%d %H:%M') if procurement.cancelled_at }}</small>
+                    </div>
                 </div>
                 {% endif %}
 
-                <hr>
+                <hr class="my-3">
 
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <p><strong>Category:</strong> {{ procurement.category.title() }}</p>
-                        <p><strong>PPRA Code:</strong> {{ procurement.ppra_code or '—' }}</p>
-                        <p><strong>Method:</strong> {{ procurement.method.replace('_', ' ').title() }}</p>
-                        <p><strong>Envelope:</strong> {{ 'Dual Envelope' if procurement.envelope_type == 'dual' else 'Single Envelope' }}</p>
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">PPRA Code</span>
+                            <strong class="text-dark">{{ procurement.ppra_code or '—' }}</strong>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Estimated Value:</strong> BWP {{ '{:,.2f}'.format(procurement.estimated_value) }}</p>
-                        <p><strong>Department:</strong> {{ procurement.user_department or '—' }}</p>
-                        <p><strong>Deadline:</strong> {{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') if procurement.submission_deadline else 'Not set' }}</p>
-                        <p><strong>Created:</strong> {{ procurement.created_at.strftime('%Y-%m-%d') }}</p>
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Procurement Method</span>
+                            <strong class="text-dark">{{ procurement.method.replace('_', ' ').title() }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Envelope Structure</span>
+                            <strong class="text-dark">{{ 'Dual Envelope' if procurement.envelope_type == 'dual' else 'Single Envelope' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Estimated Budget</span>
+                            <strong class="text-primary">BWP {{ '{:,.2f}'.format(procurement.estimated_value) }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Managing Department</span>
+                            <strong class="text-dark">{{ procurement.user_department or '—' }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small d-block">Submission Deadline</span>
+                            <strong class="text-dark">{{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') if procurement.submission_deadline else 'Not set' }}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card mb-4">
-            <div class="card-header bg-white">
-                <h6 class="mb-0">Submissions &amp; Communications</h6>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Submissions & Documents</h5>
+                <span class="badge badge-primary">{{ submission_count }} Sealed Bid(s)</span>
             </div>
             <div class="card-body">
-                <p><strong>{{ submission_count }}</strong> sealed submission(s) received.</p>
-
                 {% if submissions %}
-                <div class="submission-list mt-3">
-                    {% for s in submissions %}
-                    <div class="submission-item">
-                        <div>
-                            <div class="fw-bold">{{ s.bidder.company_name }}</div>
-                            <small class="text-muted">{{ s.envelope_type.title() }} envelope • {{ s.receipt_code }} • {{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                        </div>
-                        <div class="submission-actions">
-                            <span class="badge badge-{{ 'success' if s.status == 'submitted' else 'secondary' }}">{{ s.status.replace('_', ' ').title() }}</span>
-                            {% if s.file_path %}
-                            <a href="{{ url_for('procurements.download_submission', procurement_id=procurement.id, submission_id=s.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>View Document</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Bidder / Company</th>
+                                <th>Envelope</th>
+                                <th>Receipt Code</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                                <th class="text-end">Document</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in submissions %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ s.bidder.company_name }}</td>
+                                <td><span class="badge badge-secondary">{{ s.envelope_type.title() }}</span></td>
+                                <td><code>{{ s.receipt_code }}</code></td>
+                                <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td><span class="badge badge-{{ 'success' if s.status == 'submitted' else 'secondary' }}">{{ s.status.replace('_', ' ').title() }}</span></td>
+                                <td class="text-end">
+                                    {% if s.file_path %}
+                                    <a href="{{ url_for('procurements.download_submission', procurement_id=procurement.id, submission_id=s.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download me-1"></i>Decrypt &amp; View
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">No submitted bids are available yet.</p>
-                {% endif %}
-
-                {% if communications %}
-                <h6 class="mt-4">Recent Communications</h6>
-                <ul class="list-group">
-                    {% for c in communications %}
-                    <li class="list-group-item">
-                        <span class="badge badge-secondary me-2">{{ c.type }}</span>{{ c.content[:120] }}{{ '…' if c.content|length > 120 }}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted mb-0">No communications posted yet.</p>
+                <p class="text-muted mb-0 py-3 text-center">No submitted bids are available for this tender yet.</p>
                 {% endif %}
             </div>
         </div>
 
         {% if complaints %}
-        <div class="card">
-            <div class="card-header bg-white">
-                <h6 class="mb-0">Complaints</h6>
-            </div>
+        <div class="card mb-4">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Formal Complaints</h5></div>
             <div class="card-body">
-                <table class="table table-hover">
-                    <thead class="table-light"><tr><th>Bidder</th><th>Status</th><th>Filed</th></tr></thead>
-                    <tbody>
-                        {% for c in complaints %}
-                        <tr><td>{{ c.bidder.company_name }}</td><td>{{ c.status.replace('_',' ').title() }}</td><td>{{ c.created_at.strftime('%Y-%m-%d') }}</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead><tr><th>Complainant / Bidder</th><th>Status</th><th>Filed Date</th></tr></thead>
+                        <tbody>
+                            {% for c in complaints %}
+                            <tr>
+                                <td class="fw-bold">{{ c.bidder.company_name }}</td>
+                                <td><span class="badge badge-warning">{{ c.status.replace('_',' ').title() }}</span></td>
+                                <td>{{ c.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         {% endif %}
@@ -106,29 +147,29 @@
         {% if current_user.role.can_approve_procurement or current_user.role.can_publish or current_user.role.can_admin_system %}
         <div class="card mb-3">
             <div class="card-header bg-white">
-                <h6 class="mb-0">Workflow Actions</h6>
+                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>Workflow Control</h5>
             </div>
             <div class="card-body">
                 {% if next_status %}
-                <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mb-2">
+                <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mb-3">
                     <input type="hidden" name="to_status" value="{{ next_status }}">
                     {% if next_status == 'submission_open' and not procurement.submission_deadline %}
-                    <label class="form-label small">Submission deadline (required)</label>
+                    <label class="form-label small fw-bold">Submission deadline (required)</label>
                     <input type="datetime-local" name="submission_deadline" class="form-control mb-2" required>
                     {% endif %}
-                    <button type="submit" class="btn btn-success btn-sm w-100">
-                        Advance → {{ next_status.replace('_', ' ').title() }}
+                    <button type="submit" class="btn btn-success w-100 py-2">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Advance → {{ next_status.replace('_', ' ').title() }}
                     </button>
                 </form>
                 {% endif %}
 
                 {% if procurement.status not in ('cancelled', 'archived') %}
-                <details>
-                    <summary class="text-danger small" style="cursor:pointer;">Cancel Procurement</summary>
+                <details class="mt-2">
+                    <summary class="text-danger small fw-bold" style="cursor:pointer;"><i class="bi bi-x-circle me-1"></i>Cancel Procurement</summary>
                     <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mt-2">
                         <input type="hidden" name="to_status" value="cancelled">
                         <textarea name="cancelled_reason" class="form-control mb-2" rows="2" placeholder="Cancellation reason (required)" required></textarea>
-                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">Confirm Cancellation</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Confirm Cancellation</button>
                     </form>
                 </details>
                 {% endif %}
@@ -138,26 +179,35 @@
 
         <div class="card mb-3">
             <div class="card-header bg-white">
-                <h6 class="mb-0">Committee Members</h6>
+                <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Committee Members</h5>
             </div>
-            <div class="card-body small">
+            <div class="card-body">
                 {% if committee %}
-                    {% for m in committee %}
-                    <p class="mb-1"><strong>{{ m.role.replace('_', ' ').title() }}:</strong> {{ m.user.full_name() }}</p>
-                    {% endfor %}
+                    <div class="table-responsive">
+                        <table class="table align-middle small">
+                            <tbody>
+                                {% for m in committee %}
+                                <tr>
+                                    <td class="text-muted">{{ m.role.replace('_', ' ').title() }}</td>
+                                    <td class="fw-bold text-end">{{ m.user.full_name() }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 {% else %}
-                <p class="text-muted mb-0">No committee appointed yet.</p>
+                <p class="text-muted mb-0 small text-center">No committee appointed yet.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="card">
             <div class="card-header bg-white">
-                <h6 class="mb-0">Audit</h6>
+                <h5 class="mb-0"><i class="bi bi-shield-check me-2 text-primary"></i>Audit Trail</h5>
             </div>
             <div class="card-body small text-muted">
-                <p class="mb-1">Created by: {{ procurement.creator.full_name() }}</p>
-                <p class="mb-0">Last updated: {{ procurement.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p class="mb-1"><i class="bi bi-person me-1"></i>Created by: <strong class="text-dark">{{ procurement.creator.full_name() }}</strong></p>
+                <p class="mb-0"><i class="bi bi-clock me-1"></i>Last updated: <strong class="text-dark">{{ procurement.updated_at.strftime('%Y-%m-%d %H:%M') }}</strong></p>
             </div>
         </div>
     </div>
