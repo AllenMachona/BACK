@@ -4,152 +4,148 @@
 {% set active_nav = 'reports' %}
 
 <div class="report-shell">
-    <div class="report-hero card">
-        <div class="report-hero-content">
-            <div>
-                <span class="eyebrow-text">Procurement intelligence</span>
-                <h2 class="mb-2"><i class="bi bi-graph-up me-2"></i>Operational Reports</h2>
-            </div>
-            <span class="company-badge"><i class="bi bi-clock-history me-2"></i>Live snapshot</span>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="eyebrow">Procurement Intelligence</span>
+            <h2 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Operational Reports</h2>
         </div>
+        <span class="status-badge status-published"><i class="bi bi-clock-history me-1"></i>Live Snapshot</span>
     </div>
 
-    <div class="row mb-4 report-kpi-grid">
-        <div class="col-md-3">
-            <div class="report-kpi mini-blue">
-                <div class="report-kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
-                <div>
-                    <small>Open Tenders</small>
-                    <strong>{{ open_tenders }}</strong>
-                </div>
+    <div class="report-kpi-grid mb-4">
+        <div class="report-kpi mini-blue">
+            <div class="report-kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div>
+                <small>Open Tenders</small>
+                <strong>{{ open_tenders }}</strong>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="report-kpi mini-gold">
-                <div class="report-kpi-icon"><i class="bi bi-alarm"></i></div>
-                <div>
-                    <small>Closing Soon</small>
-                    <strong>{{ closing_soon }}</strong>
-                </div>
+        <div class="report-kpi mini-gold">
+            <div class="report-kpi-icon"><i class="bi bi-alarm"></i></div>
+            <div>
+                <small>Closing Soon</small>
+                <strong>{{ closing_soon }}</strong>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="report-kpi mini-green">
-                <div class="report-kpi-icon"><i class="bi bi-inboxes"></i></div>
-                <div>
-                    <small>Total Submissions</small>
-                    <strong>{{ total_submissions }}</strong>
-                </div>
+        <div class="report-kpi mini-green">
+            <div class="report-kpi-icon"><i class="bi bi-inboxes"></i></div>
+            <div>
+                <small>Total Submissions</small>
+                <strong>{{ total_submissions }}</strong>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="report-kpi mini-slate">
-                <div class="report-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                <div>
-                    <small>Active Complaints</small>
-                    <strong>{{ active_complaints }}</strong>
-                </div>
+        <div class="report-kpi mini-slate">
+            <div class="report-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <small>Active Complaints</small>
+                <strong>{{ active_complaints }}</strong>
             </div>
         </div>
     </div>
 
     <div class="row report-panels">
-        <div class="col-md-6">
-            <div class="card report-panel">
-                <div class="card-header"><h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Procurements by Category</h5></div>
+        <div class="col-md-6 mb-4">
+            <div class="card report-panel h-100">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Procurements by Category</h5></div>
                 <div class="card-body">
                     {% if by_category %}
-                    <table class="table report-table">
-                        <thead><tr><th>Category</th><th>Count</th><th>Value (BWP)</th></tr></thead>
-                        <tbody>
-                            {% for category, count, value in by_category %}
-                            <tr>
-                                <td><span class="report-label">{{ category.title() }}</span></td>
-                                <td>{{ count }}</td>
-                                <td>{{ '{:,.2f}'.format(value) }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table report-table align-middle">
+                            <thead><tr><th>Category</th><th>Count</th><th>Value (BWP)</th></tr></thead>
+                            <tbody>
+                                {% for category, count, value in by_category %}
+                                <tr>
+                                    <td><span class="badge badge-info">{{ category.title() }}</span></td>
+                                    <td class="fw-bold">{{ count }}</td>
+                                    <td>BWP {{ '{:,.2f}'.format(value) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <p class="text-muted mb-0">No procurements recorded yet.</p>
+                    <p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card report-panel">
-                <div class="card-header"><h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Procurements by Method</h5></div>
+        <div class="col-md-6 mb-4">
+            <div class="card report-panel h-100">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Procurements by Method</h5></div>
                 <div class="card-body">
                     {% if by_method %}
-                    <table class="table report-table">
-                        <thead><tr><th>Method</th><th>Count</th><th>%</th></tr></thead>
-                        <tbody>
-                            {% for method, count, pct in by_method %}
-                            <tr>
-                                <td><span class="report-label">{{ method.replace('_',' ').title() }}</span></td>
-                                <td>{{ count }}</td>
-                                <td>
-                                    <div class="progress-pill">
-                                        <span>{{ pct }}%</span>
-                                        <div class="progress-track"><div class="progress-fill" style="width: {{ pct }}%;"></div></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table report-table align-middle">
+                            <thead><tr><th>Method</th><th>Count</th><th>Distribution</th></tr></thead>
+                            <tbody>
+                                {% for method, count, pct in by_method %}
+                                <tr>
+                                    <td><span class="badge badge-secondary">{{ method.replace('_',' ').title() }}</span></td>
+                                    <td class="fw-bold">{{ count }}</td>
+                                    <td>
+                                        <div class="progress-pill">
+                                            <span>{{ pct }}%</span>
+                                            <div class="progress-track"><div class="progress-fill" style="width: {{ pct }}%;"></div></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <p class="text-muted mb-0">No procurements recorded yet.</p>
+                    <p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card report-panel mt-4">
-        <div class="card-header"><h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Compliance Snapshot</h5></div>
+    <div class="card report-panel mb-4">
+        <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-shield-check me-2 text-primary"></i>Compliance & Pipeline Snapshot</h5></div>
         <div class="card-body">
-            <div class="row">
+            <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <div class="metric-block">
                         <div>
-                            <span class="metric-label">Tenders past closing, still open</span>
+                            <span class="metric-label">Tenders past closing date (still open)</span>
                             <strong>{{ overdue_closing }}</strong>
                         </div>
                         {% if overdue_closing == 0 %}
-                            <span class="badge badge-success">On track</span>
+                            <span class="badge badge-success">On Track</span>
                         {% else %}
-                            <span class="badge badge-danger">Attention</span>
+                            <span class="badge badge-danger">Attention Required</span>
                         {% endif %}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="metric-block">
                         <div>
-                            <span class="metric-label">Cancelled procurements</span>
+                            <span class="metric-label">Cancelled Procurements</span>
                             <strong>{{ cancelled_count }}</strong>
                         </div>
-                        <span class="badge badge-secondary">Info</span>
+                        <span class="badge badge-secondary">Archive</span>
                     </div>
                 </div>
             </div>
 
-            <table class="table table-hover report-table mt-3">
-                <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr>
-                        <td>Submission deadlines approaching</td>
-                        <td>{{ closing_soon }}</td>
-                        <td>{% if closing_soon == 0 %}<span class="badge badge-success">Stable</span>{% else %}<span class="badge badge-warning">Watch</span>{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <td>Open procurement pipeline</td>
-                        <td>{{ open_tenders }}</td>
-                        <td><span class="badge badge-primary">Active</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover report-table align-middle">
+                    <thead><tr><th>Operational Metric</th><th>Current Count</th><th>Status Indicator</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>Submission deadlines approaching (within 7 days)</td>
+                            <td class="fw-bold">{{ closing_soon }}</td>
+                            <td>{% if closing_soon == 0 %}<span class="badge badge-success">Stable</span>{% else %}<span class="badge badge-warning">Watch</span>{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <td>Open procurement active pipeline</td>
+                            <td class="fw-bold">{{ open_tenders }}</td>
+                            <td><span class="badge badge-primary">Active</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
