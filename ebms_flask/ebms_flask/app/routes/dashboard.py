@@ -9,8 +9,9 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 
 @dashboard_bp.route('/')
-@login_required
 def index():
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
     if current_user.has_role('bidder'):
         return redirect(url_for('bidders.portal'))
     return redirect(url_for('dashboard.dashboard'))
