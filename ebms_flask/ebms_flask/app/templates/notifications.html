@@ -15,6 +15,45 @@
     {% endif %}
 </div>
 
+<div class="card mb-4">
+    <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-envelope-plus me-2 text-primary"></i>Send Message</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('notifications.send_message') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Send To</label>
+                    <select name="target_mode" class="form-select" id="target_mode">
+                        <option value="user">Specific user</option>
+                        <option value="all">Broadcast to all users</option>
+                    </select>
+                </div>
+                <div class="col-md-4" id="recipient-select-wrap">
+                    <label class="form-label fw-bold">Recipient</label>
+                    <select name="recipient_id" class="form-select">
+                        <option value="">Select user...</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.full_name() }} ({{ user.role.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Subject</label>
+                    <input type="text" name="title" class="form-control" placeholder="Message subject" value="Direct message">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Message</label>
+                    <textarea name="body" class="form-control" rows="4" placeholder="Type your message here..." required></textarea>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-send me-1"></i>Send
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-inbox me-2 text-primary"></i>Notification Inbox</h5></div>
     <div class="card-body p-0">
@@ -51,6 +90,20 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+const targetMode = document.getElementById('target_mode');
+const recipientWrap = document.getElementById('recipient-select-wrap');
+function toggleTargetMode() {
+    if (targetMode && recipientWrap) {
+        recipientWrap.style.display = targetMode.value === 'user' ? 'block' : 'none';
+    }
+}
+if (targetMode) {
+    targetMode.addEventListener('change', toggleTargetMode);
+    toggleTargetMode();
+}
+</script>
 
 <style>
 .notifications-list {
