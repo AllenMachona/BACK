@@ -4,100 +4,132 @@
 {% set active_nav = 'bidders' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-box-seam me-2"></i>Bidder Workspace</h2>
-    <span class="badge badge-primary">{{ procurement.tender_number }}</span>
+    <div>
+        <span class="eyebrow">Secure Bid Submission</span>
+        <h2 class="mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Bidder Workspace</h2>
+    </div>
+    <span class="status-badge status-{{ procurement.status }} fs-6">{{ procurement.tender_number }}</span>
 </div>
 
-<div class="alert alert-info">
-    <i class="bi bi-info-circle me-2"></i>
-    <strong>Secure Workspace:</strong> Your submission is encrypted at rest and isolated from other bidders. No one — including
-    procurement staff — can view its content until the matching envelope is formally opened.
+<div class="alert alert-info mb-4">
+    <i class="bi bi-shield-lock me-2 fs-5"></i>
+    <div>
+        <strong>Secure Encrypted Workspace:</strong> Your submission is encrypted at rest using Fernet cryptography and isolated from other bidders. No content is visible until the matching envelope is formally opened under committee quorum.
+    </div>
 </div>
 
 <div class="row">
     <div class="col-md-8">
+
         <div class="card mb-4">
-            <div class="card-header bg-white"><h5 class="mb-0">Tender Documents &amp; Addenda</h5></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Documents &amp; Addenda</h5>
+                <span class="badge badge-secondary">{{ documents|length if documents else 0 }} Documents</span>
+            </div>
             <div class="card-body">
                 {% if documents %}
-                <div class="list-group">
-                    {% for d in documents %}
-                    <div class="list-group-item d-flex justify-content-between">
-                        <span><i class="bi bi-file-earmark-text me-2 text-danger"></i>{{ d.content[:80] }}</span>
-                        <span class="text-muted small">{{ d.created_at.strftime('%Y-%m-%d') }}</span>
-                    </div>
-                    {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead><tr><th>Document Content</th><th>Published</th></tr></thead>
+                        <tbody>
+                            {% for d in documents %}
+                            <tr>
+                                <td><i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ d.content[:100] }}</td>
+                                <td class="text-muted"><i class="bi bi-clock me-1"></i>{{ d.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">No addenda published yet.</p>
+                <p class="text-muted mb-0 py-2 text-center">No addenda published yet.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="card mb-4">
-            <div class="card-header bg-white"><h5 class="mb-0">Submit Your Bid</h5></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-cloud-upload me-2 text-primary"></i>Submit Your Encrypted Bid</h5>
+                {% if procurement.status == 'submission_open' %}
+                <span class="status-badge status-published"><i class="bi bi-circle-fill me-1"></i>Open</span>
+                {% else %}
+                <span class="status-badge status-closed">Closed</span>
+                {% endif %}
+            </div>
             <div class="card-body">
                 {% if procurement.status == 'submission_open' %}
-                <p class="text-muted">Upload your bid submission securely. It will be encrypted immediately on upload.</p>
+                <p class="text-muted mb-3">Upload your bid documents. Files are encrypted at the moment of upload using PPRA-approved Fernet keys — no plaintext is ever stored.</p>
 
                 {% if procurement.envelope_type == 'dual' %}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning mb-3">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Dual Envelope:</strong> You must submit both Technical and Financial envelopes separately.
+                    <strong>Dual Envelope Requirement:</strong> You must submit both Technical and Financial envelopes in separate files.
                 </div>
                 {% endif %}
 
                 <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="submit_bid">
                     {% if procurement.envelope_type == 'dual' %}
-                    <div class="row mb-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Technical Envelope</label>
-                            <input type="file" name="technical_file" class="form-control">
+                            <label class="form-label fw-bold">Technical Envelope (PDF/DOCX)</label>
+                            <input type="file" name="technical_file" class="form-control" accept=".pdf,.doc,.docx">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Financial Envelope</label>
-                            <input type="file" name="financial_file" class="form-control">
+                            <label class="form-label fw-bold">Financial Envelope (PDF/XLSX)</label>
+                            <input type="file" name="financial_file" class="form-control" accept=".pdf,.xls,.xlsx">
                         </div>
                     </div>
                     {% else %}
                     <div class="mb-3">
-                        <label class="form-label">Bid Document</label>
+                        <label class="form-label fw-bold">Bid Document (Single Envelope)</label>
                         <input type="file" name="single_file" class="form-control">
                     </div>
                     {% endif %}
 
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" name="declare" id="declare" required>
-                        <label for="declare">I declare that all information provided is true and accurate.</label>
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="declare" id="declare" required>
+                            <label class="form-check-label fw-bold text-dark" for="declare">
+                                I declare under penalty of disqualification that all information provided in this submission is true, accurate, and compliant with the PPRA Act.
+                            </label>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success"><i class="bi bi-upload me-1"></i>Submit Bid</button>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-upload me-1"></i>Encrypt &amp; Submit Bid
+                    </button>
                 </form>
                 {% else %}
-                <p class="text-muted mb-0">Submissions are not currently open for this procurement (status: {{ procurement.status_label() }}).</p>
+                <div class="text-center py-4">
+                    <i class="bi bi-lock text-muted fs-1 mb-2 d-block"></i>
+                    <p class="text-muted mb-0">Submissions are not currently open for this tender. Current status: <strong>{{ procurement.status_label() }}</strong></p>
+                </div>
                 {% endif %}
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header bg-white"><h5 class="mb-0">Clarifications &amp; Questions</h5></div>
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-chat-dots me-2 text-primary"></i>Clarifications &amp; Questions</h5></div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" class="mb-3">
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" class="mb-4">
                     <input type="hidden" name="action" value="ask_question">
-                    <label class="form-label">Ask a Question</label>
-                    <textarea name="question" class="form-control mb-2" rows="2" placeholder="Your question will be published anonymously after approval..." required></textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit Question</button>
+                    <label class="form-label fw-bold">Ask a Clarification Question</label>
+                    <textarea name="question" class="form-control mb-2" rows="3" placeholder="Your question will be published anonymously after PPRA review and approval..." required></textarea>
+                    <button type="submit" class="btn btn-primary btn-sm px-3"><i class="bi bi-send me-1"></i>Submit Question</button>
                 </form>
 
-                <hr>
-                <h6>Published Clarifications</h6>
+                <hr class="my-3">
+
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-megaphone me-1 text-primary"></i>Official Published Clarifications</h6>
                 {% if clarifications %}
                     {% for c in clarifications %}
-                    <div class="alert alert-light border"><p class="mb-0">{{ c.content }}</p></div>
+                    <div class="p-3 border rounded bg-light mb-2">
+                        <p class="mb-0 text-dark"><i class="bi bi-chat-square-text me-2 text-primary"></i>{{ c.content }}</p>
+                    </div>
                     {% endfor %}
                 {% else %}
-                <p class="text-muted mb-0">No clarifications published yet.</p>
+                <p class="text-muted mb-0 text-center py-2">No clarifications have been published yet.</p>
                 {% endif %}
             </div>
         </div>
@@ -105,40 +137,73 @@
 
     <div class="col-md-4">
         <div class="card mb-3">
-            <div class="card-header bg-white"><h6 class="mb-0">Workspace Status</h6></div>
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>Workspace Status</h5></div>
             <div class="card-body">
-                <p><strong>Submission:</strong>
-                    {% if procurement.status == 'submission_open' %}<span class="text-success">Open</span>
-                    {% else %}<span class="text-muted">{{ procurement.status_label() }}</span>{% endif %}
-                </p>
-                <p><strong>Your submissions so far:</strong> {{ my_submissions|length }}</p>
-                {% if procurement.submission_deadline %}
-                <p><strong>Deadline:</strong> {{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') }}</p>
-                {% endif %}
+                <div class="table-responsive">
+                    <table class="table align-middle small">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Submission Window</td>
+                                <td class="text-end">
+                                    {% if procurement.status == 'submission_open' %}
+                                    <span class="badge badge-success">Open</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">{{ procurement.status_label() }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Your Submissions</td>
+                                <td class="text-end fw-bold text-dark">{{ my_submissions|length }}</td>
+                            </tr>
+                            {% if procurement.submission_deadline %}
+                            <tr>
+                                <td class="text-muted">Closing Deadline</td>
+                                <td class="text-end fw-bold text-dark">{{ procurement.submission_deadline.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div class="card mb-3">
-            <div class="card-header bg-white"><h6 class="mb-0">Tender Summary</h6></div>
-            <div class="card-body small">
-                <p class="mb-1"><strong>Title:</strong> {{ procurement.title }}</p>
-                <p class="mb-1"><strong>Value:</strong> BWP {{ '{:,.2f}'.format(procurement.estimated_value) }}</p>
-                <p class="mb-1"><strong>Envelope:</strong> {{ procurement.envelope_type.title() }}</p>
-                <p class="mb-0"><strong>Method:</strong> {{ procurement.method.replace('_',' ').title() }}</p>
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-file-earmark-check me-2 text-primary"></i>Tender Summary</h5></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle small">
+                        <tbody>
+                            <tr><td class="text-muted">Title</td><td class="fw-bold text-dark text-end">{{ procurement.title }}</td></tr>
+                            <tr><td class="text-muted">Budget</td><td class="fw-bold text-primary text-end">BWP {{ '{:,.2f}'.format(procurement.estimated_value) }}</td></tr>
+                            <tr><td class="text-muted">Envelope</td><td class="text-end"><span class="badge badge-secondary">{{ procurement.envelope_type.title() }}</span></td></tr>
+                            <tr><td class="text-muted">Method</td><td class="text-end">{{ procurement.method.replace('_',' ').title() }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header bg-white"><h6 class="mb-0">Your Registration</h6></div>
-            <div class="card-body small">
-                <p class="mb-1"><strong>Company:</strong> {{ current_user.bidder.company_name }}</p>
-                <p class="mb-1"><strong>PPRA Reg:</strong> {{ current_user.bidder.ppra_registration_number or '—' }}</p>
-                <p class="mb-1"><strong>Grade:</strong> {{ current_user.bidder.ppra_grade or '—' }}</p>
-                <p class="mb-0"><strong>Status:</strong>
-                    <span class="{{ 'text-success' if current_user.bidder.registration_status() == 'active' else 'text-danger' }}">
-                        {{ current_user.bidder.registration_status().title() }}
-                    </span>
-                </p>
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-building me-2 text-primary"></i>Your Company Registration</h5></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle small">
+                        <tbody>
+                            <tr><td class="text-muted">Company</td><td class="fw-bold text-dark text-end">{{ current_user.bidder.company_name }}</td></tr>
+                            <tr><td class="text-muted">PPRA Reg. No.</td><td class="text-end"><code>{{ current_user.bidder.ppra_registration_number or '—' }}</code></td></tr>
+                            <tr><td class="text-muted">PPRA Grade</td><td class="fw-bold text-end">{{ current_user.bidder.ppra_grade or '—' }}</td></tr>
+                            <tr>
+                                <td class="text-muted">PPRA Status</td>
+                                <td class="text-end">
+                                    <span class="badge {{ 'badge-success' if current_user.bidder.registration_status() == 'active' else 'badge-danger' }}">
+                                        {{ current_user.bidder.registration_status().title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

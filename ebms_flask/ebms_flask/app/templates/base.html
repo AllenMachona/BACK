@@ -7,52 +7,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
-<body {% if current_user.is_authenticated %}style="{{ current_user.theme_style() }}"{% else %}class="guest-auth" style="background: #f5f6fa;"{% endif %}>
+<body {% if current_user.is_authenticated %}style="{{ current_user.theme_style() }}"{% else %}class="guest-auth"{% endif %}>
     {% if current_user.is_authenticated %}
-    <nav class="navbar">
-        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}"><i class="bi bi-shield-lock me-2"></i>EBMS | Botswana PPRA</a>
+    <header class="navbar">
+        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-shield-lock-fill"></i>EBMS | Botswana PPRA
+        </a>
         <div class="navbar-user">
-            <span><i class="bi bi-person-circle me-1"></i>{{ current_user.full_name() }}
-                <small style="opacity:0.75;">({{ current_user.role.name }})</small></span>
+            <div class="navbar-user-info">
+                <i class="bi bi-person-circle"></i>
+                <span>{{ current_user.full_name() }} <small>({{ current_user.role.name }})</small></span>
+            </div>
             <a href="{{ url_for('auth.user_settings') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-gear me-1"></i>My Settings</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
         </div>
-    </nav>
+    </header>
 
-    <div class="container-fluid">
-        <nav class="col-md-2 sidebar">
+    <div class="app-container">
+        <nav class="sidebar">
             <div class="sidebar-profile">
-                <div class="avatar-badge"><i class="bi bi-person-circle"></i></div>
+                <div class="avatar-badge"><i class="bi bi-person-fill"></i></div>
                 <div>
-                    <strong>{{ current_user.full_name() }}</strong><br>
+                    <strong>{{ current_user.full_name() }}</strong>
                     <small>{{ current_user.role.name }}</small>
                 </div>
             </div>
             {% if not current_user.has_role('bidder') %}
-            <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-            <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder me-2"></i>Procurements</a>
+            <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+            <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder2-open"></i>Procurements</a>
             {% if current_user.role.can_evaluate %}
-            <a class="nav-link {{ 'active' if active_nav == 'evaluations' else '' }}" href="{{ url_for('evaluations.index') }}"><i class="bi bi-clipboard-check me-2"></i>Evaluations</a>
+            <a class="nav-link {{ 'active' if active_nav == 'evaluations' else '' }}" href="{{ url_for('evaluations.index') }}"><i class="bi bi-clipboard-check"></i>Evaluations</a>
             {% endif %}
             {% endif %}
             {% if current_user.has_role('bidder') %}
-            <a class="nav-link {{ 'active' if active_nav == 'bidders' else '' }}" href="{{ url_for('bidders.portal') }}"><i class="bi bi-shop me-2"></i>Bidder Portal</a>
+            <a class="nav-link {{ 'active' if active_nav == 'bidders' else '' }}" href="{{ url_for('bidders.portal') }}"><i class="bi bi-shop"></i>Bidder Portal</a>
             {% endif %}
             {% if current_user.role.can_view_all_records %}
-            <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="{{ url_for('reports.operational') }}"><i class="bi bi-graph-up me-2"></i>Reports</a>
+            <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="{{ url_for('reports.operational') }}"><i class="bi bi-graph-up-arrow"></i>Reports</a>
             {% endif %}
-            <a class="nav-link {{ 'active' if active_nav == 'account_settings' else '' }}" href="{{ url_for('auth.user_settings') }}"><i class="bi bi-sliders me-2"></i>My Settings</a>
+            <a class="nav-link {{ 'active' if active_nav == 'account_settings' else '' }}" href="{{ url_for('auth.user_settings') }}"><i class="bi bi-sliders"></i>My Settings</a>
             {% if current_user.role.can_admin_system %}
-            <a class="nav-link {{ 'active' if active_nav == 'admin' else '' }}" href="{{ url_for('admin.users') }}"><i class="bi bi-people me-2"></i>Users</a>
-            <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="{{ url_for('admin.settings') }}"><i class="bi bi-gear me-2"></i>System Settings</a>
+            <a class="nav-link {{ 'active' if active_nav == 'admin' else '' }}" href="{{ url_for('admin.users') }}"><i class="bi bi-people"></i>Users</a>
+            <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="{{ url_for('admin.settings') }}"><i class="bi bi-gear"></i>System Settings</a>
             {% endif %}
         </nav>
-        <main class="col-md-10 main-content">
+        <main class="main-content">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">
-                            {{ message }}
+                            <i class="bi bi-info-circle me-1"></i> {{ message }}
                         </div>
                     {% endfor %}
                 {% endif %}

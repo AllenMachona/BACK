@@ -4,7 +4,10 @@
 {% set active_nav = 'procurements' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Procurements</h2>
+    <div>
+        <span class="eyebrow">Tender Management</span>
+        <h2 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Procurements</h2>
+    </div>
     {% if current_user.role.can_create_procurement %}
     <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>Create Procurement
@@ -13,39 +16,53 @@
 </div>
 
 <div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-task me-2 text-muted"></i>All Registered Tenders</h5>
+        <span class="badge badge-primary">{{ procurements|length }} Tenders</span>
+    </div>
     <div class="card-body">
         {% if procurements %}
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Tender Number</th><th>Title</th><th>Category</th><th>Method</th>
-                    <th>Status</th><th>Deadline</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in procurements %}
-                <tr>
-                    <td class="fw-bold">{{ p.tender_number }}</td>
-                    <td>{{ p.title }}</td>
-                    <td>{{ p.category.title() }}</td>
-                    <td>{{ p.method }}</td>
-                    <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
-                    <td>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else '—' }}</td>
-                    <td>
-                        <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="procurement-access-btn">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Access
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Tender Number</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Deadline</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in procurements %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ p.tender_number }}</td>
+                        <td>{{ p.title }}</td>
+                        <td><span class="badge badge-secondary">{{ p.category.title() }}</span></td>
+                        <td>{{ p.method.replace('_',' ').title() }}</td>
+                        <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
+                        <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else '—' }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Access
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <p class="text-muted mb-0">No procurements exist yet.
-            {% if current_user.role.can_create_procurement %}
-            <a href="{{ url_for('procurements.create') }}">Create the first one.</a>
-            {% endif %}
-        </p>
+        <div class="text-center py-4">
+            <i class="bi bi-inboxes text-muted fs-1 mb-2"></i>
+            <p class="text-muted mb-0">No procurements exist yet.
+                {% if current_user.role.can_create_procurement %}
+                <a href="{{ url_for('procurements.create') }}" class="fw-bold">Create the first one.</a>
+                {% endif %}
+            </p>
+        </div>
         {% endif %}
     </div>
 </div>

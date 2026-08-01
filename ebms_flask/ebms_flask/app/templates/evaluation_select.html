@@ -3,27 +3,54 @@
 {% block content %}
 {% set active_nav = 'evaluations' %}
 
-<h2 class="mb-4"><i class="bi bi-clipboard-check me-2"></i>Evaluations</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="eyebrow">Evaluation Committee</span>
+        <h2 class="mb-0"><i class="bi bi-clipboard-check me-2 text-primary"></i>Evaluations</h2>
+    </div>
+    <span class="status-badge status-published">
+        <i class="bi bi-circle-fill me-1"></i>{{ procurements|length if procurements else 0 }} Awaiting Action
+    </span>
+</div>
 
 <div class="card">
-    <div class="card-header bg-white"><h5 class="mb-0">Procurements Awaiting Evaluation Action</h5></div>
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-task me-2 text-primary"></i>Procurements Awaiting Evaluation Action</h5>
+    </div>
     <div class="card-body">
         {% if procurements %}
-        <table class="table table-hover">
-            <thead class="table-light"><tr><th>Tender Number</th><th>Title</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-                {% for p in procurements %}
-                <tr>
-                    <td class="fw-bold">{{ p.tender_number }}</td>
-                    <td>{{ p.title }}</td>
-                    <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
-                    <td><a href="{{ url_for('evaluations.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary">Open</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th><i class="bi bi-hash me-1"></i>Tender Number</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in procurements %}
+                    <tr>
+                        <td><code class="fw-bold">{{ p.tender_number }}</code></td>
+                        <td class="fw-semibold text-dark">{{ p.title }}</td>
+                        <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
+                        <td class="text-end">
+                            <a href="{{ url_for('evaluations.detail', procurement_id=p.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Open Evaluation
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <p class="text-muted mb-0">No procurements are currently in an evaluable stage.</p>
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-x text-muted fs-1 mb-3 d-block"></i>
+            <h5 class="text-muted">No Evaluations Pending</h5>
+            <p class="text-muted mb-0">No procurements are currently at an evaluable stage.</p>
+        </div>
         {% endif %}
     </div>
 </div>

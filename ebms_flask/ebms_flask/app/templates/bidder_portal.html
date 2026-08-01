@@ -4,110 +4,112 @@
 {% set active_nav = 'bidders' %}
 
 <div class="portal-shell">
-    <div class="portal-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <span class="eyebrow-text">Bidder workspace</span>
-            <h2 class="mb-0"><i class="bi bi-shop me-2"></i>Bidder Portal</h2>
+            <span class="eyebrow">Bidder Workspace</span>
+            <h2 class="mb-0"><i class="bi bi-shop me-2 text-primary"></i>Bidder Portal</h2>
         </div>
-        <span class="company-badge">{{ current_user.bidder.company_name }}</span>
+        <span class="status-badge status-published"><i class="bi bi-building me-1"></i>{{ current_user.bidder.company_name }}</span>
     </div>
 
-    <div class="alert alert-info modern-alert">
-        <i class="bi bi-info-circle me-2"></i>
-        <strong>Welcome:</strong> You are viewing tenders open for bidding. Click "Access Workspace" to submit your bid securely and monitor your active submissions.
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2 fs-5"></i>
+        <div>
+            <strong>Welcome to PPRA eProcurement Portal:</strong> Browse open tenders below, access your submission workspace, and manage encrypted bid documents.
+        </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="mini-stat mini-blue">
-                <i class="bi bi-file-earmark-text"></i>
-                <div>
-                    <small>Open Tenders</small>
-                    <strong>{{ available|length }}</strong>
-                </div>
+    <div class="stat-grid mb-4">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card__icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-card__body">
+                <span class="stat-label">Available Tenders</span>
+                <h2>{{ available|length }}</h2>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="mini-stat mini-gold">
-                <i class="bi bi-upload"></i>
-                <div>
-                    <small>Submitted</small>
-                    <strong>{{ my_submissions|length }}</strong>
-                </div>
+        <div class="stat-card stat-card-warning">
+            <div class="stat-card__icon"><i class="bi bi-upload"></i></div>
+            <div class="stat-card__body">
+                <span class="stat-label">My Submissions</span>
+                <h2>{{ my_submissions|length }}</h2>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="mini-stat mini-green">
-                <i class="bi bi-check-circle"></i>
-                <div>
-                    <small>Active Status</small>
-                    <strong>{{ current_user.bidder.registration_status().title() }}</strong>
-                </div>
+        <div class="stat-card stat-card-success">
+            <div class="stat-card__icon"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-card__body">
+                <span class="stat-label">PPRA Reg. Status</span>
+                <h2>{{ current_user.bidder.registration_status().title() }}</h2>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="mini-stat mini-slate">
-                <i class="bi bi-calendar3"></i>
-                <div>
-                    <small>Reg. Expiry</small>
-                    <strong>{{ current_user.bidder.registration_expiry.strftime('%Y-%m-%d') if current_user.bidder.registration_expiry else 'N/A' }}</strong>
-                </div>
+        <div class="stat-card stat-card-info">
+            <div class="stat-card__icon"><i class="bi bi-calendar3"></i></div>
+            <div class="stat-card__body">
+                <span class="stat-label">Registration Expiry</span>
+                <small class="fw-bold text-dark fs-6 d-block mt-1">{{ current_user.bidder.registration_expiry.strftime('%Y-%m-%d') if current_user.bidder.registration_expiry else 'N/A' }}</small>
             </div>
         </div>
     </div>
 
-    <div class="card advanced-card">
+    <div class="card mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Available Tenders</h5>
-            <span class="badge badge-primary">{{ available|length }} active</span>
+            <h5 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Open Tenders Available for Bidding</h5>
+            <span class="badge badge-primary">{{ available|length }} Active</span>
         </div>
         <div class="card-body">
             {% if available %}
-            <table class="table table-hover">
-                <thead class="table-light"><tr><th>Tender Number</th><th>Title</th><th>Category</th><th>Deadline</th><th>Action</th></tr></thead>
-                <tbody>
-                    {% for p in available %}
-                    <tr>
-                        <td class="fw-bold">{{ p.tender_number }}</td>
-                        <td>{{ p.title }}</td>
-                        <td>{{ p.category.title() }}</td>
-                        <td>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else 'TBA' }}</td>
-                        <td><a href="{{ url_for('bidders.workspace', procurement_id=p.id) }}" class="btn btn-sm btn-primary"><i class="bi bi-box-arrow-in-right me-1"></i>Access Workspace</a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Tender Number</th><th>Title</th><th>Category</th><th>Submission Deadline</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                        {% for p in available %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ p.tender_number }}</td>
+                            <td class="fw-bold text-dark">{{ p.title }}</td>
+                            <td><span class="badge badge-secondary">{{ p.category.title() }}</span></td>
+                            <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else 'TBA' }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('bidders.workspace', procurement_id=p.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>Access Workspace
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-            <p class="text-muted mb-0">No tenders are currently open for bidding.</p>
+            <p class="text-muted mb-0 py-3 text-center">No tenders are currently open for bidding.</p>
             {% endif %}
         </div>
     </div>
 
-    <div class="card advanced-card mt-4">
-        <div class="card-header bg-white"><h5 class="mb-0">My Submissions</h5></div>
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-receipt me-2 text-primary"></i>My Submitted Bids</h5></div>
         <div class="card-body">
             {% if my_submissions %}
-            <table class="table table-hover">
-                <thead class="table-light"><tr><th>Tender</th><th>Envelope</th><th>Submitted</th><th>Status</th><th>Receipt</th></tr></thead>
-                <tbody>
-                    {% for s in my_submissions %}
-                    <tr>
-                        <td>{{ s.procurement.tender_number }} - {{ s.procurement.title }}</td>
-                        <td>{{ s.envelope_type.title() }}</td>
-                        <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            {% if s.status == 'submitted' %}<span class="badge badge-success">Submitted</span>
-                            {% elif s.status == 'replaced' %}<span class="badge badge-secondary">Replaced</span>
-                            {% elif s.status == 'withdrawn' %}<span class="badge badge-secondary">Withdrawn</span>
-                            {% else %}<span class="badge badge-danger">Late — Rejected</span>{% endif %}
-                        </td>
-                        <td class="small">{{ s.receipt_code }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>Tender Reference</th><th>Envelope</th><th>Submission Timestamp</th><th>Status</th><th>Receipt Code</th></tr></thead>
+                    <tbody>
+                        {% for s in my_submissions %}
+                        <tr>
+                            <td class="fw-bold text-dark">{{ s.procurement.tender_number }} - {{ s.procurement.title }}</td>
+                            <td><span class="badge badge-secondary">{{ s.envelope_type.title() }}</span></td>
+                            <td><i class="bi bi-clock me-1 text-muted"></i>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if s.status == 'submitted' %}<span class="badge badge-success">Submitted</span>
+                                {% elif s.status == 'replaced' %}<span class="badge badge-secondary">Replaced</span>
+                                {% elif s.status == 'withdrawn' %}<span class="badge badge-secondary">Withdrawn</span>
+                                {% else %}<span class="badge badge-danger">Late — Rejected</span>{% endif %}
+                            </td>
+                            <td><code>{{ s.receipt_code }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-            <p class="text-muted mb-0">You have not submitted any bids yet.</p>
+            <p class="text-muted mb-0 py-3 text-center">You have not submitted any bids yet.</p>
             {% endif %}
         </div>
     </div>

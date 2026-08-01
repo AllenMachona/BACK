@@ -1,28 +1,80 @@
 {% extends "base.html" %}
 {% block title %}Notifications - EBMS Botswana{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-bell me-2"></i>Notifications</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="eyebrow">System Alerts</span>
+        <h2 class="mb-0"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h2>
+    </div>
+    {% set unread = notifications | selectattr('is_read', 'equalto', false) | list %}
+    {% if unread %}
+    <span class="badge badge-danger fs-6">{{ unread|length }} Unread</span>
+    {% else %}
+    <span class="badge badge-success fs-6"><i class="bi bi-check-all me-1"></i>All Caught Up</span>
+    {% endif %}
+</div>
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-inbox me-2 text-primary"></i>Notification Inbox</h5></div>
+    <div class="card-body p-0">
         {% if notifications %}
-        {% for n in notifications %}
-        <div class="alert {{ 'alert-info' if not n.is_read else '' }}" style="{{ '' if not n.is_read else 'background:#f8f9fa;border:1px solid #eee;' }}">
-            <div class="d-flex justify-content-between">
-                <strong>{{ n.title }}</strong>
-                <span class="text-muted small">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        <div class="notifications-list">
+            {% for n in notifications %}
+            <div class="notification-item {{ 'unread' if not n.is_read else 'read' }}">
+                <div class="notification-dot {{ 'dot-active' if not n.is_read else 'dot-read' }}"></div>
+                <div class="notification-content flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong class="text-dark">{{ n.title }}</strong>
+                        <span class="text-muted small ms-3 text-nowrap">
+                            <i class="bi bi-clock me-1"></i>{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                    </div>
+                    <p class="mb-0 text-secondary">{{ n.body }}</p>
+                    {% if not n.is_read %}
+                    <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}" class="mt-2">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-check2 me-1"></i>Mark as Read
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
-            <p class="mb-1">{{ n.body }}</p>
-            {% if not n.is_read %}
-            <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Mark as read</button>
-            </form>
-            {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
         {% else %}
-        <p class="text-muted mb-0">No notifications yet.</p>
+        <div class="text-center py-5">
+            <i class="bi bi-bell-slash text-muted fs-1 mb-3 d-block"></i>
+            <h5 class="text-muted">No Notifications Yet</h5>
+            <p class="text-muted mb-0">You'll be alerted here for all procurement activity on your account.</p>
+        </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+}
+.notification-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease;
+}
+.notification-item:last-child { border-bottom: none; }
+.notification-item.unread { background: rgba(var(--primary-rgb, 10, 36, 99), 0.03); }
+.notification-item:hover { background: var(--hover-bg, #f5f7fa); }
+.notification-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+.dot-active { background: var(--primary); box-shadow: 0 0 0 3px rgba(10,36,99,.15); }
+.dot-read { background: #dee2e6; }
+</style>
 {% endblock %}
