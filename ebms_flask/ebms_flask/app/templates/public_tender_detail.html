@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ procurement.title }}{% endblock %}
+{% block guest_content %}
+<div class="public-detail-shell">
+  <div class="detail-card">
+    <div class="detail-header">
+      <div>
+        <div class="eyebrow">Tender Detail</div>
+        <h1>{{ procurement.title }}</h1>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Become a Tenderer</a>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item"><label>Tender Number</label><strong>{{ procurement.tender_number }}</strong></div>
+      <div class="detail-item"><label>Category</label><strong>{{ procurement.category.title() }}</strong></div>
+      <div class="detail-item"><label>Method</label><strong>{{ procurement.method.replace('_', ' ').title() }}</strong></div>
+      <div class="detail-item"><label>Procurement Entity</label><strong>{{ procurement.procurement_entity or 'N/A' }}</strong></div>
+      <div class="detail-item"><label>Submission Deadline</label><strong>{{ procurement.submission_deadline.strftime('%d %b %Y %H:%M') if procurement.submission_deadline else 'TBA' }}</strong></div>
+      <div class="detail-item"><label>Status</label><strong>{{ procurement.status.replace('_', ' ').title() }}</strong></div>
+      <div class="detail-item full"><label>Description</label><p>{{ procurement.description or 'No description provided.' }}</p></div>
+    </div>
+
+    <div class="detail-actions">
+      <a class="btn btn-secondary" href="{{ url_for('dashboard.public_tenders') }}">Back to tenders</a>
+      <a class="btn btn-success" href="{{ url_for('auth.register') }}">Register to Bid</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

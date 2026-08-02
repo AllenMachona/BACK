@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Procurement Portal{% endblock %}
+{% block guest_content %}
+<div class="public-landing">
+  <div class="welcome-shell">
+    <div class="welcome-left">
+      <div class="welcome-pattern"></div>
+    </div>
+
+    <div class="welcome-right">
+      <div class="welcome-topbar">
+        <div class="welcome-actions">
+          <a href="{{ url_for('auth.login') }}" class="ghost-btn">Sign In</a>
+          <a href="{{ url_for('auth.register') }}" class="primary-btn">Register as Bidder</a>
+        </div>
+      </div>
+
+      <div class="welcome-filters">
+        <div class="filter-block search-block">
+          <input type="text" value="" placeholder="Search tender by keyword" aria-label="Search tender by keyword" />
+        </div>
+
+        <div class="filter-block select-block">
+          <select aria-label="Tender category">
+            <option>All Tender Categories</option>
+            <option>Goods</option>
+            <option>Works</option>
+            <option>Services</option>
+            <option>Consultancy</option>
+            <option>Non Consultancy</option>
+          </select>
+        </div>
+
+        <button type="button" class="search-btn">Search</button>
+      </div>
+
+      <div class="welcome-tabs">
+        <span class="tab-pill active">All</span>
+        <span class="tab-pill">Goods</span>
+        <span class="tab-pill">Works</span>
+        <span class="tab-pill">Consultancy</span>
+        <span class="tab-pill">Non Consultancy</span>
+      </div>
+
+      <div class="tender-list compact-list">
+        {% for tender in tenders %}
+          <article class="proc-card">
+            <div class="proc-main">
+              <div class="proc-header">
+                <h3>{{ tender.title }}</h3>
+                {% if tender.status == 'submission_open' %}
+                  <span class="status-pill green">Submission Open</span>
+                {% else %}
+                  <span class="status-pill blue">Closed</span>
+                {% endif %}
+              </div>
+
+              <div class="proc-number">{{ tender.tender_number }}</div>
+
+              <div class="proc-info-row">
+                <span><strong>Category:</strong> {{ tender.category.title() }}</span>
+              </div>
+
+              <div class="proc-info-row">
+                <span><strong>Method:</strong> {{ tender.method.replace('_', ' ').title() }}</span>
+              </div>
+
+              <div class="proc-info-row">
+                <span><strong>Value:</strong> {{ tender.estimated_value }} BWP</span>
+              </div>
+
+              <div class="proc-info-row">
+                <span><strong>Closes:</strong> {{ tender.submission_deadline.strftime('%d %b %Y %H:%M CAT') if tender.submission_deadline else 'TBA' }}</span>
+              </div>
+            </div>
+
+            <a href="{{ url_for('dashboard.public_tender_detail', procurement_id=tender.id) }}" class="outline-link">View Details</a>
+          </article>
+        {% else %}
+          <div class="empty-state">No tenders available right now.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

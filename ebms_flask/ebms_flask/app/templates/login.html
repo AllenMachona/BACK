@@ -1,24 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Login - EBMS Botswana{% endblock %}
+{% block title %}Login - EBMS{% endblock %}
 {% block guest_content %}
-<div class="guest-shell">
-    <div class="guest-orb orb-one"></div>
-    <div class="guest-orb orb-two"></div>
-    <div class="guest-orb orb-three"></div>
-
-    <div class="auth-card auth-card-wide">
-        <div class="auth-brand-panel">
-            <div class="brand-badge"><i class="bi bi-shield-lock"></i> EBMS</div>
-            <h1>Smart procurement, secure bidding.</h1>
-            <p>Modern public sector procurement workflows that keep teams aligned, compliant, and fast.</p>
-            <div class="brand-list">
-                <span><i class="bi bi-check-circle"></i> Live bid tracking</span>
-                <span><i class="bi bi-check-circle"></i> Role-based access</span>
-                <span><i class="bi bi-check-circle"></i> Secure document handling</span>
-            </div>
+<div class="guest-shell guest-shell-compact">
+    <div class="auth-card auth-card-clean">
+        <div class="auth-panel auth-panel-left">
+            <div class="brand-mark">EP</div>
+            <h1>Public Procurement Portal</h1>
+            <p>Browse active opportunities, track tender updates, and prepare your submissions with confidence.</p>
+            <ul class="mini-feature-list">
+                <li><i class="bi bi-check-circle-fill"></i> Live procurement notices</li>
+                <li><i class="bi bi-check-circle-fill"></i> Secure bidder access</li>
+                <li><i class="bi bi-check-circle-fill"></i> Faster registration flow</li>
+            </ul>
         </div>
 
-        <div class="auth-form-panel">
+        <div class="auth-panel auth-panel-right">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
