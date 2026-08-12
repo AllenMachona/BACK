@@ -56,25 +56,19 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Department</label>
-                        <input type="text" name="department" class="form-control">
+                        <label class="form-label">Company/Organization</label>
+                        <input type="text" name="department" class="form-control" placeholder="Your company name" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Designation</label>
-                        <input type="text" name="designation" class="form-control">
+                        <label class="form-label">Job Title</label>
+                        <input type="text" name="designation" class="form-control" placeholder="e.g., Director, Manager, Officer" required>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <select class="form-select" name="role_code">
-                        <option value="user_department">User Department</option>
-                        <option value="procurement_unit">Procurement Unit</option>
-                        <option value="committee_secretary">Committee Secretary</option>
-                        <option value="committee_chair">Committee Chair</option>
-                        <option value="evaluator">Evaluator</option>
-                        <option value="bidder">Bidder</option>
-                    </select>
+                <!-- Hidden field: Bidder role is automatically assigned -->
+                <input type="hidden" name="role_code" value="bidder">
+                <div class="mb-3" style="padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; font-size: 0.875rem;">
+                    <i class="bi bi-info-circle"></i> You are registering as a <strong>Bidder</strong> to submit tenders and participate in procurements.
                 </div>
 
                 <div class="mb-3">

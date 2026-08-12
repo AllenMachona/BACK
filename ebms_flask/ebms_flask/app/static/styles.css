@@ -656,16 +656,13 @@ a:hover {
 
 .welcome-shell {
   display: grid;
-  grid-template-columns: 1.12fr 1.18fr;
+  grid-template-columns: 1fr;
   min-height: 100vh;
   width: 100%;
 }
 
 .welcome-left {
-  position: relative;
-  background: linear-gradient(180deg, #1ec85f 0%, #16b252 100%);
-  overflow: hidden;
-  min-height: 100vh;
+  display: none;
 }
 
 .welcome-pattern {
@@ -694,10 +691,13 @@ a:hover {
 
 .welcome-right {
   background: #f1f5f5;
-  padding: 24px 28px 32px 28px;
+  padding: 2rem 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1.25rem;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1200px;
 }
 
 .welcome-topbar {
@@ -717,11 +717,13 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 22px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 1rem;
+  min-height: 32px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .ghost-btn {
@@ -729,30 +731,38 @@ a:hover {
   color: #1f2b38;
   border: 1px solid rgba(31,43,56,0.2);
 }
+.ghost-btn:hover {
+  background: rgba(31,43,56,0.08);
+  border-color: rgba(31,43,56,0.35);
+}
 
 .primary-btn {
   background: #1e9ad4;
   color: #fff;
   border: 1px solid #1e9ad4;
 }
+.primary-btn:hover {
+  background: #1a8ac0;
+  border-color: #1a8ac0;
+}
 
 .welcome-filters {
   display: grid;
-  grid-template-columns: 1.7fr 1.1fr auto;
+  grid-template-columns: 2fr 1.2fr auto;
   gap: 0;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 14px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: 0.5rem;
 }
 
 .filter-block {
-  min-height: 76px;
+  min-height: 42px;
   display: flex;
   align-items: center;
-  padding: 0 18px;
-  background: rgba(255,255,255,0.62);
+  padding: 0 1rem;
+  background: rgba(255,255,255,0.7);
 }
 
 .search-block {
@@ -773,11 +783,15 @@ a:hover {
   border: none;
   background: #2cc09a;
   color: #fff;
-  min-width: 160px;
-  min-height: 76px;
-  font-weight: 700;
-  font-size: 1.08rem;
+  min-width: 120px;
+  min-height: 42px;
+  font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+.search-btn:hover {
+  background: #25a885;
 }
 
 .welcome-tabs {
@@ -888,14 +902,23 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 150px;
-  min-height: 40px;
+  min-width: 120px;
+  min-height: 32px;
   border: 1px solid #2a9ad7;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #2a9ad7;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
   background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.outline-link:hover {
+  background: rgba(42, 154, 215, 0.08);
+  border-color: #1a7fa8;
+  color: #1a7fa8;
 }
 
 .empty-state {
@@ -917,28 +940,38 @@ a:hover {
 
 .public-list-shell,
 .public-detail-shell {
-  max-width: 1220px;
-  margin: 0 auto;
-  padding: 30px 16px 50px;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 2rem 2.5rem;
+  background: #f8fafc;
 }
 
 .public-filter-form {
   display: grid;
-  grid-template-columns: 1.6fr 0.9fr auto;
-  gap: 16px;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 12px;
   align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .public-filter-form input,
 .public-filter-form select {
   width: 100%;
-  min-height: 58px;
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  border-radius: 12px;
+  min-height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
   background: #fff;
-  padding: 0 18px;
+  padding: 0 12px;
   color: #1d2a3a;
-  font-size: 1rem;
+  font-size: 0.9rem;
+}
+
+.public-filter-form button {
+  min-height: 42px;
+  padding: 0 20px;
+  font-size: 0.875rem;
+  border-radius: 8px;
 }
 
 .public-list-header h1 {
@@ -1022,11 +1055,36 @@ a:hover {
   line-height: 1.6;
 }
 
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.detail-header > div {
+  flex: 1;
+}
+
+.detail-header .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .detail-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+
+.detail-actions .btn {
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 1100px) {

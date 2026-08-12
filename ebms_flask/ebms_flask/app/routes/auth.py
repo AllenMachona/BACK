@@ -7,6 +7,7 @@ from app.models.role import Role
 from app.models.user import User
 from app.utils.audit import log_action
 from app.utils.notify import send_email
+from app.utils.security import sanitize_string, validate_email, validate_password_strength
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -65,42 +66,65 @@ def register():
         return redirect(url_for('dashboard.index'))
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        first_name = request.form.get('first_name', '').strip()
-        last_name = request.form.get('last_name', '').strip()
+        username = sanitize_string(request.form.get('username', '').strip(), max_length=80)
+        email = sanitize_string(request.form.get('email', '').strip().lower(), max_length=120)
+        first_name = sanitize_string(request.form.get('first_name', '').strip(), max_length=100)
+        last_name = sanitize_string(request.form.get('last_name', '').strip(), max_length=100)
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        role_code = request.form.get('role_code', 'user_department')
+        
+        # SECURITY: Force bidder role only - prevent users from registering as other roles
+        role_code = request.form.get('role_code', '').strip().lower()
+        if role_code != 'bidder':
+            flash('Invalid role selection. Only bidder registration is allowed.', 'danger')
+            log_action('UNAUTHORIZED_REGISTRATION_ATTEMPT', entity_type='User', 
+                      reason=f'attempted role: {role_code}')
+            return render_template('register.html')
 
-        if not all([username, email, first_name, last_name, password]):
+        # Validate all required fields
+        department = sanitize_string(request.form.get('department', '').strip(), max_length=100)
+        designation = sanitize_string(request.form.get('designation', '').strip(), max_length=100)
+        
+        if not all([username, email, first_name, last_name, password, department, designation]):
             flash('Please complete all required fields.', 'danger')
+            return render_template('register.html')
+
+        # SECURITY: Validate email format
+        if not validate_email(email):
+            flash('Please enter a valid email address.', 'danger')
             return render_template('register.html')
 
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
             return render_template('register.html')
 
-        if len(password) < 8:
-            flash('Password must be at least 8 characters long.', 'danger')
+        # SECURITY: Enforce strong password policy using utility
+        is_valid, error_msg = validate_password_strength(password)
+        if not is_valid:
+            flash(error_msg, 'danger')
             return render_template('register.html')
 
+        # Check for duplicate username/email
         if User.query.filter((User.username == username) | (User.email == email)).first():
             flash('A user with that username or email already exists.', 'danger')
+            log_action('REGISTRATION_DUPLICATE_ATTEMPT', entity_type='User', 
+                      reason=f'duplicate: {username}/{email}')
             return render_template('register.html')
 
-        role = Role.query.filter_by(code=role_code).first() or Role.query.filter_by(code='user_department').first()
+        # Get bidder role - should always exist
+        role = Role.query.filter_by(code='bidder').first()
         if not role:
-            flash('No valid user role is available. Please contact support.', 'danger')
+            flash('Bidder role not configured. Please contact support.', 'danger')
             return render_template('register.html')
 
+        # Create new bidder user with validated data
         user = User(
             username=username,
             email=email,
             first_name=first_name,
             last_name=last_name,
-            department=request.form.get('department', '').strip() or 'General',
-            designation=request.form.get('designation', '').strip() or 'New User',
+            department=department,
+            designation=designation,
             role_id=role.id,
             is_active=True,
         )
@@ -109,9 +133,9 @@ def register():
         db.session.commit()
 
         log_action('USER_REGISTERED', entity_type='User', entity_id=user.id,
-                   new_value={'username': user.username, 'role': role.code})
+                   new_value={'username': user.username, 'role': 'bidder', 'company': department})
         login_user(user)
-        flash('Account created successfully. Welcome to EBMS.', 'success')
+        flash('Account created successfully. Welcome to EBMS Botswana.', 'success')
         return redirect(url_for('dashboard.index'))
 
     return render_template('register.html')

@@ -64,18 +64,47 @@
                 <div class="notification-dot {{ 'dot-active' if not n.is_read else 'dot-read' }}"></div>
                 <div class="notification-content flex-grow-1">
                     <div class="d-flex justify-content-between align-items-start mb-1">
-                        <strong class="text-dark">{{ n.title }}</strong>
+                        <div>
+                            <strong class="text-dark">{{ n.title }}</strong>
+                            {% if n.sender %}
+                            <br><small class="text-muted">From: {{ n.sender.full_name() }} ({{ n.sender.role.name }})</small>
+                            {% endif %}
+                        </div>
                         <span class="text-muted small ms-3 text-nowrap">
                             <i class="bi bi-clock me-1"></i>{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}
                         </span>
                     </div>
-                    <p class="mb-0 text-secondary">{{ n.body }}</p>
-                    {% if not n.is_read %}
-                    <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}" class="mt-2">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-check2 me-1"></i>Mark as Read
+                    <p class="mb-2 text-secondary">{{ n.body }}</p>
+                    <div class="notification-actions mt-2">
+                        {% if not n.is_read %}
+                        <form method="POST" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}" class="d-inline-block">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-check2 me-1"></i>Mark as Read
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if n.sender and n.sender.id != current_user.id %}
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="toggleReplyForm({{ n.id }})">
+                            <i class="bi bi-reply me-1"></i>Reply
                         </button>
-                    </form>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Reply Form (Hidden by default) -->
+                    {% if n.sender and n.sender.id != current_user.id %}
+                    <div id="reply-form-{{ n.id }}" class="reply-form mt-3" style="display: none;">
+                        <form method="POST" action="{{ url_for('notifications.reply_to_message', notification_id=n.id) }}">
+                            <textarea name="body" class="form-control form-control-sm mb-2" rows="3" placeholder="Write your reply..." required></textarea>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-send me-1"></i>Send Reply
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="toggleReplyForm({{ n.id }})">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -102,6 +131,14 @@ function toggleTargetMode() {
 if (targetMode) {
     targetMode.addEventListener('change', toggleTargetMode);
     toggleTargetMode();
+}
+
+// Toggle reply form visibility
+function toggleReplyForm(notificationId) {
+    const replyForm = document.getElementById(`reply-form-${notificationId}`);
+    if (replyForm) {
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+    }
 }
 </script>
 
