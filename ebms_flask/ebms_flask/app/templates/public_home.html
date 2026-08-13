@@ -1,81 +1,276 @@
 {% extends "base.html" %}
-{% block title %}Procurement Portal{% endblock %}
+{% block title %}EBMS Procurement Portal{% endblock %}
 {% block guest_content %}
 <div class="public-landing">
-  <div class="welcome-shell">
-    <div class="welcome-right">
-      <div class="welcome-topbar">
-        <div class="welcome-actions">
-          <a href="{{ url_for('auth.login') }}" class="ghost-btn">Sign In</a>
-          <a href="{{ url_for('auth.register') }}" class="primary-btn">Register as Bidder</a>
+  <div class="public-hero-wrap">
+    <div class="public-hero">
+      <div class="hero-copy">
+        <span class="eyebrow">National e-Procurement</span>
+        <h1>Procurement made transparent, efficient, and accessible.</h1>
+        <p>Explore active opportunities, track upcoming deadlines, and register as a supplier to participate in Botswana government procurement.</p>
+        <div class="hero-actions">
+          <a href="{{ url_for('dashboard.public_tenders') }}" class="btn btn-primary">Current Tenders</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-success">Register as Supplier</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light">Sign In</a>
+        </div>
+        <div class="hero-metrics">
+          <div>
+            <strong>{{ stats.current_tenders }}</strong>
+            <span>Open now</span>
+          </div>
+          <div>
+            <strong>{{ stats.procurement_entities }}</strong>
+            <span>Entities</span>
+          </div>
+          <div>
+            <strong>{{ '{:,.0f}'.format(stats.total_award_value) }} BWP</strong>
+            <span>Awarded value</span>
+          </div>
         </div>
       </div>
 
-      <div class="welcome-filters">
-        <div class="filter-block search-block">
-          <input type="text" value="" placeholder="Search tender by keyword" aria-label="Search tender by keyword" />
+      <div class="hero-panel-card">
+        <div class="panel-glow"></div>
+        <div class="mini-header">
+          <span class="mini-badge">Live pipeline</span>
+          <span class="mini-clock"><i class="bi bi-clock-history"></i> Updated today</span>
         </div>
-
-        <div class="filter-block select-block">
-          <select aria-label="Tender category">
-            <option>All Tender Categories</option>
-            <option>Goods</option>
-            <option>Works</option>
-            <option>Services</option>
-            <option>Consultancy</option>
-            <option>Non Consultancy</option>
-          </select>
+        <div class="panel-overview-row">
+          <div>
+            <small>Total Tenders</small>
+            <strong>{{ stats.total_tenders }}</strong>
+          </div>
+          <div>
+            <small>Closing Soon</small>
+            <strong>{{ stats.closing_soon }}</strong>
+          </div>
         </div>
+        <div class="mini-chart">
+          <span style="height: 38%"></span>
+          <span style="height: 58%"></span>
+          <span style="height: 45%"></span>
+          <span style="height: 72%"></span>
+          <span style="height: 88%"></span>
+          <span style="height: 62%"></span>
+          <span style="height: 95%"></span>
+        </div>
+        <ul class="pulse-list">
+          <li><span class="dot blue"></span> Goods procurement</li>
+          <li><span class="dot green"></span> Construction & works</li>
+          <li><span class="dot amber"></span> Consultancy</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-        <button type="button" class="search-btn">Search</button>
+  <div class="public-shell">
+    <section class="stat-grid">
+      <div class="stat-card stat-card-primary">
+        <div class="stat-card__icon"><i class="bi bi-folder2-open"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Total Tenders</span>
+          <h2>{{ stats.total_tenders }}</h2>
+          <small>Across all procurement categories</small>
+        </div>
+      </div>
+      <div class="stat-card stat-card-info">
+        <div class="stat-card__icon"><i class="bi bi-building"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Procuring Entities</span>
+          <h2>{{ stats.procurement_entities }}</h2>
+          <small>Public sector buyers active</small>
+        </div>
+      </div>
+      <div class="stat-card stat-card-success">
+        <div class="stat-card__icon"><i class="bi bi-clipboard-check"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Current Tenders</span>
+          <h2>{{ stats.current_tenders }}</h2>
+          <small>Open and active opportunities</small>
+        </div>
+      </div>
+      <div class="stat-card stat-card-warning">
+        <div class="stat-card__icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Closing Soon</span>
+          <h2>{{ stats.closing_soon }}</h2>
+          <small>Within the next 14 days</small>
+        </div>
+      </div>
+      <div class="stat-card stat-card-success">
+        <div class="stat-card__icon"><i class="bi bi-trophy"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Awarded Tenders</span>
+          <h2>{{ stats.awarded_tenders }}</h2>
+          <small>Completed and awarded</small>
+        </div>
+      </div>
+      <div class="stat-card stat-card-primary">
+        <div class="stat-card__icon"><i class="bi bi-currency-dollar"></i></div>
+        <div class="stat-card__body">
+          <span class="stat-label">Total Award Value</span>
+          <h2>{{ '{:,.0f}'.format(stats.total_award_value) }}</h2>
+          <small>BWP awarded to suppliers</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="category-panel">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Categories</span>
+          <h2>Procurement categories</h2>
+        </div>
+        <a href="{{ url_for('dashboard.public_tenders') }}" class="text-link">View all tenders</a>
       </div>
 
-      <div class="welcome-tabs">
-        <span class="tab-pill active">All</span>
-        <span class="tab-pill">Goods</span>
-        <span class="tab-pill">Works</span>
-        <span class="tab-pill">Consultancy</span>
-        <span class="tab-pill">Non Consultancy</span>
+      <div class="category-grid">
+        <div class="category-card category-blue">
+          <div class="category-icon"><i class="bi bi-box-seam"></i></div>
+          <div>
+            <h3>Goods</h3>
+            <p>{{ category_counts.goods }} tenders</p>
+          </div>
+        </div>
+        <div class="category-card category-green">
+          <div class="category-icon"><i class="bi bi-building"></i></div>
+          <div>
+            <h3>Works</h3>
+            <p>{{ category_counts.works }} tenders</p>
+          </div>
+        </div>
+        <div class="category-card category-violet">
+          <div class="category-icon"><i class="bi bi-briefcase"></i></div>
+          <div>
+            <h3>Consultancy</h3>
+            <p>{{ category_counts.consultancy }} tenders</p>
+          </div>
+        </div>
+        <div class="category-card category-amber">
+          <div class="category-icon"><i class="bi bi-people"></i></div>
+          <div>
+            <h3>Non-Consultancy</h3>
+            <p>{{ category_counts.non_consultancy }} tenders</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="market-section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Live opportunities</span>
+          <h2>Current Tenders</h2>
+        </div>
+        <a href="{{ url_for('dashboard.public_tenders') }}" class="text-link">Browse all</a>
       </div>
 
       <div class="tender-list compact-list">
-        {% for tender in tenders %}
+        {% for tender in current_tenders %}
           <article class="proc-card">
             <div class="proc-main">
               <div class="proc-header">
                 <h3>{{ tender.title }}</h3>
                 {% if tender.status == 'submission_open' %}
                   <span class="status-pill green">Submission Open</span>
+                {% elif tender.status == 'award_published' %}
+                  <span class="status-pill blue">Awarded</span>
                 {% else %}
-                  <span class="status-pill blue">Closed</span>
+                  <span class="status-pill blue">Published</span>
                 {% endif %}
               </div>
 
-              <div class="proc-number">{{ tender.tender_number }}</div>
-
-              <div class="proc-info-row">
-                <span><strong>Category:</strong> {{ tender.category.title() }}</span>
+              <div class="proc-meta-row">
+                <span>{{ tender.procurement_entity or tender.user_department or 'Department not specified' }}</span>
+                <span>{{ tender.tender_number }}</span>
               </div>
 
-              <div class="proc-info-row">
-                <span><strong>Method:</strong> {{ tender.method.replace('_', ' ').title() }}</span>
-              </div>
-
-              <div class="proc-info-row">
-                <span><strong>Value:</strong> {{ tender.estimated_value }} BWP</span>
-              </div>
-
-              <div class="proc-info-row">
-                <span><strong>Closes:</strong> {{ tender.submission_deadline.strftime('%d %b %Y %H:%M CAT') if tender.submission_deadline else 'TBA' }}</span>
+              <div class="proc-info-grid">
+                <span><strong>Category:</strong> {{ (tender.category or 'goods').replace('_', ' ').title() }}</span>
+                <span><strong>Deadline:</strong> {{ tender.submission_deadline.strftime('%d %b %Y') if tender.submission_deadline else 'TBA' }}</span>
+                <span><strong>Value:</strong> {{ '{:,.0f}'.format(tender.estimated_value) }} BWP</span>
+                <span><strong>Published:</strong> {{ tender.created_at.strftime('%d %b %Y') if tender.created_at else '—' }}</span>
               </div>
             </div>
 
             <a href="{{ url_for('dashboard.public_tender_detail', procurement_id=tender.id) }}" class="outline-link">View Details</a>
           </article>
         {% else %}
-          <div class="empty-state">No tenders available right now.</div>
+          <div class="empty-state">No tenders are currently available. Please check back soon.</div>
         {% endfor %}
       </div>
+    </section>
+
+    <div class="dashboard-row">
+      <section class="market-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Planning</span>
+            <h2>Annual Procurement Plans</h2>
+          </div>
+        </div>
+        <div class="mini-list">
+          {% for tender in annual_plan_tenders %}
+            <div class="mini-item">
+              <div>
+                <strong>{{ tender.title }}</strong>
+                <small>{{ tender.procurement_entity or tender.user_department or 'Procurement entity' }}</small>
+              </div>
+              <span class="mini-tag">{{ (tender.category or 'goods').replace('_', ' ').title() }}</span>
+            </div>
+          {% else %}
+            <div class="empty-state compact-empty">No annual procurement plans available.</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="market-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Current window</span>
+            <h2>Opened Tenders</h2>
+          </div>
+        </div>
+        <div class="mini-list">
+          {% for tender in opened_tenders %}
+            <div class="mini-item">
+              <div>
+                <strong>{{ tender.title }}</strong>
+                <small>Closes {{ tender.submission_deadline.strftime('%d %b %Y') if tender.submission_deadline else 'TBA' }}</small>
+              </div>
+              {% if tender.submission_deadline and (tender.submission_deadline - now).days <= 14 %}
+                <span class="mini-tag danger">Closing Soon</span>
+              {% else %}
+                <span class="mini-tag">Open</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="empty-state compact-empty">There are no opened tenders at the moment.</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="market-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Awards</span>
+            <h2>Awarded Tenders</h2>
+          </div>
+        </div>
+        <div class="mini-list">
+          {% for tender in awarded_tenders %}
+            <div class="mini-item">
+              <div>
+                <strong>{{ tender.title }}</strong>
+                <small>{{ tender.tender_number }}</small>
+              </div>
+              <span class="mini-tag success">Awarded</span>
+            </div>
+          {% else %}
+            <div class="empty-state compact-empty">No awarded tenders published yet.</div>
+          {% endfor %}
+        </div>
+      </section>
     </div>
   </div>
 </div>

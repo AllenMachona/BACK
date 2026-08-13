@@ -1,69 +1,120 @@
 {% extends "base.html" %}
-{% block title %}Public Tenders{% endblock %}
+{% block title %}Current Tenders{% endblock %}
 {% block guest_content %}
 <div class="public-list-shell">
   <div class="public-list-header">
-    <h1>All Procurements</h1>
+    <div>
+      <span class="eyebrow">Supplier portal</span>
+      <h1>Current Tenders</h1>
+    </div>
+    <div class="public-list-actions">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Sign In</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-success">Register as Supplier</a>
+    </div>
   </div>
 
-  <div class="public-filters">
-    <form method="get" action="{{ url_for('dashboard.public_tenders') }}" class="public-filter-form">
-      <div class="search-row">
-        <input type="text" name="q" value="{{ search_term }}" placeholder="Search tender by keyword" aria-label="Search tender by keyword">
-      </div>
-      <div class="select-row">
-        <select name="category" aria-label="Tender category">
-          <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
-          <option value="goods" {% if selected_category == 'goods' %}selected{% endif %}>Goods</option>
-          <option value="works" {% if selected_category == 'works' %}selected{% endif %}>Works</option>
-          <option value="services" {% if selected_category == 'services' %}selected{% endif %}>Services</option>
-          <option value="consultancy" {% if selected_category == 'consultancy' %}selected{% endif %}>Consultancy</option>
-          <option value="non_consultancy" {% if selected_category == 'non_consultancy' %}selected{% endif %}>Non Consultancy</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-success">Search</button>
-    </form>
-  </div>
+  <form method="get" action="{{ url_for('dashboard.public_tenders') }}" class="public-filter-form advanced-filter">
+    <div class="filter-group">
+      <label>Keyword</label>
+      <input type="text" name="q" value="{{ search_term }}" placeholder="Tender title, number or description">
+    </div>
+    <div class="filter-group">
+      <label>Category</label>
+      <select name="category">
+        <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All categories</option>
+        <option value="goods" {% if selected_category == 'goods' %}selected{% endif %}>Goods</option>
+        <option value="works" {% if selected_category == 'works' %}selected{% endif %}>Works</option>
+        <option value="consultancy" {% if selected_category == 'consultancy' %}selected{% endif %}>Consultancy</option>
+        <option value="non_consultancy" {% if selected_category == 'non_consultancy' %}selected{% endif %}>Non Consultancy</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Procuring Entity</label>
+      <input type="text" name="entity" value="{{ entity_filter }}" placeholder="Ministry or department">
+    </div>
+    <div class="filter-group">
+      <label>Location</label>
+      <input type="text" name="location" value="{{ location_filter }}" placeholder="Gaborone, Francistown, etc.">
+    </div>
+    <div class="filter-group">
+      <label>Deadline</label>
+      <select name="deadline">
+        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Any deadline</option>
+        <option value="closing_soon" {% if selected_status == 'closing_soon' %}selected{% endif %}>Closing soon</option>
+        <option value="open" {% if selected_status == 'open' %}selected{% endif %}>Open now</option>
+        <option value="awarded" {% if selected_status == 'awarded' %}selected{% endif %}>Awarded</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Sort</label>
+      <select name="sort">
+        <option value="deadline_asc" {% if sort == 'deadline_asc' %}selected{% endif %}>Deadline: soonest</option>
+        <option value="deadline_desc" {% if sort == 'deadline_desc' %}selected{% endif %}>Deadline: latest</option>
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+        <option value="value_desc" {% if sort == 'value_desc' %}selected{% endif %}>Highest value</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary filter-submit">Apply Filters</button>
+  </form>
 
   {% if tenders %}
-  <div class="public-results narrow-results">
-    {% for tender in tenders %}
-      <article class="proc-card public-card">
-        <div class="proc-main">
-          <div class="proc-header">
-            <h3>{{ tender.title }}</h3>
-            {% if tender.status == 'submission_open' %}
-              <span class="status-pill green">Submission Open</span>
-            {% else %}
-              <span class="status-pill blue">Closed</span>
-            {% endif %}
+    <div class="results-toolbar">
+      <span>{{ total_results }} matching tenders</span>
+      <a href="{{ url_for('dashboard.public_tenders') }}" class="text-link">Reset filters</a>
+    </div>
+
+    <div class="public-results narrow-results">
+      {% for tender in tenders %}
+        <article class="proc-card public-card">
+          <div class="proc-main">
+            <div class="proc-header">
+              <h3>{{ tender.title }}</h3>
+              {% if tender.status == 'submission_open' %}
+                {% if tender.submission_deadline and (tender.submission_deadline - now).days <= 14 %}
+                  <span class="status-pill green">Closing Soon</span>
+                {% else %}
+                  <span class="status-pill green">Submission Open</span>
+                {% endif %}
+              {% elif tender.status == 'award_published' %}
+                <span class="status-pill blue">Awarded</span>
+              {% else %}
+                <span class="status-pill blue">Published</span>
+              {% endif %}
+            </div>
+
+            <div class="proc-meta-row">
+              <span>{{ tender.procurement_entity or tender.user_department or 'Department not specified' }}</span>
+              <span>{{ tender.tender_number }}</span>
+            </div>
+
+            <div class="proc-info-grid">
+              <span><strong>Category:</strong> {{ (tender.category or 'goods').replace('_', ' ').title() }}</span>
+              <span><strong>Method:</strong> {{ tender.method.replace('_', ' ').title() }}</span>
+              <span><strong>Publication Date:</strong> {{ tender.created_at.strftime('%d %b %Y') if tender.created_at else '—' }}</span>
+              <span><strong>Deadline:</strong> {{ tender.submission_deadline.strftime('%d %b %Y %H:%M') if tender.submission_deadline else 'TBA' }}</span>
+              <span><strong>Status:</strong> {{ tender.status_label() }}</span>
+              <span><strong>Value:</strong> {{ '{:,.0f}'.format(tender.estimated_value) }} BWP</span>
+            </div>
           </div>
 
-          <div class="proc-number">{{ tender.tender_number }}</div>
+          <a href="{{ url_for('dashboard.public_tender_detail', procurement_id=tender.id) }}" class="outline-link">View Details</a>
+        </article>
+      {% endfor %}
+    </div>
 
-          <div class="proc-info-row">
-            <span><strong>Category:</strong> {{ tender.category.title() }}</span>
-          </div>
-
-          <div class="proc-info-row">
-            <span><strong>Method:</strong> {{ tender.method.replace('_', ' ').title() }}</span>
-          </div>
-
-          <div class="proc-info-row">
-            <span><strong>Value:</strong> {{ tender.estimated_value }} BWP</span>
-          </div>
-
-          <div class="proc-info-row">
-            <span><strong>Closes:</strong> {{ tender.submission_deadline.strftime('%d %b %Y %H:%M CAT') if tender.submission_deadline else 'TBA' }}</span>
-          </div>
-        </div>
-
-        <a href="{{ url_for('dashboard.public_tender_detail', procurement_id=tender.id) }}" class="outline-link">View Details</a>
-      </article>
-    {% endfor %}
-  </div>
+    {% if total_pages > 1 %}
+      <nav class="pagination" aria-label="Tender pagination">
+        {% if page > 1 %}
+          <a href="{{ url_for('dashboard.public_tenders', q=search_term, category=selected_category, entity=entity_filter, location=location_filter, deadline=selected_status, sort=sort, page=page-1) }}" class="page-link">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="{{ url_for('dashboard.public_tenders', q=search_term, category=selected_category, entity=entity_filter, location=location_filter, deadline=selected_status, sort=sort, page=page+1) }}" class="page-link">Next</a>
+        {% endif %}
+      </nav>
+    {% endif %}
   {% else %}
-  <div class="empty-state alt">No tenders match your current search.</div>
+    <div class="empty-state alt">No tenders match the selected criteria. Try broadening your search.</div>
   {% endif %}
 </div>
 {% endblock %}

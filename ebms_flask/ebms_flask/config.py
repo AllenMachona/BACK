@@ -50,6 +50,7 @@ class Config:
 
     OPENING_QUORUM = int(os.environ.get('OPENING_QUORUM') or 2)
     COOLING_OFF_DAYS = int(os.environ.get('COOLING_OFF_DAYS') or 10)
+    REQUIRE_HTTPS = os.environ.get('REQUIRE_HTTPS', 'false').lower() in {'1', 'true', 'yes', 'on'}
 
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
