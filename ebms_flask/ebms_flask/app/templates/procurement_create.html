@@ -116,17 +116,25 @@
             <div class="card mb-4">
                 <div class="card-header bg-white d-flex align-items-center gap-2">
                     <span class="step-badge">3</span>
-                    <h5 class="mb-0">Budget &amp; Timeline</h5>
+                    <h5 class="mb-0">Budget, Fees &amp; Timeline</h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Estimated Value (BWP) <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">Estimated Contract Value (BWP) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text fw-bold">BWP</span>
                                 <input type="number" step="0.01" min="0" name="estimated_value" class="form-control form-control-lg" placeholder="0.00" required>
                             </div>
-                            <div class="form-text">Estimated contract value in Botswana Pula.</div>
+                            <div class="form-text">Estimated contract budget in Botswana Pula.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tender Document Purchase Fee (BWP)</label>
+                            <div class="input-group">
+                                <span class="input-group-text fw-bold">BWP</span>
+                                <input type="number" step="0.01" min="0" name="tender_fee" class="form-control form-control-lg" placeholder="0.00" value="0.00">
+                            </div>
+                            <div class="form-text">Fee bidders must pay to unlock RFCE &amp; ITT documents (leave 0 if free).</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Submission Deadline</label>
@@ -138,10 +146,60 @@
                             <input type="datetime-local" name="clarification_deadline" class="form-control form-control-lg">
                             <div class="form-text">Deadline for bidder clarification submissions.</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Advertisement Document <span class="text-danger">*</span></label>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Public Advertisement Document <span class="text-danger">*</span></label>
                             <input type="file" name="advertisement_document" class="form-control form-control-lg" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx" required>
-                            <div class="form-text">This file is published to bidders as the advertising notice.</div>
+                            <div class="form-text">Published publicly as the general tender notice.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Requesting Department Internal Forms (FORM D & FORM E) -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">4</span>
+                    <div>
+                        <h5 class="mb-0">Requesting User / Department Internal Forms</h5>
+                        <small class="text-muted">FORM D and FORM E are stored securely for internal procurement review and are never exposed to bidders.</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload FORM D (Procurement Requisition)</label>
+                            <input type="file" name="form_d_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">Requisition &amp; authorization form from the user department.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload FORM E (Specification &amp; Budget Clearance)</label>
+                            <input type="file" name="form_e_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">Technical specification and financial clearance form.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Bidder Tender Documents (RFCE & ITT - Gated by Payment Approval) -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">5</span>
+                    <div>
+                        <h5 class="mb-0">Bidder Tender Documents (RFCE &amp; ITT)</h5>
+                        <small class="text-muted">These documents remain locked to bidders until proof of payment is submitted and approved by Procurement.</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-code text-warning me-1"></i>Upload RFCE (Request for Clarification / Eligibility)</label>
+                            <input type="file" name="rfce_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">Official RFCE document for qualifying bidders.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-warning me-1"></i>Upload ITT (Invitation to Tender)</label>
+                            <input type="file" name="itt_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">Comprehensive tender instructions and bill of quantities.</div>
                         </div>
                     </div>
                 </div>

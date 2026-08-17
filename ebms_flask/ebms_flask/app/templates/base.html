@@ -51,6 +51,9 @@
             {% if not current_user.has_role('bidder') %}
             <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
             <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder2-open"></i>Procurements</a>
+            {% if current_user.role.can_approve_procurement or current_user.role.can_publish or current_user.role.can_admin_system %}
+            <a class="nav-link {{ 'active' if active_nav == 'payment_verifications' else '' }}" href="{{ url_for('procurements.payment_verifications') }}"><i class="bi bi-credit-card-2-front"></i>Payment Verifications</a>
+            {% endif %}
             {% if current_user.role.can_evaluate %}
             <a class="nav-link {{ 'active' if active_nav == 'evaluations' else '' }}" href="{{ url_for('evaluations.index') }}"><i class="bi bi-clipboard-check"></i>Evaluations</a>
             {% endif %}

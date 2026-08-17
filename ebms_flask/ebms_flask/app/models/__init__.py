@@ -14,9 +14,11 @@ from app.models.communication import Communication
 from app.models.audit import AuditLog
 from app.models.notification import Notification
 from app.models.site_setting import SiteSetting
+from app.models.payment import BidderPayment, BidderDocumentAccess
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
     'CommitteeMember', 'EvaluationCriteria', 'Evaluation', 'ScoreSheet',
     'Award', 'Complaint', 'Communication', 'AuditLog', 'Notification', 'SiteSetting',
+    'BidderPayment', 'BidderDocumentAccess',
 ]

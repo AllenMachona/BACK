@@ -21,10 +21,290 @@
 <div class="row">
     <div class="col-md-8">
 
+        <!-- Gated Official Tender Documents (RFCE & ITT) Card -->
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Documents &amp; Addenda</h5>
-                <span class="badge badge-secondary">{{ documents|length if documents else 0 }} Documents</span>
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Documents (RFCE &amp; ITT)</h5>
+                    <small class="text-muted">Payment-gated bidding documents authorized by PPRA.</small>
+                </div>
+                {% if has_rfce_access and has_itt_access %}
+                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>All Documents Unlocked</span>
+                {% else %}
+                <span class="badge badge-warning"><i class="bi bi-lock-fill me-1"></i>Payment Approval Required</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- RFCE Document -->
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded {{ 'bg-light border-success' if has_rfce_access else 'bg-light border-danger' }} h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="fw-bold text-dark">
+                                    <i class="bi bi-file-earmark-text me-1 text-primary"></i>RFCE
+                                    <small class="d-block text-muted">Request for Clarification / Eligibility</small>
+                                </div>
+                                {% if has_rfce_access %}
+                                <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Unlocked</span>
+                                {% else %}
+                                <span class="badge badge-danger"><i class="bi bi-lock-fill me-1"></i>Locked</span>
+                                {% endif %}
+                            </div>
+
+                            {% if has_rfce_access %}
+                                {% if procurement.has_rfce() %}
+                                <div class="small text-muted mb-3"><i class="bi bi-file-earmark-check me-1 text-success"></i>{{ procurement.rfce_filename }}</div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill">
+                                        <i class="bi bi-eye me-1"></i>View Document
+                                    </a>
+                                    <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" class="btn btn-sm btn-success flex-fill">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p class="small text-muted mb-0">Procurement has not yet uploaded the RFCE file.</p>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-danger py-2 px-3 small mb-0">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>
+                                    <strong>🔒 Payment approval required</strong>
+                                    <div class="mt-1 text-muted">Submit proof of payment in the section below to request document access.</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ITT Document -->
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded {{ 'bg-light border-success' if has_itt_access else 'bg-light border-danger' }} h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="fw-bold text-dark">
+                                    <i class="bi bi-file-earmark-ruled me-1 text-primary"></i>ITT
+                                    <small class="d-block text-muted">Invitation to Tender &amp; Instructions</small>
+                                </div>
+                                {% if has_itt_access %}
+                                <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Unlocked</span>
+                                {% else %}
+                                <span class="badge badge-danger"><i class="bi bi-lock-fill me-1"></i>Locked</span>
+                                {% endif %}
+                            </div>
+
+                            {% if has_itt_access %}
+                                {% if procurement.has_itt() %}
+                                <div class="small text-muted mb-3"><i class="bi bi-file-earmark-check me-1 text-success"></i>{{ procurement.itt_filename }}</div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='itt') }}" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill">
+                                        <i class="bi bi-eye me-1"></i>View Document
+                                    </a>
+                                    <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='itt') }}" class="btn btn-sm btn-success flex-fill">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p class="small text-muted mb-0">Procurement has not yet uploaded the ITT file.</p>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-danger py-2 px-3 small mb-0">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>
+                                    <strong>🔒 Payment approval required</strong>
+                                    <div class="mt-1 text-muted">Submit proof of payment in the section below to request document access.</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bidder Payment & Document Access Verification Section -->
+        <div class="card mb-4" id="paymentSection">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Tender Document Payment &amp; Access Status</h5>
+                    <small class="text-muted">Submit payment reference and bank proof to unlock RFCE &amp; ITT documents.</small>
+                </div>
+                {% if my_payment %}
+                    {% if my_payment.status == 'approved' %}
+                    <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Payment Approved</span>
+                    {% elif my_payment.status == 'pending' %}
+                    <span class="badge badge-warning"><i class="bi bi-hourglass-split me-1"></i>Verification Pending</span>
+                    {% elif my_payment.status == 'resubmission_required' %}
+                    <span class="badge badge-info"><i class="bi bi-arrow-repeat me-1"></i>Resubmission Required</span>
+                    {% elif my_payment.status == 'rejected' %}
+                    <span class="badge badge-danger"><i class="bi bi-x-circle-fill me-1"></i>Payment Rejected</span>
+                    {% endif %}
+                {% else %}
+                <span class="badge badge-secondary">Payment Required</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if not my_payment %}
+                <!-- Case 1: No Payment Submitted Yet -->
+                <div class="p-3 border rounded bg-light mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small d-block">Tender Document Purchase Fee</span>
+                            <strong class="text-primary fs-5">BWP {{ '{:,.2f}'.format(procurement.tender_fee or 0.0) }}</strong>
+                        </div>
+                        <span class="badge badge-info fs-6">Bank Deposit / EFT</span>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="submit_payment">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Amount (BWP) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">BWP</span>
+                                <input type="number" step="0.01" min="0" name="amount" class="form-control" value="{{ procurement.tender_fee or '0.00' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Reference / Deposit Slip No. <span class="text-danger">*</span></label>
+                            <input type="text" name="payment_reference" class="form-control" placeholder="e.g. EFT-2026-98124 / REC-4412" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Proof of Payment Document (PDF / Image) <span class="text-danger">*</span></label>
+                            <input type="file" name="proof_file" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+                            <div class="form-text">Attach your official bank deposit receipt, wire confirmation, or electronic transfer slip.</div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-cloud-upload me-1"></i>Submit Payment for Verification
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {% elif my_payment.status == 'pending' %}
+                <!-- Case 2: Payment Pending Verification -->
+                <div class="alert alert-warning mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-hourglass-split fs-4 me-3 text-warning"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Proof of Payment Under Review</h6>
+                            <p class="mb-2 small">Your payment proof has been submitted to the Procurement Department and is currently awaiting verification. Once verified and approved, the RFCE and ITT documents above will unlock automatically.</p>
+                            <div class="p-2 bg-white rounded border small">
+                                <div><strong>Reference:</strong> <code>{{ my_payment.payment_reference }}</code></div>
+                                <div><strong>Amount Paid:</strong> BWP {{ '{:,.2f}'.format(my_payment.amount) }}</div>
+                                <div><strong>Submitted On:</strong> {{ my_payment.submitted_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                <div><strong>Uploaded Proof:</strong> <a href="{{ url_for('procurements.download_payment_proof', payment_id=my_payment.id) }}"><i class="bi bi-paperclip me-1"></i>{{ my_payment.proof_filename }}</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% elif my_payment.status == 'approved' %}
+                <!-- Case 3: Payment Approved -->
+                <div class="alert alert-success mb-0">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Payment Verified &amp; Approved</h6>
+                            <p class="mb-2 small">Your payment was approved by Procurement{% if my_payment.reviewed_by %} ({{ my_payment.reviewed_by.full_name() }}){% endif %} on {{ my_payment.reviewed_at.strftime('%Y-%m-%d %H:%M') if my_payment.reviewed_at }}. You have active access to view and download all official tender documents (RFCE and ITT).</p>
+                            <div class="p-2 bg-white rounded border small">
+                                <div><strong>Reference:</strong> <code>{{ my_payment.payment_reference }}</code></div>
+                                <div><strong>Amount:</strong> BWP {{ '{:,.2f}'.format(my_payment.amount) }}</div>
+                                {% if my_payment.notes %}<div><strong>Procurement Note:</strong> {{ my_payment.notes }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% elif my_payment.status == 'resubmission_required' %}
+                <!-- Case 4: Resubmission Required -->
+                <div class="alert alert-warning mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Correction / Resubmission Required</h6>
+                            <p class="mb-2 small">Procurement reviewed your payment submission and requested a correction:</p>
+                            <div class="p-2 bg-white rounded border text-danger small mb-2">
+                                <strong>Instructions:</strong> {{ my_payment.notes or 'Please upload a clearer proof of payment.' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resubmission Form -->
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-arrow-repeat me-1 text-primary"></i>Submit Corrected Proof of Payment</h6>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="submit_payment">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Amount (BWP) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">BWP</span>
+                                <input type="number" step="0.01" min="0" name="amount" class="form-control" value="{{ my_payment.amount }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Reference / Deposit Slip No. <span class="text-danger">*</span></label>
+                            <input type="text" name="payment_reference" class="form-control" value="{{ my_payment.payment_reference }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Updated Proof Document <span class="text-danger">*</span></label>
+                            <input type="file" name="proof_file" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-warning px-4">
+                                <i class="bi bi-send me-1"></i>Resubmit Payment Proof
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {% elif my_payment.status == 'rejected' %}
+                <!-- Case 5: Payment Rejected -->
+                <div class="alert alert-danger mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-x-circle-fill fs-4 me-3 text-danger"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Payment Proof Rejected</h6>
+                            <p class="mb-2 small">Your submitted payment proof was rejected by the Procurement Department:</p>
+                            <div class="p-2 bg-white rounded border text-danger small mb-2">
+                                <strong>Reason:</strong> {{ my_payment.notes or 'Payment proof invalid or unverifiable.' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-arrow-repeat me-1 text-primary"></i>Submit New Proof of Payment</h6>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="submit_payment">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Amount (BWP) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">BWP</span>
+                                <input type="number" step="0.01" min="0" name="amount" class="form-control" value="{{ procurement.tender_fee or '0.00' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Payment Reference / Slip No. <span class="text-danger">*</span></label>
+                            <input type="text" name="payment_reference" class="form-control" placeholder="New payment reference..." required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">New Proof Document <span class="text-danger">*</span></label>
+                            <input type="file" name="proof_file" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-upload me-1"></i>Submit for Verification
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Addenda &amp; Notices</h5>
+                <span class="badge badge-secondary">{{ documents|length if documents else 0 }} Addenda</span>
             </div>
             <div class="card-body">
                 {% if documents %}

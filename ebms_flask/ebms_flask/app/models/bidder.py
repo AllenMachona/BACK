@@ -34,5 +34,13 @@ class Bidder(db.Model):
             return 'expired'
         return 'active' if self.active else 'inactive'
 
+    def get_payment_for_procurement(self, procurement_id):
+        from app.models.payment import BidderPayment
+        return BidderPayment.query.filter_by(bidder_id=self.id, procurement_id=procurement_id).order_by(BidderPayment.submitted_at.desc()).first()
+
+    def has_document_access(self, procurement_id, doc_type=None):
+        from app.models.payment import BidderDocumentAccess
+        return BidderDocumentAccess.can_bidder_access(procurement_id, self.id, doc_type)
+
     def __repr__(self):
         return f'<Bidder {self.company_name}>'

@@ -12,6 +12,11 @@ from app.utils.crypto import encrypt_bytes, sha256_hex
 from app.utils.audit import log_action
 from app.utils.decorators import role_required
 
+from app.models.user import User
+from app.models.role import Role
+from app.models.payment import BidderPayment, BidderDocumentAccess
+from app.utils.notify import notify_user
+
 bidders_bp = Blueprint('bidders', __name__, url_prefix='/bidders')
 
 
@@ -26,14 +31,17 @@ def _require_bidder():
 def portal():
     _require_bidder()
     available = Procurement.query.filter(
-        Procurement.status.in_(['published', 'submission_open'])
+        Procurement.status.in_(['published', 'submission_open', 'clarification_period'])
     ).order_by(Procurement.submission_deadline).all()
 
     my_submissions = Submission.query.filter_by(bidder_id=current_user.bidder_id).order_by(
         Submission.submitted_at.desc()
     ).all()
 
-    return render_template('bidder_portal.html', available=available, my_submissions=my_submissions)
+    # Track payments per available tender
+    payments = {p.id: current_user.bidder.get_payment_for_procurement(p.id) for p in available}
+
+    return render_template('bidder_portal.html', available=available, my_submissions=my_submissions, payments=payments)
 
 
 @bidders_bp.route('/workspace/<int:procurement_id>', methods=['GET', 'POST'])
@@ -59,6 +67,84 @@ def workspace(procurement_id):
                 db.session.commit()
                 log_action('QUESTION_SUBMITTED', entity_type='Communication', entity_id=comm.id)
                 flash('Your question has been submitted and will be published after review.', 'success')
+            return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+        if action == 'submit_payment':
+            payment_reference = request.form.get('payment_reference', '').strip()
+            amount_raw = request.form.get('amount', '').strip()
+            proof_file = request.files.get('proof_file')
+
+            if not payment_reference:
+                flash('Payment reference is required.', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+            try:
+                amount = float(amount_raw) if amount_raw else float(procurement.tender_fee or 0.0)
+            except ValueError:
+                flash('Please enter a valid numeric payment amount.', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+            if not proof_file or not proof_file.filename:
+                flash('Please upload a proof of payment document (PDF, PNG, JPG, DOCX).', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+            payments_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'payments')
+            os.makedirs(payments_dir, exist_ok=True)
+            token = secrets.token_hex(4)
+            filename = secure_filename(f"{procurement.tender_number}_{current_user.bidder_id}_{token}_{proof_file.filename}")
+            filepath = os.path.join(payments_dir, filename)
+            proof_file.save(filepath)
+
+            # Check if there is an existing payment record to update (resubmission)
+            payment = BidderPayment.query.filter_by(
+                procurement_id=procurement.id,
+                bidder_id=current_user.bidder_id
+            ).first()
+
+            if payment:
+                payment.payment_reference = payment_reference
+                payment.amount = amount
+                payment.proof_file_path = filepath
+                payment.proof_filename = proof_file.filename
+                payment.status = 'pending'
+                payment.notes = None
+                payment.submitted_at = datetime.utcnow()
+                payment.submitted_by_id = current_user.id
+                payment.reviewed_by_id = None
+                payment.reviewed_at = None
+            else:
+                payment = BidderPayment(
+                    procurement_id=procurement.id,
+                    bidder_id=current_user.bidder_id,
+                    submitted_by_id=current_user.id,
+                    payment_reference=payment_reference,
+                    amount=amount,
+                    proof_file_path=filepath,
+                    proof_filename=proof_file.filename,
+                    status='pending'
+                )
+                db.session.add(payment)
+
+            db.session.commit()
+
+            log_action('PAYMENT_PROOF_SUBMITTED', entity_type='BidderPayment', entity_id=payment.id,
+                       new_value={'procurement_id': procurement.id, 'bidder_id': current_user.bidder_id,
+                                  'reference': payment_reference, 'amount': amount})
+
+            # Notify Procurement Unit
+            procurement_users = User.query.join(Role).filter(
+                Role.code.in_(['procurement_unit', 'system_admin', 'procurement_oversight'])
+            ).all()
+
+            for officer in procurement_users:
+                notify_user(
+                    officer, 'payment_submitted',
+                    f'Payment Proof Submitted: {procurement.tender_number}',
+                    f'Bidder {current_user.bidder.company_name} has submitted proof of payment (Ref: {payment_reference}, Amount: BWP {amount:,.2f}) for {procurement.title}. Please review and verify.',
+                    procurement_id=procurement.id
+                )
+
+            flash('Payment proof submitted successfully! Your submission is now pending Procurement verification. Tender documents will unlock once approved.', 'success')
             return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
 
         if action == 'submit_bid':
@@ -137,7 +223,19 @@ def workspace(procurement_id):
         procurement_id=procurement.id, bidder_id=current_user.bidder_id
     ).all()
 
+    # Query payment and document access for current bidder
+    my_payment = current_user.bidder.get_payment_for_procurement(procurement.id)
+    has_rfce_access = current_user.bidder.has_document_access(procurement.id, 'rfce')
+    has_itt_access = current_user.bidder.has_document_access(procurement.id, 'itt')
+
     return render_template(
-        'bidder_workspace.html', procurement=procurement, documents=documents,
-        clarifications=clarifications, advertisement=advertisement, my_submissions=my_submissions,
+        'bidder_workspace.html',
+        procurement=procurement,
+        documents=documents,
+        clarifications=clarifications,
+        advertisement=advertisement,
+        my_submissions=my_submissions,
+        my_payment=my_payment,
+        has_rfce_access=has_rfce_access,
+        has_itt_access=has_itt_access,
     )

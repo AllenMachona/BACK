@@ -35,6 +35,21 @@ class Procurement(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Tender Document Fee & Document Storage
+    tender_fee = db.Column(db.Numeric(15, 2), default=0.00)
+
+    # Requesting user/department internal forms
+    form_d_file_path = db.Column(db.String(500))
+    form_d_filename = db.Column(db.String(300))
+    form_e_file_path = db.Column(db.String(500))
+    form_e_filename = db.Column(db.String(300))
+
+    # Bidder-facing tender documents (gated by payment verification)
+    rfce_file_path = db.Column(db.String(500))
+    rfce_filename = db.Column(db.String(300))
+    itt_file_path = db.Column(db.String(500))
+    itt_filename = db.Column(db.String(300))
+
     # Relationships
     lots = db.relationship('Lot', backref='procurement', lazy='dynamic', cascade='all, delete-orphan')
     submissions = db.relationship('Submission', backref='procurement', lazy='dynamic')
@@ -46,9 +61,31 @@ class Procurement(db.Model):
     award = db.relationship('Award', backref='procurement', uselist=False)
     replacement = db.relationship('Procurement', remote_side=[id], backref='replaced_by')
 
+    def has_form_d(self):
+        return bool(self.form_d_file_path and self.form_d_filename)
+
+    def has_form_e(self):
+        return bool(self.form_e_file_path and self.form_e_filename)
+
+    def has_rfce(self):
+        return bool(self.rfce_file_path and self.rfce_filename)
+
+    def has_itt(self):
+        return bool(self.itt_file_path and self.itt_filename)
+
+    def has_tender_documents(self):
+        return self.has_rfce() or self.has_itt()
+
     @staticmethod
     def ppra_code_options():
-        return ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110']
+        base_codes = ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110']
+        sub_codes = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+        all_codes = list(base_codes)
+        for b in base_codes:
+            for s in sub_codes:
+                if s != '00':
+                    all_codes.append(f"{b}-{s}")
+        return all_codes
 
     @staticmethod
     def ppra_sub_code_options():
@@ -121,6 +158,15 @@ class Procurement(db.Model):
             'procurement_entity': 'ALTER TABLE procurements ADD COLUMN procurement_entity VARCHAR(200)',
             'ppra_sub_code': 'ALTER TABLE procurements ADD COLUMN ppra_sub_code VARCHAR(20)',
             'clarification_deadline': 'ALTER TABLE procurements ADD COLUMN clarification_deadline DATETIME',
+            'tender_fee': 'ALTER TABLE procurements ADD COLUMN tender_fee NUMERIC(15, 2) DEFAULT 0.00',
+            'form_d_file_path': 'ALTER TABLE procurements ADD COLUMN form_d_file_path VARCHAR(500)',
+            'form_d_filename': 'ALTER TABLE procurements ADD COLUMN form_d_filename VARCHAR(300)',
+            'form_e_file_path': 'ALTER TABLE procurements ADD COLUMN form_e_file_path VARCHAR(500)',
+            'form_e_filename': 'ALTER TABLE procurements ADD COLUMN form_e_filename VARCHAR(300)',
+            'rfce_file_path': 'ALTER TABLE procurements ADD COLUMN rfce_file_path VARCHAR(500)',
+            'rfce_filename': 'ALTER TABLE procurements ADD COLUMN rfce_filename VARCHAR(300)',
+            'itt_file_path': 'ALTER TABLE procurements ADD COLUMN itt_file_path VARCHAR(500)',
+            'itt_filename': 'ALTER TABLE procurements ADD COLUMN itt_filename VARCHAR(300)',
         }.items():
             try:
                 db.session.execute(text(f'SELECT {column_name} FROM procurements LIMIT 1'))

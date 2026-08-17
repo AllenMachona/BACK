@@ -59,14 +59,37 @@
             {% if available %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead><tr><th>Tender Number</th><th>Title</th><th>Category</th><th>Submission Deadline</th><th class="text-end">Action</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Tender Number</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Submission Deadline</th>
+                            <th>Tender Docs Access</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         {% for p in available %}
+                        {% set pay = payments.get(p.id) %}
                         <tr>
                             <td class="fw-bold text-primary">{{ p.tender_number }}</td>
                             <td class="fw-bold text-dark">{{ p.title }}</td>
                             <td><span class="badge badge-secondary">{{ p.category.title() }}</span></td>
                             <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else 'TBA' }}</td>
+                            <td>
+                                {% if pay and pay.status == 'approved' %}
+                                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>Unlocked</span>
+                                {% elif pay and pay.status == 'pending' %}
+                                <span class="badge badge-warning"><i class="bi bi-hourglass-split me-1"></i>Review Pending</span>
+                                {% elif pay and pay.status == 'resubmission_required' %}
+                                <span class="badge badge-info"><i class="bi bi-arrow-repeat me-1"></i>Resubmit Req.</span>
+                                {% elif pay and pay.status == 'rejected' %}
+                                <span class="badge badge-danger"><i class="bi bi-x-circle me-1"></i>Rejected</span>
+                                {% else %}
+                                <span class="badge badge-secondary"><i class="bi bi-lock-fill me-1"></i>Payment Required</span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
                                 <a href="{{ url_for('bidders.workspace', procurement_id=p.id) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-box-arrow-in-right me-1"></i>Access Workspace
