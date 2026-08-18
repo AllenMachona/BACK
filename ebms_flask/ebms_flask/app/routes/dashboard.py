@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
@@ -56,14 +57,39 @@ def index():
         func.coalesce(func.sum(Procurement.estimated_value), 0)
     ).filter(Procurement.status == 'award_published').scalar() or 0
 
+    procurement_entities = [
+        {'name': tender.procurement_entity or 'Public Entity', 'count': 1}
+        for tender in public_query.distinct(Procurement.procurement_entity).all()
+        if tender.procurement_entity
+    ]
+
     stats = {
         'total_tenders': Procurement.query.count(),
-        'procurement_entities': Procurement.query.filter(Procurement.procurement_entity.isnot(None)).distinct(Procurement.procurement_entity).count(),
+        'procurement_entities': len(procurement_entities),
         'current_tenders': Procurement.query.filter(Procurement.status.in_(['published', 'submission_open'])).count(),
         'closing_soon': closing_soon,
         'awarded_tenders': Procurement.query.filter(Procurement.status == 'award_published').count(),
         'total_award_value': float(total_award_value),
     }
+
+    tender_cards = []
+    for tender in current_tenders:
+        category = _category_key(tender.category)
+        tender_cards.append({
+            'id': tender.id,
+            'title': tender.title,
+            'entity': tender.procurement_entity or 'Procurement Entity',
+            'logoUrl': '',
+            'invitationDate': tender.created_at.strftime('%Y-%m-%d') if tender.created_at else 'TBA',
+            'submissionDeadline': tender.submission_deadline.strftime('%Y-%m-%d %H:%M') if tender.submission_deadline else 'TBA',
+            'number': tender.tender_number or 'N/A',
+            'category': category,
+            'tags': [
+                {'label': 'Open', 'style': 'green'} if tender.status == 'submission_open' else {'label': 'Published', 'style': 'neutral'},
+                {'label': category.replace('_', ' ').title(), 'style': 'orange'}
+            ],
+            'detailsUrl': url_for('dashboard.public_tender_detail', procurement_id=tender.id),
+        })
 
     return render_template(
         'public_home.html',
@@ -74,6 +100,8 @@ def index():
         annual_plan_tenders=annual_plan_tenders,
         stats=stats,
         category_counts=category_counts,
+        procurement_entities=procurement_entities,
+        tender_cards_json=json.dumps(tender_cards),
     )
 
 

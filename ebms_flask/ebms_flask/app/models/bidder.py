@@ -42,5 +42,9 @@ class Bidder(db.Model):
         from app.models.payment import BidderDocumentAccess
         return BidderDocumentAccess.can_bidder_access(procurement_id, self.id, doc_type)
 
+    def has_approved_payment_for_procurement(self, procurement_id):
+        payment = self.get_payment_for_procurement(procurement_id)
+        return bool(payment and payment.status == 'approved')
+
     def __repr__(self):
         return f'<Bidder {self.company_name}>'

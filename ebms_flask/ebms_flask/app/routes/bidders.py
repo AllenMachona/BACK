@@ -225,8 +225,14 @@ def workspace(procurement_id):
 
     # Query payment and document access for current bidder
     my_payment = current_user.bidder.get_payment_for_procurement(procurement.id)
+    has_approved_payment = current_user.bidder.has_approved_payment_for_procurement(procurement.id)
     has_rfce_access = current_user.bidder.has_document_access(procurement.id, 'rfce')
     has_itt_access = current_user.bidder.has_document_access(procurement.id, 'itt')
+
+    if not has_approved_payment:
+        documents = []
+        clarifications = []
+        advertisement = None
 
     return render_template(
         'bidder_workspace.html',
@@ -238,4 +244,5 @@ def workspace(procurement_id):
         my_payment=my_payment,
         has_rfce_access=has_rfce_access,
         has_itt_access=has_itt_access,
+        has_approved_payment=has_approved_payment,
     )

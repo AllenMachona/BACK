@@ -689,6 +689,12 @@ def download_document(procurement_id, communication_id):
     procurement = Procurement.query.get_or_404(procurement_id)
     document = Communication.query.filter_by(id=communication_id, procurement_id=procurement.id).first_or_404()
 
+    if current_user.has_role('bidder'):
+        if not current_user.bidder or not current_user.bidder.has_approved_payment_for_procurement(procurement.id):
+            log_action('UNAUTHORIZED_COMMUNICATION_DOWNLOAD_BLOCKED', entity_type='Communication', entity_id=document.id,
+                       reason=f"Bidder {current_user.bidder_id} attempted access before payment approval")
+            abort(403)
+
     if not document.file_path or not document.original_filename:
         abort(404)
 

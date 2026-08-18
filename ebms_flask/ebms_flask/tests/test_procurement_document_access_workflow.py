@@ -11,6 +11,7 @@ from app.models.role import Role
 from app.models.bidder import Bidder
 from app.models.procurement import Procurement
 from app.models.payment import BidderPayment, BidderDocumentAccess
+from app.models.communication import Communication
 from app.models.audit import AuditLog
 from app.models.notification import Notification
 
@@ -417,6 +418,46 @@ class ProcurementDocumentAccessWorkflowTests(unittest.TestCase):
         # 4. Bidder A attempts to access RFCE -> MUST get 403 Forbidden
         self._login('bidder_alpha_test')
         resp = self.client.get(f'/procurements/{proc_id}/tender-docs/rfce/download')
+        self.assertEqual(resp.status_code, 403)
+
+    def test_bidders_cannot_view_procurement_details_or_docs_before_payment_approval(self):
+        """Bidder workspace and bidder-facing procurement docs must stay locked until payment is approved."""
+        with self.app.app_context():
+            proc = Procurement(
+                tender_number=f"TB-LOCK-{uuid.uuid4().hex[:6].upper()}",
+                title='Locked Tender Access Control',
+                category='goods',
+                method='open_domestic',
+                estimated_value=900000,
+                tender_fee=250.0,
+                status='submission_open',
+                created_by_id=self.proc_user_id
+            )
+            db.session.add(proc)
+            db.session.commit()
+            proc_id = proc.id
+
+            notice = Communication(
+                procurement_id=proc_id,
+                type='advertisement',
+                content='First bidder notice',
+                from_bidder_id=None,
+                is_public=True,
+                original_filename='notice.pdf',
+                file_path='uploads/test_notice.pdf'
+            )
+            db.session.add(notice)
+            db.session.commit()
+            notice_id = notice.id
+
+        self._login('bidder_alpha_test')
+
+        resp = self.client.get(f'/bidders/workspace/{proc_id}')
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn(b'Official Tender Addenda &amp; Notices', resp.data)
+        self.assertNotIn(b'View Document', resp.data)
+
+        resp = self.client.get(f'/procurements/{proc_id}/documents/{notice_id}/download')
         self.assertEqual(resp.status_code, 403)
 
     def test_procurement_officer_upload_replacement_documents(self):
