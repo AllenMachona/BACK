@@ -15,10 +15,19 @@ from app.models.audit import AuditLog
 from app.models.notification import Notification
 from app.models.site_setting import SiteSetting
 from app.models.payment import BidderPayment, BidderDocumentAccess
+# Enhanced messaging, versioning, and clarification models
+from app.models.message import Message, MessageRecipient
+from app.models.document_version import DocumentVersion
+from app.models.clarification import ClarificationVisibility, ClarificationAccess
+from app.models.history import ProcurementHistory, SubmissionHistory
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
     'CommitteeMember', 'EvaluationCriteria', 'Evaluation', 'ScoreSheet',
     'Award', 'Complaint', 'Communication', 'AuditLog', 'Notification', 'SiteSetting',
     'BidderPayment', 'BidderDocumentAccess',
+    # Enhanced models
+    'Message', 'MessageRecipient', 'DocumentVersion',
+    'ClarificationVisibility', 'ClarificationAccess',
+    'ProcurementHistory', 'SubmissionHistory',
 ]

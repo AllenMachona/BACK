@@ -1,0 +1,783 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <div class="page-title-section">
+            <h1><i class="bi bi-envelope"></i> Messages</h1>
+            <p class="page-subtitle">Manage your procurement communications and clarifications</p>
+        </div>
+        <div class="page-actions">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">
+                <i class="bi bi-pencil-square me-2"></i> New Message
+            </button>
+        </div>
+    </div>
+
+    <div class="page-toolbar">
+        <div class="toolbar-filters">
+            <form class="toolbar-search" method="GET" action="{{ url_for('messages.inbox') }}">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" placeholder="Search messages..." value="{{ request.args.get('q', '') }}" class="search-input">
+                {% if request.args.get('q') %}
+                    <a href="{{ url_for('messages.inbox') }}" class="clear-search"><i class="bi bi-x-circle-fill"></i></a>
+                {% endif %}
+            </form>
+            <div class="filter-tabs">
+                <a href="{{ url_for('messages.inbox') }}" class="filter-tab {{ 'active' if not request.args.get('filter') else '' }}">
+                    All <span class="badge">{{ total_messages }}</span>
+                </a>
+                <a href="{{ url_for('messages.inbox', filter='unread') }}" class="filter-tab {{ 'active' if request.args.get('filter') == 'unread' else '' }}">
+                    Unread <span class="badge badge-alert">{{ unread_count }}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages-list">
+        {% for message in messages %}
+        <div class="message-card {{ 'message-unread' if not message.is_read() else '' }}" onclick="window.location='{{ url_for('messages.view_message', message_id=message.id) }}'" style="cursor: pointer;">
+            <div class="message-card-header">
+                <div class="message-sender-info">
+                    <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
+                        {{ message.sender.full_name()[0].upper() }}
+                    </div>
+                    <div class="message-sender-details">
+                        <div class="message-sender-name">
+                            {{ message.sender.full_name() }}
+                            {% if message.message_type == 'broadcast' %}
+                                <span class="badge badge-info">Broadcast</span>
+                            {% elif message.message_type == 'targeted' %}
+                                <span class="badge badge-warning">Targeted</span>
+                            {% endif %}
+                        </div>
+                        <div class="message-sender-role">{{ message.sender.role.name if message.sender.role else 'User' }}</div>
+                    </div>
+                </div>
+                <div class="message-metadata">
+                    <div class="message-time">{{ message.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+                    {% if not message.is_read() %}
+                        <div class="unread-indicator"><i class="bi bi-circle-fill"></i></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="message-card-body">
+                <h4 class="message-subject">{{ message.subject }}</h4>
+                <p class="message-preview">{{ message.body[:150] }}{% if message.body|length > 150 %}...{% endif %}</p>
+            </div>
+
+            <div class="message-card-footer">
+                <div class="message-tags">
+                    {% if message.reply_to_id %}
+                        <span class="tag tag-secondary"><i class="bi bi-reply"></i> Reply</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if pages > 1 %}
+        <div class="pagination-center">
+            <nav class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('messages.inbox', page=1, q=request.args.get('q', '')) }}" class="pagination-link">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('messages.inbox', page=page-1, q=request.args.get('q', '')) }}" class="pagination-link">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                    {% if p == page %}
+                        <span class="pagination-current">{{ p }}</span>
+                    {% else %}
+                        <a href="{{ url_for('messages.inbox', page=p, q=request.args.get('q', '')) }}" class="pagination-link">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < pages %}
+                    <a href="{{ url_for('messages.inbox', page=page+1, q=request.args.get('q', '')) }}" class="pagination-link">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('messages.inbox', page=pages, q=request.args.get('q', '')) }}" class="pagination-link">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h3>No Messages</h3>
+        <p>You don't have any messages yet. Start a conversation by sending a message.</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">
+            <i class="bi bi-pencil-square me-2"></i> Send First Message
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Compose Message Modal -->
+<div class="modal fade" id="composeMessageModal" tabindex="-1" aria-labelledby="composeMessageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="composeMessageLabel">
+                    <i class="bi bi-pencil-square me-2"></i> New Message
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('messages.send_message') }}" method="POST" id="composeForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="messageType" class="form-label">Message Type</label>
+                        <select name="message_type" id="messageType" class="form-select" required onchange="updateRecipientFields()">
+                            <option value="">Select message type...</option>
+                            <option value="direct">Direct Message (to one person)</option>
+                            <option value="broadcast">Broadcast (to all users)</option>
+                            <option value="targeted">Targeted (to selected users/bidders/roles)</option>
+                        </select>
+                    </div>
+
+                    <div id="directRecipient" style="display: none;">
+                        <div class="form-group">
+                            <label for="recipientUser" class="form-label">Select Recipient</label>
+                            <select name="recipient_user_id" id="recipientUser" class="form-select">
+                                <option value="">Choose a user...</option>
+                                {% for user in all_users %}
+                                    {% if user.id != current_user.id %}
+                                        <option value="{{ user.id }}">{{ user.full_name() }} ({{ user.role.name }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="targetedRecipients" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Recipients</label>
+                            <div class="recipient-options">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="users" id="recipients_users">
+                                    <label class="form-check-label" for="recipients_users">
+                                        Specific Users
+                                    </label>
+                                </div>
+                                <div id="usersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    {% for user in all_users %}
+                                        {% if user.id != current_user.id %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="user_ids" value="{{ user.id }}">
+                                                <label class="form-check-label">
+                                                    {{ user.full_name() }} <small class="text-muted">({{ user.role.name }})</small>
+                                                </label>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="bidders" id="recipients_bidders">
+                                    <label class="form-check-label" for="recipients_bidders">
+                                        Specific Bidders
+                                    </label>
+                                </div>
+                                <div id="biddersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    {% for bidder in all_bidders %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="bidder_ids" value="{{ bidder.id }}">
+                                            <label class="form-check-label">
+                                                {{ bidder.company_name or bidder.legal_name }} <small class="text-muted">({{ bidder.country }})</small>
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="roles" id="recipients_roles">
+                                    <label class="form-check-label" for="recipients_roles">
+                                        By Role
+                                    </label>
+                                </div>
+                                <div id="rolesList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    {% for role in all_roles %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="role_ids" value="{{ role.id }}">
+                                            <label class="form-check-label">
+                                                {{ role.name }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="messageSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="messageSubject" name="subject" required placeholder="Message subject">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="messageBody" class="form-label">Message</label>
+                        <textarea class="form-control" id="messageBody" name="body" rows="6" required placeholder="Type your message..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-2"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.page-title-section h1 {
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.page-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-toolbar {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toolbar-filters {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+}
+
+.toolbar-search {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.toolbar-search i {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--ppra-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 1rem;
+}
+
+.filter-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.filter-tab:hover {
+    border-color: var(--ppra-accent);
+    color: var(--ppra-accent);
+}
+
+.filter-tab.active {
+    background: var(--ppra-accent);
+    border-color: var(--ppra-accent);
+    color: white;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--ppra-accent);
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-alert {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.badge-info {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.badge-warning {
+    background: rgba(217, 119, 6, 0.15);
+    color: #d97706;
+}
+
+.messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
+.message-card:hover {
+    border-color: var(--ppra-accent);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.message-unread {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%);
+    border-left: 3px solid var(--ppra-accent);
+}
+
+.message-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.message-sender-info {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+}
+
+.avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.message-sender-details {
+    flex: 1;
+}
+
+.message-sender-name {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.message-sender-role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.message-metadata {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.unread-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ppra-accent);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.message-card-body {
+    margin-bottom: 1rem;
+}
+
+.message-subject {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.05rem;
+    color: var(--text-main);
+}
+
+.message-preview {
+    margin: 0;
+    color: var(--text-body);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.message-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.message-tags {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tag {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    background: var(--bg-subtle);
+    color: var(--text-body);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.tag-secondary {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--ppra-accent);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+}
+
+.empty-state-icon {
+    font-size: 3.5rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.pagination-center {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-link {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.pagination-link:hover {
+    border-color: var(--ppra-accent);
+    color: var(--ppra-accent);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.pagination-current {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--ppra-accent);
+    color: white;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-control, .form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--ppra-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    accent-color: var(--ppra-accent);
+}
+
+.form-check-label {
+    cursor: pointer;
+    color: var(--text-body);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.recipient-options {
+    background: var(--bg-subtle);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.container-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.modal-content {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    border-radius: 12px;
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--border-color);
+    background: var(--bg-subtle);
+}
+
+.modal-title {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: var(--ppra-accent);
+    color: white;
+    border-color: var(--ppra-accent);
+}
+
+.btn-primary:hover {
+    background: var(--ppra-accent-hover);
+    border-color: var(--ppra-accent-hover);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-subtle);
+    border-color: var(--text-body);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .toolbar-filters {
+        flex-direction: column;
+    }
+
+    .filter-tabs {
+        width: 100%;
+    }
+
+    .message-card {
+        padding: 1rem;
+    }
+
+    .message-card-header {
+        flex-direction: column;
+    }
+
+    .message-metadata {
+        align-items: flex-start;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageTypeSelect = document.getElementById('messageType');
+    const directRecipient = document.getElementById('directRecipient');
+    const targetedRecipients = document.getElementById('targetedRecipients');
+    
+    messageTypeSelect.addEventListener('change', updateRecipientFields);
+});
+
+function updateRecipientFields() {
+    const messageType = document.getElementById('messageType').value;
+    const directRecipient = document.getElementById('directRecipient');
+    const targetedRecipients = document.getElementById('targetedRecipients');
+    
+    if (messageType === 'direct') {
+        directRecipient.style.display = 'block';
+        targetedRecipients.style.display = 'none';
+    } else if (messageType === 'targeted') {
+        directRecipient.style.display = 'none';
+        targetedRecipients.style.display = 'block';
+        updateTargetedCheckboxes();
+    } else {
+        directRecipient.style.display = 'none';
+        targetedRecipients.style.display = 'none';
+    }
+}
+
+function updateTargetedCheckboxes() {
+    const usersCheck = document.getElementById('recipients_users');
+    const bidderCheck = document.getElementById('recipients_bidders');
+    const rolesCheck = document.getElementById('recipients_roles');
+    const usersList = document.getElementById('usersList');
+    const biddersList = document.getElementById('biddersList');
+    const rolesList = document.getElementById('rolesList');
+    
+    usersCheck.addEventListener('change', () => {
+        usersList.style.display = usersCheck.checked ? 'block' : 'none';
+    });
+    
+    bidderCheck.addEventListener('change', () => {
+        biddersList.style.display = bidderCheck.checked ? 'block' : 'none';
+    });
+    
+    rolesCheck.addEventListener('change', () => {
+        rolesList.style.display = rolesCheck.checked ? 'block' : 'none';
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}{{ clarification.subject }} - Clarifications - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="back-link">
+            <i class="bi bi-chevron-left me-2"></i> Back to Clarifications
+        </a>
+    </div>
+
+    <div class="clarification-view">
+        <div class="clarification-view-header">
+            <div>
+                <h1>{{ clarification.subject }}</h1>
+                <div class="clarification-meta">
+                    <span><i class="bi bi-calendar me-1"></i> Posted {{ clarification.created_at.strftime('%d %B %Y, %I:%M %p') }}</span>
+                    {% if clarification.visibility_type == 'public' %}
+                        <span class="badge badge-public"><i class="bi bi-globe me-1"></i> Public</span>
+                    {% else %}
+                        <span class="badge badge-targeted"><i class="bi bi-lock me-1"></i> Targeted</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if current_user.has_permission('can_respond_to_clarifications') %}
+            <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-gear me-2"></i> Manage Access
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="clarification-content">
+            <div class="content-section">
+                <h3 class="content-title">Question</h3>
+                <div class="content-body">
+                    {{ clarification.question | safe }}
+                </div>
+            </div>
+
+            {% if clarification.response %}
+            <div class="content-section response-section">
+                <h3 class="content-title">
+                    <i class="bi bi-check-circle me-2" style="color: #22c55e;"></i> Response
+                </h3>
+                <div class="response-meta">
+                    Answered by {{ clarification.responded_by.full_name() if clarification.responded_by else 'System' }} on {{ clarification.response_date.strftime('%d %B %Y, %I:%M %p') if clarification.response_date else 'N/A' }}
+                </div>
+                <div class="content-body">
+                    {{ clarification.response | safe }}
+                </div>
+            </div>
+            {% else %}
+            <div class="content-section pending-section">
+                <h3 class="content-title">
+                    <i class="bi bi-clock me-2" style="color: #f59e0b;"></i> Pending Response
+                </h3>
+                <p class="text-muted">This clarification is waiting for a response from procurement staff.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Access Log (Staff Only) -->
+    {% if current_user.has_permission('can_respond_to_clarifications') and access_log %}
+    <div class="access-log-section">
+        <h2><i class="bi bi-eye me-2"></i> Access Log</h2>
+        <p class="section-subtitle">Who has viewed or downloaded this clarification</p>
+
+        <div class="access-log-table">
+            <div class="table-header">
+                <div class="table-cell">Bidder</div>
+                <div class="table-cell">Action</div>
+                <div class="table-cell">Date/Time</div>
+                <div class="table-cell">IP Address</div>
+            </div>
+
+            {% for log in access_log %}
+            <div class="table-row">
+                <div class="table-cell">
+                    <strong>{{ log.bidder.company_name or log.bidder.legal_name }}</strong>
+                </div>
+                <div class="table-cell">
+                    {% if log.access_type == 'view' %}
+                        <span class="badge badge-view"><i class="bi bi-eye me-1"></i> Viewed</span>
+                    {% elif log.access_type == 'download' %}
+                        <span class="badge badge-download"><i class="bi bi-download me-1"></i> Downloaded</span>
+                    {% endif %}
+                </div>
+                <div class="table-cell">
+                    {{ log.accessed_at.strftime('%d %b %Y, %I:%M %p') }}
+                </div>
+                <div class="table-cell">
+                    <code>{{ log.ip_address or 'N/A' }}</code>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.container-main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--ppra-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.back-link:hover {
+    transform: translateX(-4px);
+}
+
+.clarification-view {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.clarification-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.clarification-view-header h1 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.75rem;
+    color: var(--text-main);
+}
+
+.clarification-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+}
+
+.badge-public {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.badge-targeted {
+    background: rgba(217, 119, 6, 0.15);
+    color: #d97706;
+}
+
+.badge-view {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.badge-download {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-subtle);
+    border-color: var(--text-body);
+}
+
+.clarification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.content-section {
+    padding: 1.5rem;
+    background: var(--bg-subtle);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.response-section {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(22, 163, 74, 0.05) 100%);
+    border-left: 3px solid #22c55e;
+}
+
+.pending-section {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+.content-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.content-body {
+    color: var(--text-body);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.content-body p {
+    margin: 0 0 1rem 0;
+}
+
+.content-body p:last-child {
+    margin-bottom: 0;
+}
+
+.response-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.access-log-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.access-log-section h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.35rem;
+    color: var(--text-main);
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.access-log-table {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1.5fr;
+    background: var(--ppra-accent);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1.5fr;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.table-row:hover {
+    background: rgba(37, 99, 235, 0.02);
+}
+
+.table-cell {
+    font-size: 0.9rem;
+    color: var(--text-body);
+}
+
+code {
+    background: var(--bg-surface);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8rem;
+    color: #d97706;
+}
+
+@media (max-width: 768px) {
+    .clarification-view-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .table-header, .table-row {
+        grid-template-columns: 1fr;
+    }
+
+    .table-header {
+        display: none;
+    }
+
+    .table-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1.5rem 1rem;
+    }
+
+    .table-cell {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .table-cell::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-main);
+    }
+}
+</style>
+{% endblock %}

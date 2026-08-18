@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Access - {{ clarification.subject }} - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <a href="{{ url_for('clarifications.view_clarification', procurement_id=procurement.id, clarification_id=clarification.id) }}" class="back-link">
+            <i class="bi bi-chevron-left me-2"></i> Back to Clarification
+        </a>
+    </div>
+
+    <div class="manage-visibility-card">
+        <h1><i class="bi bi-shield-lock me-2"></i> Manage Clarification Access</h1>
+        <p class="card-subtitle">{{ clarification.subject }}</p>
+
+        <!-- Current Visibility Status -->
+        <div class="status-section">
+            <h2>Current Status</h2>
+            <div class="visibility-status">
+                {% if clarification.visibility_type == 'public' %}
+                    <div class="status-box status-public">
+                        <div class="status-icon"><i class="bi bi-globe"></i></div>
+                        <div class="status-content">
+                            <h4>Public Clarification</h4>
+                            <p>All eligible bidders can view this clarification and download attachments.</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="status-box status-targeted">
+                        <div class="status-icon"><i class="bi bi-lock"></i></div>
+                        <div class="status-content">
+                            <h4>Targeted Clarification</h4>
+                            <p>Only selected bidders have access to this clarification.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Visibility Controls -->
+        <div class="controls-section">
+            <h2>Change Visibility</h2>
+            <form action="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" method="POST" id="visibilityForm">
+                <div class="form-group">
+                    <label class="form-label">Visibility Type</label>
+                    <div class="radio-options">
+                        <div class="radio-option">
+                            <input type="radio" id="public" name="visibility_type" value="public" 
+                                   {% if clarification.visibility_type == 'public' %}checked{% endif %}
+                                   onchange="updateVisibilityUI()">
+                            <label for="public">
+                                <div class="radio-label-content">
+                                    <strong><i class="bi bi-globe me-2"></i> Public</strong>
+                                    <span class="radio-description">All eligible bidders can view</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="radio-option">
+                            <input type="radio" id="targeted" name="visibility_type" value="targeted" 
+                                   {% if clarification.visibility_type == 'targeted' %}checked{% endif %}
+                                   onchange="updateVisibilityUI()">
+                            <label for="targeted">
+                                <div class="radio-label-content">
+                                    <strong><i class="bi bi-lock me-2"></i> Targeted</strong>
+                                    <span class="radio-description">Only selected bidders can view</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i> Save Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Bidder Access Management (for targeted clarifications) -->
+        {% if clarification.visibility_type == 'targeted' %}
+        <div class="access-management-section">
+            <h2><i class="bi bi-people-fill me-2"></i> Manage Bidder Access</h2>
+            <p class="section-subtitle">Grant or revoke access to specific bidders</p>
+
+            <!-- Grant Access Form -->
+            <div class="grant-access-form">
+                <h3>Grant Access to New Bidders</h3>
+                <form action="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" method="POST">
+                    <input type="hidden" name="action" value="grant_access">
+                    <div class="form-group">
+                        <label for="bidderSelect" class="form-label">Select Bidder(s)</label>
+                        <select id="bidderSelect" name="bidder_ids" class="form-select" multiple required>
+                            {% for bidder in available_bidders %}
+                                <option value="{{ bidder.id }}">
+                                    {{ bidder.company_name or bidder.legal_name }} ({{ bidder.country }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text">Hold Ctrl/Cmd to select multiple bidders</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="grantReason" class="form-label">Reason for Granting Access (optional)</label>
+                        <textarea id="grantReason" name="reason" class="form-control" rows="3" placeholder="Why are you granting access to these bidders?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Grant Access
+                    </button>
+                </form>
+            </div>
+
+            <!-- Current Access List -->
+            <div class="access-list-section">
+                <h3>Current Access</h3>
+                {% if clarification_access %}
+                <div class="access-list">
+                    {% for access in clarification_access %}
+                    <div class="access-item">
+                        <div class="access-item-info">
+                            <h4>{{ access.bidder.company_name or access.bidder.legal_name }}</h4>
+                            <div class="access-item-meta">
+                                <span><i class="bi bi-globe me-1"></i> {{ access.bidder.country }}</span>
+                                <span><i class="bi bi-calendar me-1"></i> Granted {{ access.granted_at.strftime('%d %b %Y') }}</span>
+                                {% if access.granted_by %}
+                                    <span><i class="bi bi-person me-1"></i> by {{ access.granted_by.full_name() }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <form action="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" method="POST" style="display: inline;">
+                            <input type="hidden" name="action" value="revoke_access">
+                            <input type="hidden" name="bidder_id" value="{{ access.bidder_id }}">
+                            <button type="submit" class="btn-revoke" onclick="return confirm('Revoke access for {{ access.bidder.company_name or access.bidder.legal_name }}?')">
+                                <i class="bi bi-x-circle me-1"></i> Revoke
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-access">
+                    <p><i class="bi bi-info-circle me-2"></i> No bidders have access to this clarification yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Revoked Access History -->
+            {% if revoked_access %}
+            <div class="revoked-access-section">
+                <h3>Previously Revoked Access</h3>
+                <div class="revoked-list">
+                    {% for revoked in revoked_access %}
+                    <div class="revoked-item">
+                        <div class="revoked-item-info">
+                            <strong>{{ revoked.bidder.company_name or revoked.bidder.legal_name }}</strong>
+                            <span class="badge-revoked">
+                                <i class="bi bi-x-circle me-1"></i> Revoked {{ revoked.revoked_at.strftime('%d %b %Y') }}
+                            </span>
+                            {% if revoked.revoked_by %}
+                                <span class="revoked-by">by {{ revoked.revoked_by.full_name() }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.container-main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--ppra-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.back-link:hover {
+    transform: translateX(-4px);
+}
+
+.manage-visibility-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.manage-visibility-card h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    color: var(--text-main);
+}
+
+.card-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+.status-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.status-section h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.visibility-status {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-box {
+    flex: 1;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    display: flex;
+    gap: 1rem;
+}
+
+.status-public {
+    background: rgba(34, 197, 94, 0.05);
+    border-color: #22c55e;
+}
+
+.status-targeted {
+    background: rgba(217, 119, 6, 0.05);
+    border-color: #d97706;
+}
+
+.status-icon {
+    font-size: 2rem;
+    color: var(--ppra-accent);
+    flex-shrink: 0;
+}
+
+.status-public .status-icon {
+    color: #22c55e;
+}
+
+.status-targeted .status-icon {
+    color: #d97706;
+}
+
+.status-content h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.status-content p {
+    margin: 0;
+    color: var(--text-body);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.controls-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.controls-section h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.radio-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+}
+
+.radio-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 1rem;
+    margin-top: 0.25rem;
+    cursor: pointer;
+    accent-color: var(--ppra-accent);
+    flex-shrink: 0;
+}
+
+.radio-option label {
+    flex: 1;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.15s ease;
+}
+
+.radio-option input[type="radio"]:checked + label {
+    background: rgba(37, 99, 235, 0.05);
+    border-color: var(--ppra-accent);
+}
+
+.radio-label-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.radio-label-content strong {
+    color: var(--text-main);
+}
+
+.radio-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.access-management-section {
+    margin-top: 2rem;
+}
+
+.access-management-section h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.grant-access-form {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.grant-access-form h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+    color: var(--text-main);
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--ppra-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.15s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--ppra-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.access-list-section {
+    margin-bottom: 2rem;
+}
+
+.access-list-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+    color: var(--text-main);
+}
+
+.access-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.access-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.access-item:hover {
+    border-color: var(--ppra-accent);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+}
+
+.access-item-info h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.access-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.btn-revoke {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ef4444;
+    background: transparent;
+    color: #ef4444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+.btn-revoke:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.empty-access {
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+}
+
+.revoked-access-section {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.revoked-access-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+    color: #dc2626;
+}
+
+.revoked-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.revoked-item {
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border-left: 3px solid #ef4444;
+    border-radius: 4px;
+}
+
+.revoked-item-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+}
+
+.badge-revoked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.revoked-by {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-primary {
+    background: var(--ppra-accent);
+    color: white;
+    border-color: var(--ppra-accent);
+}
+
+.btn-primary:hover {
+    background: var(--ppra-accent-hover);
+    border-color: var(--ppra-accent-hover);
+}
+
+@media (max-width: 768px) {
+    .access-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .access-item-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .status-box {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function updateVisibilityUI() {
+    const visibilityType = document.querySelector('input[name="visibility_type"]:checked').value;
+    const accessManagement = document.querySelector('.access-management-section');
+    if (accessManagement) {
+        accessManagement.style.display = visibilityType === 'targeted' ? 'block' : 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', updateVisibilityUI);
+</script>
+{% endblock %}

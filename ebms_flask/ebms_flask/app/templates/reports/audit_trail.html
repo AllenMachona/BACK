@@ -1,0 +1,672 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail Report - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <div>
+            <h1><i class="bi bi-shield-check me-2"></i> Audit Trail Report</h1>
+            <p class="page-subtitle">Complete record of all system activities and changes</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-panel">
+        <h3>Filter Audit Log</h3>
+        <form method="GET" action="{{ url_for('reports.audit_trail') }}" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="user_id" class="form-label">User</label>
+                    <select name="user_id" id="user_id" class="form-select">
+                        <option value="">All Users</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}" {% if user.id == request.args.get('user_id')|int(default=0) %}selected{% endif %}>
+                                {{ user.full_name() }} ({{ user.role.name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="action" class="form-label">Action Type</label>
+                    <input type="text" name="action" id="action" class="form-control" placeholder="e.g., create, update, delete..." value="{{ request.args.get('action', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="entity_type" class="form-label">Entity Type</label>
+                    <select name="entity_type" id="entity_type" class="form-select">
+                        <option value="">All Entities</option>
+                        <option value="Procurement" {% if request.args.get('entity_type') == 'Procurement' %}selected{% endif %}>Procurement</option>
+                        <option value="Submission" {% if request.args.get('entity_type') == 'Submission' %}selected{% endif %}>Submission</option>
+                        <option value="User" {% if request.args.get('entity_type') == 'User' %}selected{% endif %}>User</option>
+                        <option value="Communication" {% if request.args.get('entity_type') == 'Communication' %}selected{% endif %}>Communication</option>
+                        <option value="Evaluation" {% if request.args.get('entity_type') == 'Evaluation' %}selected{% endif %}>Evaluation</option>
+                        <option value="Award" {% if request.args.get('entity_type') == 'Award' %}selected{% endif %}>Award</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('reports.audit_trail') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Export Options -->
+    <div class="export-section">
+        <h3>Export Report</h3>
+        <div class="export-buttons">
+            <a href="{{ url_for('reports.audit_trail_export') }}?{{ request.query_string.decode() }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel me-2"></i> Export to Excel (.xlsx)
+            </a>
+        </div>
+    </div>
+
+    <!-- Audit Log Data -->
+    {% if audit_logs %}
+    <div class="report-section">
+        <h2>Audit Log</h2>
+        <div class="report-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ audit_logs|length }}</div>
+                <div class="stat-label">Total Entries</div>
+            </div>
+        </div>
+
+        <div class="audit-log-list">
+            {% for log in audit_logs %}
+            <div class="audit-log-item">
+                <div class="audit-log-header">
+                    <div class="audit-log-info">
+                        <h4 class="audit-log-action">
+                            <i class="bi bi-{{ log_icon(log.action) }} me-2"></i>
+                            <strong>{{ log.action|upper }}</strong> on {{ log.entity_type }}
+                        </h4>
+                        <div class="audit-log-meta">
+                            <span><i class="bi bi-person me-1"></i> {{ log.user.full_name() if log.user else 'System' }}</span>
+                            <span><i class="bi bi-calendar me-1"></i> {{ log.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+                            <span><i class="bi bi-globe me-1"></i> {{ log.ip_address or 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="audit-log-details">
+                        <span class="badge badge-{{ log.action|lower }}">{{ log.action }}</span>
+                    </div>
+                </div>
+
+                <div class="audit-log-body">
+                    {% if log.description %}
+                    <div class="audit-description">
+                        <strong>Description:</strong> {{ log.description }}
+                    </div>
+                    {% endif %}
+
+                    {% if log.changes %}
+                    <div class="audit-changes">
+                        <strong>Changes:</strong>
+                        <div class="changes-grid">
+                            {% for field, change in log.changes.items() %}
+                            <div class="change-item">
+                                <div class="change-field">{{ field }}</div>
+                                <div class="change-values">
+                                    <span class="old-value">{{ change.old if change.old else '-' }}</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                    <span class="new-value">{{ change.new if change.new else '-' }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if log.reason %}
+                    <div class="audit-reason">
+                        <strong>Reason:</strong> {{ log.reason }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if pages > 1 %}
+        <div class="pagination-center">
+            <nav class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('reports.audit_trail', page=1) }}" class="pagination-link">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('reports.audit_trail', page=page-1) }}" class="pagination-link">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                    {% if p == page %}
+                        <span class="pagination-current">{{ p }}</span>
+                    {% else %}
+                        <a href="{{ url_for('reports.audit_trail', page=p) }}" class="pagination-link">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < pages %}
+                    <a href="{{ url_for('reports.audit_trail', page=page+1) }}" class="pagination-link">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('reports.audit_trail', page=pages) }}" class="pagination-link">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h3>No Audit Logs</h3>
+        <p>No activities match your filter criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.container-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    color: var(--text-main);
+}
+
+.page-subtitle {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.filter-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-panel h3 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.form-select, .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.form-select:focus, .form-control:focus {
+    outline: none;
+    border-color: var(--ppra-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.export-section {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.export-section h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.export-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--ppra-accent);
+    color: white;
+    border-color: var(--ppra-accent);
+}
+
+.btn-primary:hover {
+    background: var(--ppra-accent-hover);
+    border-color: var(--ppra-accent-hover);
+}
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+    border-color: #22c55e;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-surface);
+    border-color: var(--text-body);
+}
+
+.report-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.report-section h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.35rem;
+    color: var(--text-main);
+}
+
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--ppra-accent);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.audit-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.audit-log-item {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.audit-log-item:hover {
+    border-color: var(--ppra-accent);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.audit-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.audit-log-info {
+    flex: 1;
+}
+
+.audit-log-action {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+}
+
+.audit-log-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.audit-log-details {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-create {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.badge-update {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.badge-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.badge-view {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.badge-download {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.audit-log-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.audit-description {
+    padding: 0.75rem;
+    background: rgba(37, 99, 235, 0.05);
+    border-left: 3px solid var(--ppra-accent);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-body);
+}
+
+.audit-description strong {
+    color: var(--text-main);
+}
+
+.audit-changes {
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+}
+
+.audit-changes strong {
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.changes-grid {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.change-item {
+    font-size: 0.85rem;
+    color: var(--text-body);
+}
+
+.change-field {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+}
+
+.change-values {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.old-value {
+    background: rgba(239, 68, 68, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    color: #dc2626;
+}
+
+.new-value {
+    background: rgba(34, 197, 94, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    color: #16a34a;
+}
+
+.audit-reason {
+    padding: 0.75rem;
+    background: rgba(217, 119, 6, 0.05);
+    border-left: 3px solid #d97706;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-body);
+}
+
+.audit-reason strong {
+    color: var(--text-main);
+}
+
+.pagination-center {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-link {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-body);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.pagination-link:hover {
+    border-color: var(--ppra-accent);
+    color: var(--ppra-accent);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.pagination-current {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--ppra-accent);
+    color: white;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+}
+
+.empty-state-icon {
+    font-size: 3.5rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+    }
+
+    .filter-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .audit-log-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .export-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .audit-log-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+function log_icon(action) {
+    const icons = {
+        'create': 'plus-circle',
+        'update': 'pencil-square',
+        'delete': 'trash',
+        'view': 'eye',
+        'download': 'download',
+        'restore': 'arrow-clockwise'
+    };
+    return icons[action?.toLowerCase()] || 'record';
+}
+</script>
+{% endblock %}
