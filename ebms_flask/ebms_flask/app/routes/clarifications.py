@@ -49,10 +49,17 @@ def list_clarifications(procurement_id):
     
     clarifications = query.order_by(Communication.created_at.desc()).all()
     
+    # Counts for stats display
+    all_comms = Communication.query.filter_by(procurement_id=procurement_id)
+    public_count = all_comms.filter_by(visibility_type='public').count()
+    targeted_count = all_comms.filter_by(visibility_type='targeted').count()
+    
     return render_template(
         'clarifications/list.html',
         procurement=procurement,
-        clarifications=clarifications
+        clarifications=clarifications,
+        public_count=public_count,
+        targeted_count=targeted_count
     )
 
 

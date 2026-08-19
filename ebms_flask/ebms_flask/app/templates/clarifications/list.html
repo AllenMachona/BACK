@@ -57,26 +57,16 @@
             </div>
 
             <div class="clarification-card-body">
-                <h3 class="clarification-title">{{ clarification.subject }}</h3>
-                <div class="clarification-preview">{{ clarification.question[:200] }}{% if clarification.question|length > 200 %}...{% endif %}</div>
-
-                {% if clarification.response %}
-                <div class="clarification-response-indicator">
-                    <i class="bi bi-check-circle me-1"></i> Response Provided
-                </div>
-                {% else %}
-                <div class="clarification-pending">
-                    <i class="bi bi-clock me-1"></i> Pending Response
-                </div>
-                {% endif %}
+                <h3 class="clarification-title">{{ clarification.type|capitalize }}</h3>
+                <div class="clarification-preview">{{ clarification.content[:200] }}{% if clarification.content|length > 200 %}...{% endif %}</div>
             </div>
 
             <div class="clarification-card-actions">
-                <a href="{{ url_for('clarifications.view_clarification', procurement_id=procurement.id, clarification_id=clarification.id) }}" class="btn-link">
+                <a href="{{ url_for('clarifications.view_clarification', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn-link">
                     View Details <i class="bi bi-chevron-right ms-1"></i>
                 </a>
                 {% if current_user.has_permission('can_respond_to_clarifications') %}
-                <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" class="btn-link btn-link-secondary">
+                <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn-link btn-link-secondary">
                     <i class="bi bi-gear me-1"></i> Manage
                 </a>
                 {% endif %}

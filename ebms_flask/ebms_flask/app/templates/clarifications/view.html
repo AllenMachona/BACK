@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ clarification.subject }} - Clarifications - EBMS Botswana{% endblock %}
+{% block title %}{{ clarification.type|capitalize }} - Clarifications - EBMS Botswana{% endblock %}
 
 {% block content %}
 <div class="container-main">
@@ -13,7 +13,7 @@
     <div class="clarification-view">
         <div class="clarification-view-header">
             <div>
-                <h1>{{ clarification.subject }}</h1>
+                <h1>{{ clarification.type|capitalize }}</h1>
                 <div class="clarification-meta">
                     <span><i class="bi bi-calendar me-1"></i> Posted {{ clarification.created_at.strftime('%d %B %Y, %I:%M %p') }}</span>
                     {% if clarification.visibility_type == 'public' %}
@@ -24,7 +24,7 @@
                 </div>
             </div>
             {% if current_user.has_permission('can_respond_to_clarifications') %}
-            <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, clarification_id=clarification.id) }}" class="btn btn-outline-secondary">
+            <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-gear me-2"></i> Manage Access
             </a>
             {% endif %}
@@ -32,30 +32,18 @@
 
         <div class="clarification-content">
             <div class="content-section">
-                <h3 class="content-title">Question</h3>
+                <h3 class="content-title">Content</h3>
                 <div class="content-body">
-                    {{ clarification.question | safe }}
+                    {{ clarification.content | safe }}
                 </div>
             </div>
 
-            {% if clarification.response %}
-            <div class="content-section response-section">
-                <h3 class="content-title">
-                    <i class="bi bi-check-circle me-2" style="color: #22c55e;"></i> Response
-                </h3>
-                <div class="response-meta">
-                    Answered by {{ clarification.responded_by.full_name() if clarification.responded_by else 'System' }} on {{ clarification.response_date.strftime('%d %B %Y, %I:%M %p') if clarification.response_date else 'N/A' }}
-                </div>
-                <div class="content-body">
-                    {{ clarification.response | safe }}
-                </div>
-            </div>
-            {% else %}
-            <div class="content-section pending-section">
-                <h3 class="content-title">
-                    <i class="bi bi-clock me-2" style="color: #f59e0b;"></i> Pending Response
-                </h3>
-                <p class="text-muted">This clarification is waiting for a response from procurement staff.</p>
+            {% if clarification.file_path %}
+            <div class="content-section">
+                <h3 class="content-title"><i class="bi bi-paperclip me-2"></i> Attachment</h3>
+                <a href="{{ url_for('clarifications.download_clarification_file', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-download me-2"></i> {{ clarification.original_filename or 'Download File' }}
+                </a>
             </div>
             {% endif %}
         </div>
