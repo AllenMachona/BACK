@@ -25,7 +25,7 @@ def list_clarifications(procurement_id):
     if current_user.has_role('bidder'):
         if procurement.status not in ['published', 'submission_open', 'clarification_period', 'closed']:
             abort(403)
-    elif not (current_user.has_role('procurement_staff') or current_user.has_role('admin')):
+    elif not (current_user.has_role('system_admin') or current_user.has_permission('can_create_procurement')):
         abort(403)
     
     # Get clarifications based on visibility
@@ -85,11 +85,11 @@ def view_clarification(procurement_id, communication_id):
             accessed_by_user_id=current_user.id,
             access_type='view'
         )
-    elif not (current_user.has_role('procurement_staff') or current_user.has_role('admin')):
+    elif not (current_user.has_role('system_admin') or current_user.has_permission('can_create_procurement')):
         abort(403)
     
     access_log = None
-    if current_user.has_role('procurement_staff') or current_user.has_role('admin'):
+    if current_user.has_role('system_admin') or current_user.has_permission('can_create_procurement'):
         access_log = ClarificationAccessService.get_access_log(communication_id, limit=50)
     
     return render_template(

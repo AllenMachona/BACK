@@ -23,7 +23,7 @@
                     {% endif %}
                 </div>
             </div>
-            {% if current_user.has_permission('can_respond_to_clarifications') %}
+            {% if current_user.has_permission('can_create_procurement') %}
             <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-gear me-2"></i> Manage Access
             </a>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Access Log (Staff Only) -->
-    {% if current_user.has_permission('can_respond_to_clarifications') and access_log %}
+    {% if current_user.has_permission('can_create_procurement') and access_log %}
     <div class="access-log-section">
         <h2><i class="bi bi-eye me-2"></i> Access Log</h2>
         <p class="section-subtitle">Who has viewed or downloaded this clarification</p>

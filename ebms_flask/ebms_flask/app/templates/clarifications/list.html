@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    {% if current_user.has_permission('can_respond_to_clarifications') %}
+    {% if current_user.has_permission('can_create_procurement') %}
     <div class="page-actions">
         <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-2"></i> Post New Clarification
@@ -27,7 +27,7 @@
             <div class="stat-value">{{ public_count }}</div>
             <div class="stat-label">Public Clarifications</div>
         </div>
-        {% if current_user.has_permission('can_respond_to_clarifications') %}
+        {% if current_user.has_permission('can_create_procurement') %}
         <div class="stat-card">
             <div class="stat-value">{{ targeted_count }}</div>
             <div class="stat-label">Targeted Clarifications</div>
@@ -65,7 +65,7 @@
                 <a href="{{ url_for('clarifications.view_clarification', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn-link">
                     View Details <i class="bi bi-chevron-right ms-1"></i>
                 </a>
-                {% if current_user.has_permission('can_respond_to_clarifications') %}
+                {% if current_user.has_permission('can_create_procurement') %}
                 <a href="{{ url_for('clarifications.manage_visibility', procurement_id=procurement.id, communication_id=clarification.id) }}" class="btn-link btn-link-secondary">
                     <i class="bi bi-gear me-1"></i> Manage
                 </a>
@@ -82,7 +82,7 @@
         </div>
         <h3>No Clarifications Yet</h3>
         <p>No clarifications have been posted for this procurement.</p>
-        {% if current_user.has_permission('can_respond_to_clarifications') %}
+        {% if current_user.has_permission('can_create_procurement') %}
         <p class="text-muted">Use the "Post New Clarification" button to add one.</p>
         {% endif %}
     </div>

@@ -184,6 +184,10 @@ class User(UserMixin, db.Model):
     def has_role(self, role_code):
         return bool(self.role and self.role.code == role_code)
 
+    def has_permission(self, flag_name):
+        """Return True if the user's role grants the given permission flag."""
+        return bool(self.role and getattr(self.role, flag_name, False))
+
     def can_access_procurement(self, procurement):
         if not procurement:
             return False

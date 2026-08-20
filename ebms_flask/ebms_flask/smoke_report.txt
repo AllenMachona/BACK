@@ -9,7 +9,7 @@ login -> 200
   GET /bidders/portal (bidders.portal) -> 403
   GET /bidders/workspace/1 (bidders.workspace) -> 403
   GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
-  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications -> 200
   GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
   GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
   GET /dashboard -> 200
@@ -17,8 +17,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -33,15 +33,15 @@ login -> 200
   GET /procurements/payment-verifications -> 200
   GET /procurements/search -> 200
   GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
-  GET /reports/audit-trail (reports.audit_trail) -> 500
-  GET /reports/bidder-participation (reports.bidder_participation) -> 500
-  GET /reports/complaints (reports.complaints) -> 500
-  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
-  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
-  GET /reports/complaints/export (reports.export_complaints) -> 500
-  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/audit-trail -> 200
+  GET /reports/bidder-participation -> 200
+  GET /reports/complaints -> 200
+  GET /reports/audit-trail/export -> 200
+  GET /reports/bidder-participation/export -> 200
+  GET /reports/complaints/export -> 200
+  GET /reports/procurement-summary/export -> 200
   GET /reports/operational -> 200
-  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+  GET /reports/procurement-summary -> 200
 
 === LOGIN: d.tlou ===
 login -> 200
@@ -50,7 +50,7 @@ login -> 200
   GET /bidders/portal (bidders.portal) -> 403
   GET /bidders/workspace/1 (bidders.workspace) -> 403
   GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
-  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications -> 200
   GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 404
   GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
   GET /dashboard -> 200
@@ -58,8 +58,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -74,15 +74,15 @@ login -> 200
   GET /procurements/payment-verifications -> 200
   GET /procurements/search -> 200
   GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
-  GET /reports/audit-trail (reports.audit_trail) -> 500
-  GET /reports/bidder-participation (reports.bidder_participation) -> 500
-  GET /reports/complaints (reports.complaints) -> 500
-  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
-  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
-  GET /reports/complaints/export (reports.export_complaints) -> 500
-  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/audit-trail -> 200
+  GET /reports/bidder-participation -> 200
+  GET /reports/complaints -> 200
+  GET /reports/audit-trail/export -> 200
+  GET /reports/bidder-participation/export -> 200
+  GET /reports/complaints/export -> 200
+  GET /reports/procurement-summary/export -> 200
   GET /reports/operational -> 200
-  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+  GET /reports/procurement-summary -> 200
 
 === LOGIN: k.motsumi ===
 login -> 200
@@ -99,8 +99,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 -> 200
   GET /evaluations/ -> 200
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -140,8 +140,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 -> 200
   GET /evaluations/ -> 200
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -181,8 +181,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -214,7 +214,7 @@ login -> 200
   GET /bidders/portal -> 200
   GET /bidders/workspace/1 -> 200
   GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
-  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 500
+  GET /procurements/1/clarifications -> 200
   GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
   GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
   GET /dashboard -> 200
@@ -222,8 +222,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -263,8 +263,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -279,15 +279,15 @@ login -> 200
   GET /procurements/payment-verifications -> 200
   GET /procurements/search -> 200
   GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
-  GET /reports/audit-trail (reports.audit_trail) -> 500
-  GET /reports/bidder-participation (reports.bidder_participation) -> 500
-  GET /reports/complaints (reports.complaints) -> 500
-  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
-  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
-  GET /reports/complaints/export (reports.export_complaints) -> 500
-  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/audit-trail -> 200
+  GET /reports/bidder-participation -> 200
+  GET /reports/complaints -> 200
+  GET /reports/audit-trail/export -> 200
+  GET /reports/bidder-participation/export -> 200
+  GET /reports/complaints/export -> 200
+  GET /reports/procurement-summary/export -> 200
   GET /reports/operational -> 200
-  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+  GET /reports/procurement-summary -> 200
 
 === LOGIN: s.kgosi ===
 login -> 200
@@ -304,8 +304,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -320,15 +320,15 @@ login -> 200
   GET /procurements/payment-verifications -> 200
   GET /procurements/search -> 200
   GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
-  GET /reports/audit-trail (reports.audit_trail) -> 500
-  GET /reports/bidder-participation (reports.bidder_participation) -> 500
-  GET /reports/complaints (reports.complaints) -> 500
-  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
-  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
-  GET /reports/complaints/export (reports.export_complaints) -> 500
-  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/audit-trail -> 200
+  GET /reports/bidder-participation -> 200
+  GET /reports/complaints -> 200
+  GET /reports/audit-trail/export -> 200
+  GET /reports/bidder-participation/export -> 200
+  GET /reports/complaints/export -> 200
+  GET /reports/procurement-summary/export -> 200
   GET /reports/operational -> 200
-  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+  GET /reports/procurement-summary -> 200
 
 === LOGIN: g.motsumi ===
 login -> 200
@@ -345,8 +345,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 -> 200
   GET /evaluations/ -> 200
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
@@ -386,8 +386,8 @@ login -> 200
   GET /tenders -> 200
   GET /evaluations/1 (evaluations.detail) -> 403
   GET /evaluations/ (evaluations.index) -> 403
-  GET /messages/ (messages.inbox) -> 500
-  GET /messages/search (messages.search) -> 500
+  GET /messages/ -> 200
+  GET /messages/search -> 200
   GET /messages/unread-count -> 200
   GET /messages/1 (messages.view_message) -> 404
   GET /notifications/ -> 200
