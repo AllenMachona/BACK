@@ -79,7 +79,7 @@
     <div class="export-section">
         <h3>Export Report</h3>
         <div class="export-buttons">
-            <a href="{{ url_for('reports.bidder_participation_export') }}?{{ request.query_string.decode() }}" class="btn btn-success">
+            <a href="{{ url_for('reports.export_bidder_participation') }}?{{ request.query_string.decode() }}" class="btn btn-success">
                 <i class="bi bi-file-earmark-excel me-2"></i> Export to Excel (.xlsx)
             </a>
         </div>

@@ -87,7 +87,7 @@
         <!-- Reply Form -->
         <div class="message-reply-form" id="replyForm" style="display: none;">
             <h3 class="reply-form-title">Write a Reply</h3>
-            <form action="{{ url_for('messages.reply_message', message_id=message.id) }}" method="POST">
+            <form action="{{ url_for('messages.reply_to_message', message_id=message.id) }}" method="POST">
                 <div class="form-group">
                     <textarea name="body" class="form-control" rows="5" placeholder="Type your reply..." required></textarea>
                 </div>

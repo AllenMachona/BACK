@@ -1,113 +1,119 @@
 {% extends "base.html" %}
 {% block title %}Dashboard - EBMS Botswana{% endblock %}
-{% block content %}
-{% set active_nav = 'dashboard' %}
-
-<div class="dashboard-shell">
-    <div class="dashboard-topbar d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <span class="eyebrow">Operations overview</span>
-            <h2 class="dashboard-title mb-0">Procurement Dashboard</h2>
-        </div>
-
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Dashboard</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title">Procurement Dashboard</h1>
+        <p class="ebms-page-subtitle">Operational overview of the e-procurement lifecycle</p>
+    </div>
+    <div class="ebms-page-actions">
         {% if current_user.role.can_create_procurement %}
-        <a href="{{ url_for('procurements.create') }}" class="btn btn-primary dashboard-primary-btn">
-            <i class="bi bi-plus-lg me-1"></i>New Procurement
+        <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>New Procurement
+        </a>
+        {% endif %}
+        {% if current_user.role.can_view_all_records %}
+        <a href="{{ url_for('reports.operational') }}" class="btn btn-outline-primary">
+            <i class="bi bi-graph-up-arrow"></i>Reports
         </a>
         {% endif %}
     </div>
-
-    <div class="stat-grid mb-4">
-        <div class="stat-card stat-card-primary">
-            <div class="stat-card__icon">
-                <i class="bi bi-file-earmark-text"></i>
-            </div>
-            <div class="stat-card__body">
-                <span class="stat-label">Active Tenders</span>
-                <h2>{{ active_tenders }}</h2>
-                <small>Published &amp; open for submission</small>
-            </div>
-        </div>
-        <div class="stat-card stat-card-warning">
-            <div class="stat-card__icon">
-                <i class="bi bi-hourglass-split"></i>
-            </div>
-            <div class="stat-card__body">
-                <span class="stat-label">Pending Evaluations</span>
-                <h2>{{ pending_evaluations }}</h2>
-                <small>Awaiting committee action</small>
+</div>
+{% endblock %}
+{% block content %}
+<div class="dashboard-shell">
+    <div class="kpi-grid mb-4">
+        <div class="kpi-card">
+            <span class="kpi-icon stat-card-primary"><i class="bi bi-file-earmark-text"></i></span>
+            <div>
+                <span class="kpi-label">Active Tenders</span>
+                <div class="kpi-value">{{ active_tenders }}</div>
+                <span class="kpi-meta">Published &amp; open for submission</span>
             </div>
         </div>
-        <div class="stat-card stat-card-success">
-            <div class="stat-card__icon">
-                <i class="bi bi-people"></i>
-            </div>
-            <div class="stat-card__body">
-                <span class="stat-label">Registered Bidders</span>
-                <h2>{{ registered_bidders }}</h2>
-                <small>Total in system</small>
+        <div class="kpi-card">
+            <span class="kpi-icon stat-card-warning"><i class="bi bi-hourglass-split"></i></span>
+            <div>
+                <span class="kpi-label">Pending Evaluations</span>
+                <div class="kpi-value">{{ pending_evaluations }}</div>
+                <span class="kpi-meta">Awaiting committee action</span>
             </div>
         </div>
-        <div class="stat-card stat-card-info">
-            <div class="stat-card__icon">
-                <i class="bi bi-cloud-upload"></i>
+        <div class="kpi-card">
+            <span class="kpi-icon stat-card-success"><i class="bi bi-people"></i></span>
+            <div>
+                <span class="kpi-label">Registered Bidders</span>
+                <div class="kpi-value">{{ registered_bidders }}</div>
+                <span class="kpi-meta">Total in system</span>
             </div>
-            <div class="stat-card__body">
-                <span class="stat-label">Recent Submissions</span>
-                <h2>{{ recent_submissions }}</h2>
-                <small>Last 24 hours</small>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-icon stat-card-info"><i class="bi bi-cloud-upload"></i></span>
+            <div>
+                <span class="kpi-label">Recent Submissions</span>
+                <div class="kpi-value">{{ recent_submissions }}</div>
+                <span class="kpi-meta">Last 24 hours</span>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="panel-card">
-                <div class="panel-card__header">
-                    <div>
-                        <span class="panel-kicker">Latest activity</span>
-                        <h5 class="mb-0">Recently Updated Procurements</h5>
-                    </div>
-                    <span class="status-badge status-published"><i class="bi bi-broadcast me-1"></i>Live</span>
-                </div>
-                <div class="panel-card__body">
-                    {% if recent_procurements %}
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Tender Number</th>
-                                    <th>Title</th>
-                                    <th>Status</th>
-                                    <th>Updated</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in recent_procurements %}
-                                <tr>
-                                    <td class="fw-bold text-primary">{{ p.tender_number }}</td>
-                                    <td>{{ p.title }}</td>
-                                    <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
-                                    <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td class="text-end">
-                                        <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye me-1"></i>View
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <i class="bi bi-inboxes text-muted fs-1 mb-2"></i>
-                        <p class="text-muted mb-0">No procurements recorded yet. Create one to get started.</p>
-                    </div>
-                    {% endif %}
-                </div>
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <span class="panel-kicker">Latest activity</span>
+                <h5>Recently Updated Procurements</h5>
             </div>
+            <span class="status-badge status-submission_open"><i class="bi bi-broadcast me-1"></i>Live</span>
+        </div>
+        <div class="card-body">
+            {% if recent_procurements %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Tender Number</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Updated</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_procurements %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ p.tender_number }}</td>
+                            <td>{{ p.title }}</td>
+                            <td><span class="status-badge status-{{ p.status }}">{{ p.status_label() }}</span></td>
+                            <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('procurements.detail', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inboxes empty-state-icon"></i>
+                <div class="empty-state-title">No procurements recorded yet</div>
+                <p class="empty-state-text">Create a procurement to start the PPRA compliance workflow.</p>
+                {% if current_user.role.can_create_procurement %}
+                <div class="empty-state-actions">
+                    <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">Create Procurement</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

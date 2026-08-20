@@ -1,0 +1,198 @@
+/* =============================================================
+   EBMS — Enterprise Design Tokens
+   Central color system, typography, spacing, elevation.
+   Loaded AFTER styles.css so tokens win, but every component
+   still reads from these variables (light + dark).
+   ============================================================= */
+
+:root {
+  /* Brand */
+  --primary: #0f4c8f;
+  --primary-dark: #0b3a6e;
+  --primary-darker: #082c54;
+  --primary-light: #e7f0fb;
+  --primary-soft: #f2f8ff;
+
+  /* Semantic */
+  --success: #1a8754;
+  --success-bg: #e6f4ec;
+  --warning: #b45309;
+  --warning-bg: #fdf3e0;
+  --danger: #c4282c;
+  --danger-bg: #fbeaea;
+  --info: #0e7490;
+  --info-bg: #e3f3f7;
+
+  /* Neutral surfaces (light) */
+  --background: #f4f6f9;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --border: #d9dfe7;
+  --border-strong: #c3ccd8;
+  --text-primary: #17202b;
+  --text-secondary: #4b5a6b;
+  --text-muted: #8494a6;
+  --text-inverse: #ffffff;
+
+  --focus-ring: rgba(15, 76, 143, 0.22);
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(16, 42, 67, 0.06);
+  --shadow-sm: 0 1px 3px rgba(16, 42, 67, 0.08);
+  --shadow-md: 0 4px 14px rgba(16, 42, 67, 0.10);
+  --shadow-lg: 0 12px 32px rgba(16, 42, 67, 0.14);
+
+  /* Radius + layout */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 10px;
+  --topbar-height: 60px;
+  --sidebar-width: 252px;
+  --sidebar-width-collapsed: 72px;
+
+  /* Typography */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    --motion: all 0.18s ease;
+  }
+}
+
+/* Dark mode override — clean, muted, non-inverted. */
+:root[data-theme='dark'] {
+  --background: #0d1520;
+  --surface: #131c2a;
+  --surface-subtle: #17212f;
+  --border: #263243;
+  --border-strong: #334154;
+  --text-primary: #e7edf6;
+  --text-secondary: #b7c3d3;
+  --text-muted: #8593a8;
+  --text-inverse: #0f172a;
+
+  --primary: #4d8ee0;
+  --primary-dark: #6ba4ea;
+  --primary-darker: #3d7bd1;
+  --primary-light: #1c2c44;
+  --primary-soft: #18243a;
+
+  --success: #4cbe83;
+  --success-bg: #14301f;
+  --warning: #f0b45a;
+  --warning-bg: #382a12;
+  --danger: #ef6a70;
+  --danger-bg: #3b1c1f;
+  --info: #67c2dd;
+  --info-bg: #102c36;
+
+  --focus-ring: rgba(109, 162, 232, 0.28);
+}
+
+/* =============================================================
+   Legacy token remap (styles.css compatibility).
+   Every rule in the existing stylesheet reads --ppra-accent,
+   --bg-surface, --text-main etc. so we simply re-point those
+   to the new enterprise tokens. This upgrades every page in the
+   app to the new design system without editing each file.
+   ============================================================= */
+:root,
+:root[data-theme='light'] {
+  --ppra-navy: #0f2d52;
+  --ppra-blue: #14406f;
+  --ppra-accent: var(--primary);
+  --ppra-accent-hover: var(--primary-dark);
+  --ppra-gold: #b06a00;
+
+  --bg-canvas: var(--background);
+  --bg-surface: var(--surface);
+  --bg-subtle: var(--surface-subtle);
+  --hover-bg: #eef2f6;
+
+  --border-color: var(--border);
+  --border-hover: var(--border-strong);
+  --border: var(--border);
+
+  --text-main: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --text-muted: var(--text-muted);
+  --text-light: var(--text-muted);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --sidebar-width: var(--sidebar-width);
+
+  --primary-rgb: 15, 76, 143;
+}
+
+:root[data-theme='dark'] {
+  --ppra-navy: #0b1830;
+  --ppra-blue: #16315c;
+  --ppra-accent: #5b9ce8;
+  --ppra-accent-hover: #79b2f0;
+  --ppra-gold: #f0b45a;
+
+  --bg-canvas: var(--background);
+  --bg-surface: var(--surface);
+  --bg-subtle: var(--surface-subtle);
+  --hover-bg: #1a2433;
+
+  --border-color: var(--border);
+  --border-hover: var(--border-strong);
+
+  --text-main: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --text-muted: var(--text-muted);
+  --text-light: #6f7d92;
+
+  --primary-rgb: 93, 156, 232;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* User preference theme (stored in account settings). The
+   authenticated user's inline style already delivers --app-* so
+   we transparently fall back on the tokens above in all cases. */
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--background);
+  font-feature-settings: 'cv02', 'cv03';
+}
+
+/* =============================================================
+   Base typography & resets for a professional, calm feel.
+   ============================================================= */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1.05rem; }
+h5 { font-size: 0.98rem; }
+h6 { font-size: 0.9rem; }
+
+a {
+  color: var(--primary);
+}
+
+/* Consistent, accessible focus state. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

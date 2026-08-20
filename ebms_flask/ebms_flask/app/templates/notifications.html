@@ -1,19 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Notifications - EBMS Botswana{% endblock %}
-{% block content %}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Notifications</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
     <div>
-        <span class="eyebrow">System Alerts</span>
-        <h2 class="mb-0"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h2>
+        <h1 class="ebms-page-title"><i class="bi bi-bell me-2"></i>Notifications</h1>
+        <p class="ebms-page-subtitle">System alerts and procurement communications</p>
     </div>
     {% set unread = notifications | selectattr('is_read', 'equalto', false) | list %}
-    {% if unread %}
-    <span class="badge badge-danger fs-6">{{ unread|length }} Unread</span>
-    {% else %}
-    <span class="badge badge-success fs-6"><i class="bi bi-check-all me-1"></i>All Caught Up</span>
-    {% endif %}
+    <div class="ebms-page-actions">
+        {% if unread %}
+        <span class="badge badge-danger">{{ unread|length }} Unread</span>
+        {% else %}
+        <span class="badge badge-success"><i class="bi bi-check-all me-1"></i>All Caught Up</span>
+        {% endif %}
+    </div>
 </div>
+{% endblock %}
+{% block content %}
 
 <div class="card mb-4">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-envelope-plus me-2 text-primary"></i>Send Message</h5></div>

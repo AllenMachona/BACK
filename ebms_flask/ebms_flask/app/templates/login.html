@@ -1,79 +1,512 @@
 {% extends "base.html" %}
 {% block title %}Login - EBMS{% endblock %}
 {% block guest_content %}
-<div class="guest-shell guest-shell-compact">
-    <div class="auth-card auth-card-clean">
-        <div class="auth-panel auth-panel-left">
-            <div class="brand-logo-wrapper">
+<style>
+    .ebms-theme-wrap {
+        --bg-deep: #080d18;
+        --panel-glass: rgba(15, 23, 41, 0.72);
+        --panel-border: rgba(148, 163, 184, 0.14);
+        --field-bg: rgba(255, 255, 255, 0.03);
+        --field-border: rgba(148, 163, 184, 0.22);
+        --accent: #2dd4bf;
+        --accent-dim: rgba(45, 212, 191, 0.14);
+        --accent-warm: #f5a623;
+        --text-primary: #e8ecf4;
+        --text-muted: #8b96ac;
+        --danger: #f87171;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    #network-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        display: block;
+        background: var(--bg-deep);
+    }
+
+    .bg-gradient {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+            radial-gradient(ellipse 900px 600px at 82% 8%, rgba(45, 212, 191, 0.10), transparent 60%),
+            radial-gradient(ellipse 700px 500px at 8% 95%, rgba(245, 166, 35, 0.06), transparent 60%),
+            linear-gradient(180deg, rgba(8, 13, 24, 0.2) 0%, rgba(8, 13, 24, 0.55) 100%);
+    }
+
+    .page-shell {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 20px;
+        color: var(--text-primary);
+    }
+
+    .auth-wrap {
+        width: 100%;
+        max-width: 420px;
+        opacity: 0;
+        transform: translate(-38vw, 32vh) rotate(-6deg) scale(0.92);
+        animation: ebms-diagonal-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes ebms-diagonal-in {
+        to { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+    }
+
+    @keyframes ebms-diagonal-out {
+        to { opacity: 0; transform: translate(38vw, -32vh) rotate(6deg) scale(0.92); }
+    }
+
+    .auth-wrap.ebms-diagonal-leaving {
+        animation: ebms-diagonal-out 0.55s cubic-bezier(0.55, 0, 0.85, 0.35) forwards;
+        pointer-events: none;
+    }
+
+    .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .brand-row .auth-logo { width: 34px; height: 34px; }
+
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0;
+    }
+
+    .eyebrow::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-dim);
+    }
+
+    .page-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 28px;
+        letter-spacing: -0.01em;
+        margin: 0 0 6px;
+        color: #fff;
+    }
+
+    .page-sub {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0 0 6px;
+    }
+
+    .tagline-sub {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: var(--accent-warm);
+        margin: 0 0 22px;
+    }
+
+    .mini-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .mini-feature-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        color: var(--text-muted);
+    }
+
+    .mini-feature-list i { color: var(--accent); font-size: 13px; }
+
+    .panel {
+        background: var(--panel-glass);
+        border: 1px solid var(--panel-border);
+        border-radius: 18px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+    }
+
+    .panel-inner { padding: 32px 32px 28px; }
+
+    .ebms-alert {
+        border-radius: 10px;
+        padding: 11px 14px;
+        margin-bottom: 18px;
+        font-size: 13px;
+    }
+
+    .ebms-alert.alert-danger {
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        background: rgba(248, 113, 113, 0.08);
+        color: var(--danger);
+    }
+
+    .ebms-alert.alert-success {
+        border: 1px solid rgba(52, 211, 153, 0.35);
+        background: rgba(52, 211, 153, 0.08);
+        color: #34d399;
+    }
+
+    .ebms-alert.alert-warning,
+    .ebms-alert.alert-info {
+        border: 1px solid rgba(245, 166, 35, 0.35);
+        background: rgba(245, 166, 35, 0.08);
+        color: var(--accent-warm);
+    }
+
+    .form-head { margin-bottom: 20px; }
+
+    .form-head h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 19px;
+        color: #fff;
+        margin: 0 0 3px;
+    }
+
+    .form-head p {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    .field label {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 7px;
+    }
+
+    .field .form-control {
+        width: 100%;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 10px;
+        color: var(--text-primary);
+        padding: 11px 13px;
+        font-size: 14.5px;
+        font-family: 'Inter', sans-serif;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .field .form-control::placeholder { color: rgba(139, 150, 172, 0.55); }
+
+    .field .form-control:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: rgba(45, 212, 191, 0.045);
+        box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .row-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .remember {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .remember input { accent-color: var(--accent); }
+
+    .small-link {
+        font-size: 12.5px;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .small-link:hover { text-decoration: underline; }
+
+    .submit-btn {
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        padding: 13px 18px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        color: #062621;
+        background: linear-gradient(135deg, var(--accent), #5eead4);
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.2s ease;
+        box-shadow: 0 10px 24px -8px rgba(45, 212, 191, 0.55);
+    }
+
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -8px rgba(45, 212, 191, 0.7); }
+    .submit-btn:active { transform: translateY(0); }
+
+    .foot-note {
+        text-align: center;
+        font-size: 12.5px;
+        color: var(--text-muted);
+        margin-top: 18px;
+    }
+
+    .foot-note a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .foot-note a:hover { text-decoration: underline; }
+
+    @media (max-width: 460px) {
+        .panel-inner { padding: 24px 20px 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #network-canvas { display: none; }
+    }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<div class="ebms-theme-wrap">
+    <canvas id="network-canvas"></canvas>
+    <div class="bg-gradient"></div>
+
+    <div class="page-shell">
+        <div class="auth-wrap" id="ebms-auth-card">
+            <div class="brand-row">
                 <svg class="auth-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
                     <defs>
                         <linearGradient id="authShieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+                            <stop offset="0%" style="stop-color:#2dd4bf;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
                         </linearGradient>
-                        <filter id="logoShadow">
-                            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3"/>
-                        </filter>
                     </defs>
-                    <path d="M 60 10 L 95 30 L 95 55 Q 95 85 60 100 Q 25 85 25 55 L 25 30 Z" fill="url(#authShieldGradient)" stroke="#0284c7" stroke-width="2" filter="url(#logoShadow)"/>
+                    <path d="M 60 10 L 95 30 L 95 55 Q 95 85 60 100 Q 25 85 25 55 L 25 30 Z" fill="url(#authShieldGradient)" stroke="#0d9488" stroke-width="2"/>
                     <g transform="translate(60, 55) scale(1.2)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
                         <rect x="-6" y="-2" width="12" height="10" rx="1.5"/>
                         <path d="M -4 -2 Q -4 -8 0 -8 Q 4 -8 4 -2"/>
                         <circle cx="0" cy="2" r="1.5" fill="white"/>
                     </g>
                 </svg>
+                <p class="eyebrow">EBMS Botswana</p>
             </div>
-            <h1>EBMS Botswana</h1>
-            <p class="tagline">E-Procurement & Bid Management System</p>
-            <p class="tagline-sub">Transparent • Efficient • Accountable</p>
-            <h2>Public Procurement Portal</h2>
-            <p class="auth-description">Browse active opportunities, track tender updates, and prepare your submissions with confidence.</p>
+
+            <h1 class="page-title">Public procurement portal</h1>
+            <p class="page-sub">E-Procurement &amp; Bid Management System</p>
+            <p class="tagline-sub">Transparent · Efficient · Accountable</p>
+
             <ul class="mini-feature-list">
                 <li><i class="bi bi-check-circle-fill"></i> Live procurement notices</li>
                 <li><i class="bi bi-check-circle-fill"></i> Secure bidder access</li>
                 <li><i class="bi bi-check-circle-fill"></i> Faster registration flow</li>
             </ul>
-        </div>
 
-        <div class="auth-panel auth-panel-right">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+            <div class="panel">
+                <div class="panel-inner">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="ebms-alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
-            <div class="auth-header text-center">
-                <h2>Welcome back</h2>
-                <p>Sign in to continue</p>
-            </div>
-
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <div class="mb-3">
-                    <label class="form-label">Username or email</label>
-                    <input type="text" name="username" class="form-control" required autofocus>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="form-check">
-                        <input type="checkbox" name="remember" id="remember">
-                        <label for="remember">Remember me</label>
+                    <div class="form-head">
+                        <h2>Welcome back</h2>
+                        <p>Sign in to continue</p>
                     </div>
-                    <a href="{{ url_for('auth.forgot_password') }}" class="small-link">Forgot password?</a>
+
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        <div class="field">
+                            <label>Username or email</label>
+                            <input type="text" name="username" class="form-control" required autofocus>
+                        </div>
+                        <div class="field">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="row-between">
+                            <label class="remember">
+                                <input type="checkbox" name="remember" id="remember">
+                                Remember me
+                            </label>
+                            <a href="{{ url_for('auth.forgot_password') }}" class="small-link">Forgot password?</a>
+                        </div>
+                        <button type="submit" class="submit-btn">Sign in</button>
+                    </form>
+
+                    <p class="foot-note">New here? <a href="{{ url_for('auth.register') }}" id="ebms-register-link">Create an account</a></p>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Sign In</button>
-            </form>
-
-            <div class="auth-divider"><span>or</span></div>
-
-            <div class="text-center small-text">
-                New here? <a href="{{ url_for('auth.register') }}">Create an account</a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        var registerLink = document.getElementById('ebms-register-link');
+        var card = document.getElementById('ebms-auth-card');
+        if (registerLink && card) {
+            registerLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                var href = registerLink.getAttribute('href');
+                card.classList.add('ebms-diagonal-leaving');
+                setTimeout(function () {
+                    window.location.href = href;
+                }, 480);
+            });
+        }
+    })();
+
+    (function () {
+        var canvas = document.getElementById('network-canvas');
+        if (!canvas) return;
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) return;
+
+        var ctx = canvas.getContext('2d');
+        var W, H, dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var nodes = [];
+        var NODE_COUNT;
+        var LINK_DIST;
+        var anchors = [];
+        var pulseT = 0;
+
+        function resize() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            NODE_COUNT = Math.round((W * H) / 24000);
+            LINK_DIST = Math.max(120, Math.min(W, H) * 0.16);
+
+            anchors = [
+                { x: W * 0.14, y: H * 0.82, r: 4.5 },
+                { x: W * 0.86, y: H * 0.16, r: 4.5 }
+            ];
+        }
+
+        function seed() {
+            nodes = [];
+            for (var i = 0; i < NODE_COUNT; i++) {
+                nodes.push({
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    vx: (Math.random() - 0.5) * 0.18,
+                    vy: (Math.random() - 0.5) * 0.18,
+                    r: 1.1 + Math.random() * 1.4
+                });
+            }
+        }
+
+        function step() {
+            ctx.clearRect(0, 0, W, H);
+
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                n.x += n.vx;
+                n.y += n.vy;
+                if (n.x < 0 || n.x > W) n.vx *= -1;
+                if (n.y < 0 || n.y > H) n.vy *= -1;
+            }
+
+            ctx.lineWidth = 1;
+            for (var a = 0; a < nodes.length; a++) {
+                for (var b = a + 1; b < nodes.length; b++) {
+                    var dx = nodes[a].x - nodes[b].x, dy = nodes[a].y - nodes[b].y;
+                    var d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < LINK_DIST) {
+                        var alpha = (1 - d / LINK_DIST) * 0.16;
+                        ctx.strokeStyle = 'rgba(45, 212, 191, ' + alpha + ')';
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[a].x, nodes[a].y);
+                        ctx.lineTo(nodes[b].x, nodes[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
+            for (var i2 = 0; i2 < nodes.length; i2++) {
+                var nn = nodes[i2];
+                ctx.beginPath();
+                ctx.arc(nn.x, nn.y, nn.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            var p0 = anchors[0], p1 = anchors[1];
+            ctx.strokeStyle = 'rgba(45, 212, 191, 0.28)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.stroke();
+
+            pulseT += 0.006;
+            var t = pulseT % 1;
+            var px = p0.x + (p1.x - p0.x) * t;
+            var py = p0.y + (p1.y - p0.y) * t;
+            ctx.fillStyle = '#2dd4bf';
+            ctx.shadowColor = 'rgba(45, 212, 191, 0.9)';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            anchors.forEach(function (an) {
+                ctx.beginPath();
+                ctx.arc(an.x, an.y, an.r, 0, Math.PI * 2);
+                ctx.fillStyle = '#e8ecf4';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(an.x, an.y, an.r + 5, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(45, 212, 191, 0.35)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(step);
+        }
+
+        resize();
+        seed();
+        requestAnimationFrame(step);
+        window.addEventListener('resize', function () {
+            resize();
+            seed();
+        });
+    })();
+</script>
 {% endblock %}

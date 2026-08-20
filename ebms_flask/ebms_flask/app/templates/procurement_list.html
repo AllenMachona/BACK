@@ -1,23 +1,34 @@
 {% extends "base.html" %}
 {% block title %}Procurements - EBMS Botswana{% endblock %}
-{% block content %}
-{% set active_nav = 'procurements' %}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Procurements</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
     <div>
-        <span class="eyebrow">Tender Management</span>
-        <h2 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Procurements</h2>
+        <h1 class="ebms-page-title"><i class="bi bi-folder2-open me-2"></i>Procurements</h1>
+        <p class="ebms-page-subtitle">Tender Management &amp; PPRA compliance workspace</p>
     </div>
-    {% if current_user.role.can_create_procurement %}
-    <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Create Procurement
-    </a>
-    {% endif %}
+    <div class="ebms-page-actions">
+        {% if current_user.role.can_create_procurement %}
+        <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>Create Procurement
+        </a>
+        {% endif %}
+    </div>
 </div>
-
-<div class="card">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-list-task me-2 text-muted"></i>All Registered Tenders</h5>
+{% endblock %}
+{% block content %}
+<div class="ebms-card">
+    <div class="card-header">
+        <div>
+            <span class="panel-kicker">Tender register</span>
+            <h5>All Registered Tenders</h5>
+        </div>
         <span class="badge badge-primary">{{ procurements|length }} Tenders</span>
     </div>
     <div class="card-body">
@@ -55,13 +66,19 @@
             </table>
         </div>
         {% else %}
-        <div class="text-center py-4">
-            <i class="bi bi-inboxes text-muted fs-1 mb-2"></i>
-            <p class="text-muted mb-0">No procurements exist yet.
-                {% if current_user.role.can_create_procurement %}
-                <a href="{{ url_for('procurements.create') }}" class="fw-bold">Create the first one.</a>
-                {% endif %}
+        <div class="empty-state">
+            <i class="bi bi-inboxes empty-state-icon"></i>
+            <div class="empty-state-title">No procurements found</div>
+            <p class="empty-state-text">There are no registered tenders yet.
+                {% if current_user.role.can_create_procurement %}Create the first one to begin the procurement workflow.{% endif %}
             </p>
+            {% if current_user.role.can_create_procurement %}
+            <div class="empty-state-actions">
+                <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i>Create Procurement
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>

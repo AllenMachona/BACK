@@ -26,34 +26,43 @@ def inbox():
     """User's message inbox with unread count."""
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    
-    # Get messages for current user
-    user_messages = MessageRecipient.query.filter(
+    filter_type = request.args.get('filter', '').strip()
+
+    base = MessageRecipient.query.filter(
         MessageRecipient.user_id == current_user.id,
-        MessageRecipient.archived_at == None
-    ).order_by(MessageRecipient.created_at.desc()).paginate(page=page, per_page=per_page)
-    
+        MessageRecipient.archived_at.is_(None),
+    )
+    if filter_type == 'unread':
+        base = base.filter(MessageRecipient.read_at.is_(None))
+
+    user_messages = base.order_by(MessageRecipient.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False)
+
     unread_count = MessageRecipient.query.filter(
         MessageRecipient.user_id == current_user.id,
-        MessageRecipient.read_at == None,
-        MessageRecipient.archived_at == None
+        MessageRecipient.read_at.is_(None),
+        MessageRecipient.archived_at.is_(None),
     ).count()
-    
+
     # Get available recipients for composition
-    users = User.query.filter(User.id != current_user.id, User.is_active == True).order_by(
+    users = User.query.filter(User.id != current_user.id, User.is_active.is_(True)).order_by(
         User.first_name, User.last_name
     ).all()
-    
+
     bidders = Bidder.query.filter_by(active=True, suspended=False).all()
     roles = Role.query.all()
-    
+
     return render_template(
         'messages/inbox.html',
-        messages=user_messages,
+        messages=user_messages.items,
+        total_messages=user_messages.total,
+        pages=user_messages.pages,
+        page=user_messages.page,
         unread_count=unread_count,
         users=users,
         bidders=bidders,
-        roles=roles
+        roles=roles,
+        filter=filter_type,
     )
 
 

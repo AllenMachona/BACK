@@ -1,17 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Bidder Portal - EBMS Botswana{% endblock %}
-{% block content %}
-{% set active_nav = 'bidders' %}
-
-<div class="portal-shell">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <span class="eyebrow">Bidder Workspace</span>
-            <h2 class="mb-0"><i class="bi bi-shop me-2 text-primary"></i>Bidder Portal</h2>
-        </div>
-        <span class="status-badge status-published"><i class="bi bi-building me-1"></i>{{ current_user.bidder.company_name }}</span>
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Bidder Portal</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-shop me-2"></i>Bidder Portal</h1>
+        <p class="ebms-page-subtitle">Browse open tenders, submit bids and manage your documents</p>
     </div>
-
+    <div class="ebms-page-actions">
+        <span class="status-badge status-submission_open"><i class="bi bi-building me-1"></i>{{ current_user.bidder.company_name }}</span>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="portal-shell">
     <div class="alert alert-info mb-4">
         <i class="bi bi-info-circle me-2 fs-5"></i>
         <div>

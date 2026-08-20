@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Message Search - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <div class="page-title-section">
+            <h1><i class="bi bi-search"></i> Message Search</h1>
+            <p class="page-subtitle">Results for "{{ query }}"</p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Back to Inbox
+            </a>
+        </div>
+    </div>
+
+    <form class="toolbar-search" method="GET" action="{{ url_for('messages.search') }}" style="margin-bottom: 1.5rem;">
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" placeholder="Search messages..." value="{{ query }}" class="search-input">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    {% if results %}
+    <div class="messages-list">
+        {% for recipient, message in results %}
+        <div class="message-card" onclick="window.location='{{ url_for('messages.view_message', message_id=message.id) }}'" style="cursor: pointer;">
+            <div class="message-card-header">
+                <div class="message-sender-info">
+                    <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
+                        {{ message.sender.full_name()[0].upper() }}
+                    </div>
+                    <div class="message-sender-details">
+                        <div class="message-sender-name">{{ message.sender.full_name() }}</div>
+                        <div class="message-sender-role">{{ message.sender.role.name if message.sender.role else 'User' }}</div>
+                    </div>
+                </div>
+                <div class="message-metadata">
+                    <div class="message-time">{{ message.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+                </div>
+            </div>
+            <div class="message-card-body">
+                <h4 class="message-subject">{{ message.subject }}</h4>
+                <p class="message-preview">{{ message.body[:150] }}{% if message.body|length > 150 %}...{% endif %}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-search"></i></div>
+        <h3>No Messages Found</h3>
+        <p>No messages matched your search for "{{ query }}". Try different keywords.</p>
+        <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary mt-3">
+            <i class="bi bi-arrow-left me-2"></i> Back to Inbox
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.container-main { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.page-title-section { margin-bottom: 1rem; }
+.page-header h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; color: var(--text-main); }
+.page-subtitle { margin: 0; color: var(--text-muted); }
+.toolbar-search { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; }
+.toolbar-search input { flex: 1; border: none; background: transparent; color: var(--text-body); font-size: 0.9rem; }
+.messages-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.message-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; transition: all 0.15s ease; }
+.message-card:hover { border-color: var(--ppra-accent); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); }
+.message-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.message-sender-info { display: flex; align-items: center; gap: 0.75rem; }
+.avatar-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
+.message-sender-name { font-weight: 600; color: var(--text-main); }
+.message-sender-role { font-size: 0.8rem; color: var(--text-muted); }
+.message-time { font-size: 0.8rem; color: var(--text-muted); }
+.message-card-body { margin-top: 0.75rem; }
+.message-subject { margin: 0 0 0.25rem 0; color: var(--text-main); font-size: 1rem; }
+.message-preview { margin: 0; color: var(--text-body); font-size: 0.9rem; }
+.empty-state { text-align: center; padding: 4rem 2rem; background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border-color); }
+.empty-state-icon { font-size: 3.5rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.5; }
+.empty-state h3 { color: var(--text-main); margin-bottom: 0.5rem; }
+.empty-state p { color: var(--text-muted); margin: 0 0 1rem 0; }
+.btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.btn-primary { background: var(--ppra-accent); color: white; border: 1px solid var(--ppra-accent); }
+.btn-outline-secondary { background: transparent; color: var(--text-body); border: 1px solid var(--border-color); }
+.btn-outline-secondary:hover { background: var(--bg-subtle); }
+</style>
+{% endblock %}

@@ -39,22 +39,17 @@ class ReportsService:
         
         # Base query
         query = db.session.query(
-            Procurement.id,
+            Procurement.id.label('procurement_id'),
             Procurement.tender_number,
             Procurement.title,
+            Bidder.id.label('bidder_id'),
             Bidder.company_name,
-            Bidder.ppra_registration_number,
             Submission.submitted_at,
             Submission.status,
-            Evaluation.evaluation_stage,
-            Evaluation.passed
         ).join(
             Submission, Procurement.id == Submission.procurement_id
         ).join(
             Bidder, Submission.bidder_id == Bidder.id
-        ).outerjoin(
-            Evaluation, (Evaluation.procurement_id == Procurement.id) & 
-                       (Evaluation.bidder_id == Submission.bidder_id)
         )
         
         # Apply filters
@@ -76,18 +71,34 @@ class ReportsService:
         # Get results
         results = query.order_by(Procurement.tender_number, Bidder.company_name).all()
         
-        # Format as dicts
+        # Format as dicts (keys match the bidder participation report template)
         rows = []
-        for proc_id, tender_num, title, company, reg_num, submit_date, status, eval_stage, passed in results:
+        for proc_id, tender_num, title, bidder_id, company, submit_date, status in results:
+            # Representative evaluation score for this bidder on this procurement
+            evaluation = Evaluation.query.filter(
+                Evaluation.procurement_id == proc_id,
+                Evaluation.bidder_id == bidder_id,
+                Evaluation.score.isnot(None),
+            ).order_by(Evaluation.id.desc()).first()
+
+            evaluation_score = None
+            if evaluation is not None:
+                evaluation_score = float(evaluation.consensus_score or evaluation.score)
+
+            # Has an award been published with this bidder as the winner?
+            from app.models.award import Award
+            award_status = 'awarded' if Award.query.filter_by(
+                procurement_id=proc_id, winning_bidder_id=bidder_id
+            ).first() else None
+
             rows.append({
-                'Procurement': tender_num,
-                'Title': title,
-                'Bidder': company,
-                'Registration Number': reg_num or 'N/A',
-                'Submission Date': submit_date.strftime('%Y-%m-%d %H:%M') if submit_date else 'N/A',
-                'Status': status.replace('_', ' ').title(),
-                'Evaluation Stage': eval_stage.replace('_', ' ').title() if eval_stage else '-',
-                'Evaluation Result': 'Passed' if passed == True else ('Failed' if passed == False else 'Pending'),
+                'procurement_title': title,
+                'tender_number': tender_num,
+                'bidder_name': company,
+                'submission_date': submit_date,
+                'status': status,
+                'evaluation_score': evaluation_score,
+                'award_status': award_status,
             })
         
         return rows

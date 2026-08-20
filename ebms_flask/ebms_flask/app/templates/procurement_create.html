@@ -1,18 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Create Procurement - EBMS Botswana{% endblock %}
-{% block content %}
-{% set active_nav = 'procurements' %}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('procurements.list_procurements') }}">Procurements</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Create</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
     <div>
-        <span class="eyebrow">Procurement Management</span>
-        <h2 class="mb-0"><i class="bi bi-plus-circle me-2 text-primary"></i>New Procurement</h2>
+        <h1 class="ebms-page-title"><i class="bi bi-plus-circle me-2"></i>New Procurement</h1>
+        <p class="ebms-page-subtitle">Create a tender and begin the PPRA workflow</p>
     </div>
-    <a href="{{ url_for('procurements.list_procurements') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back to List
-    </a>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('procurements.list_procurements') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>Back to List
+        </a>
+    </div>
 </div>
-
+{% endblock %}
+{% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data">

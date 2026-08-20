@@ -1,0 +1,413 @@
+Users in DB: 12
+Users present: ['AllyFomso', 'admin', 'bidder1', 'bidder14', 'd.tlou', 'g.motsumi', 'j.molefe', 'k.motsumi', 'n.kgosi', 'p.seleka', 'p.seleka2', 's.kgosi']
+Procurement ids in DB: [1, 2, 3, 4]
+
+=== LOGIN: admin ===
+login -> 200
+  GET /admin/settings -> 200
+  GET /admin/users -> 200
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 -> 200
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof -> 200
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 500
+  GET /reports/bidder-participation (reports.bidder_participation) -> 500
+  GET /reports/complaints (reports.complaints) -> 500
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
+  GET /reports/complaints/export (reports.export_complaints) -> 500
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/operational -> 200
+  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+
+=== LOGIN: d.tlou ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 404
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create -> 200
+  GET /procurements/1 -> 200
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof -> 200
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 500
+  GET /reports/bidder-participation (reports.bidder_participation) -> 500
+  GET /reports/complaints (reports.complaints) -> 500
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
+  GET /reports/complaints/export (reports.export_complaints) -> 500
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/operational -> 200
+  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+
+=== LOGIN: k.motsumi ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 -> 200
+  GET /evaluations/ -> 200
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 (procurements.detail) -> 403
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof (procurements.download_payment_proof) -> 403
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403
+
+=== LOGIN: n.kgosi ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 -> 200
+  GET /evaluations/ -> 200
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 (procurements.detail) -> 403
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof (procurements.download_payment_proof) -> 403
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403
+
+=== LOGIN: p.seleka ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 (procurements.detail) -> 403
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof (procurements.download_payment_proof) -> 403
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403
+
+=== LOGIN: bidder1 ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal -> 200
+  GET /bidders/workspace/1 -> 200
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 500
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 -> 200
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof -> 200
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ (procurements.list_procurements) -> 403
+  GET /procurements/payment-verifications (procurements.payment_verifications) -> 403
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403
+
+=== LOGIN: j.molefe ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 -> 200
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof -> 200
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 500
+  GET /reports/bidder-participation (reports.bidder_participation) -> 500
+  GET /reports/complaints (reports.complaints) -> 500
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
+  GET /reports/complaints/export (reports.export_complaints) -> 500
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/operational -> 200
+  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+
+=== LOGIN: s.kgosi ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 -> 200
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof -> 200
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 500
+  GET /reports/bidder-participation (reports.bidder_participation) -> 500
+  GET /reports/complaints (reports.complaints) -> 500
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 500
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 500
+  GET /reports/complaints/export (reports.export_complaints) -> 500
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 500
+  GET /reports/operational -> 200
+  GET /reports/procurement-summary (reports.procurement_summary) -> 500
+
+=== LOGIN: g.motsumi ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 -> 200
+  GET /evaluations/ -> 200
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 (procurements.detail) -> 403
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof (procurements.download_payment_proof) -> 403
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403
+
+=== LOGIN: p.seleka2 ===
+login -> 200
+  GET /admin/settings (admin.settings) -> 403
+  GET /admin/users (admin.users) -> 403
+  GET /bidders/portal (bidders.portal) -> 403
+  GET /bidders/workspace/1 (bidders.workspace) -> 403
+  GET /procurements/1/clarifications/1/download (clarifications.download_clarification_file) -> 404
+  GET /procurements/1/clarifications (clarifications.list_clarifications) -> 403
+  GET /procurements/1/clarifications/1/manage-visibility (clarifications.manage_visibility) -> 403
+  GET /procurements/1/clarifications/1 (clarifications.view_clarification) -> 404
+  GET /dashboard -> 200
+  GET /tenders/1 -> 200
+  GET /tenders -> 200
+  GET /evaluations/1 (evaluations.detail) -> 403
+  GET /evaluations/ (evaluations.index) -> 403
+  GET /messages/ (messages.inbox) -> 500
+  GET /messages/search (messages.search) -> 500
+  GET /messages/unread-count -> 200
+  GET /messages/1 (messages.view_message) -> 404
+  GET /notifications/ -> 200
+  GET /notifications/unread-count -> 200
+  GET /procurements/create (procurements.create) -> 403
+  GET /procurements/1 (procurements.detail) -> 403
+  GET /procurements/1/documents/1/download (procurements.download_document) -> 404
+  GET /procurements/payments/1/proof (procurements.download_payment_proof) -> 403
+  GET /procurements/1/submission/1/download (procurements.download_submission) -> 404
+  GET /procurements/1/tender-docs/<string:doc_type>/download (procurements.download_tender_document) -> 404
+  GET /procurements/ -> 200
+  GET /procurements/payment-verifications -> 200
+  GET /procurements/search -> 200
+  GET /procurements/1/tender-docs/<string:doc_type>/view (procurements.view_tender_document) -> 404
+  GET /reports/audit-trail (reports.audit_trail) -> 403
+  GET /reports/bidder-participation (reports.bidder_participation) -> 403
+  GET /reports/complaints (reports.complaints) -> 403
+  GET /reports/audit-trail/export (reports.export_audit_trail) -> 403
+  GET /reports/bidder-participation/export (reports.export_bidder_participation) -> 403
+  GET /reports/complaints/export (reports.export_complaints) -> 403
+  GET /reports/procurement-summary/export (reports.export_procurement_summary) -> 403
+  GET /reports/operational (reports.operational) -> 403
+  GET /reports/procurement-summary (reports.procurement_summary) -> 403

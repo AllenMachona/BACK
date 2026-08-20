@@ -193,25 +193,43 @@ def export_procurement_summary():
 @permission_required('can_view_all_records')
 def audit_trail():
     """Audit trail report."""
+    user_id = request.args.get('user_id', type=int)
     action = request.args.get('action', type=str)
     entity_type = request.args.get('entity_type', type=str)
-    
+    page = request.args.get('page', 1, type=int)
+
+    query = AuditLog.query
+    if user_id:
+        query = query.filter(AuditLog.user_id == user_id)
+    if action:
+        query = query.filter(AuditLog.action.like(f"%{action}%"))
+    if entity_type:
+        query = query.filter(AuditLog.entity_type == entity_type)
+
     filters = {}
+    if user_id:
+        filters['user_id'] = user_id
     if action:
         filters['action'] = action
     if entity_type:
         filters['entity_type'] = entity_type
-    
-    report_data = ReportsService.generate_audit_report(filters)
-    
+
+    audit_logs = query.order_by(AuditLog.created_at.desc()).paginate(
+        page=page, per_page=25, error_out=False)
+
     # Get filter options
+    from app.models.user import User
+    users = User.query.order_by(User.first_name, User.last_name).all()
     from sqlalchemy.sql import distinct
     actions = db.session.query(distinct(AuditLog.action)).all()
     entity_types = db.session.query(distinct(AuditLog.entity_type)).all()
-    
+
     return render_template(
         'reports/audit_trail.html',
-        data=report_data,
+        audit_logs=audit_logs.items,
+        page=audit_logs.page,
+        pages=audit_logs.pages,
+        users=users,
         actions=[a[0] for a in actions if a[0]],
         entity_types=[e[0] for e in entity_types if e[0]],
         filters=filters

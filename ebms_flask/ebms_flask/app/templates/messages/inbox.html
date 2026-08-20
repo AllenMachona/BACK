@@ -18,7 +18,7 @@
 
     <div class="page-toolbar">
         <div class="toolbar-filters">
-            <form class="toolbar-search" method="GET" action="{{ url_for('messages.inbox') }}">
+            <form class="toolbar-search" method="GET" action="{{ url_for('messages.search') }}">
                 <i class="bi bi-search"></i>
                 <input type="text" name="q" placeholder="Search messages..." value="{{ request.args.get('q', '') }}" class="search-input">
                 {% if request.args.get('q') %}
@@ -39,26 +39,26 @@
     {% if messages %}
     <div class="messages-list">
         {% for message in messages %}
-        <div class="message-card {{ 'message-unread' if not message.is_read() else '' }}" onclick="window.location='{{ url_for('messages.view_message', message_id=message.id) }}'" style="cursor: pointer;">
+        <div class="message-card {{ 'message-unread' if not message.is_read() else '' }}" onclick="window.location='{{ url_for('messages.view_message', message_id=message.message_id) }}'" style="cursor: pointer;">
             <div class="message-card-header">
                 <div class="message-sender-info">
                     <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
-                        {{ message.sender.full_name()[0].upper() }}
+                        {{ message.message.sender.full_name()[0].upper() }}
                     </div>
                     <div class="message-sender-details">
                         <div class="message-sender-name">
-                            {{ message.sender.full_name() }}
-                            {% if message.message_type == 'broadcast' %}
+                            {{ message.message.sender.full_name() }}
+                            {% if message.message.message_type == 'broadcast' %}
                                 <span class="badge badge-info">Broadcast</span>
-                            {% elif message.message_type == 'targeted' %}
+                            {% elif message.message.message_type == 'targeted' %}
                                 <span class="badge badge-warning">Targeted</span>
                             {% endif %}
                         </div>
-                        <div class="message-sender-role">{{ message.sender.role.name if message.sender.role else 'User' }}</div>
+                        <div class="message-sender-role">{{ message.message.sender.role.name if message.message.sender.role else 'User' }}</div>
                     </div>
                 </div>
                 <div class="message-metadata">
-                    <div class="message-time">{{ message.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+                    <div class="message-time">{{ message.message.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
                     {% if not message.is_read() %}
                         <div class="unread-indicator"><i class="bi bi-circle-fill"></i></div>
                     {% endif %}
@@ -66,13 +66,13 @@
             </div>
 
             <div class="message-card-body">
-                <h4 class="message-subject">{{ message.subject }}</h4>
-                <p class="message-preview">{{ message.body[:150] }}{% if message.body|length > 150 %}...{% endif %}</p>
+                <h4 class="message-subject">{{ message.message.subject }}</h4>
+                <p class="message-preview">{{ message.message.body[:150] }}{% if message.message.body|length > 150 %}...{% endif %}</p>
             </div>
 
             <div class="message-card-footer">
                 <div class="message-tags">
-                    {% if message.reply_to_id %}
+                    {% if message.message.reply_to_id %}
                         <span class="tag tag-secondary"><i class="bi bi-reply"></i> Reply</span>
                     {% endif %}
                 </div>
@@ -92,7 +92,7 @@
                     </a>
                 {% endif %}
 
-                {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                {% for p in range([1, page-2]|max, [pages, page+2]|min + 1) %}
                     {% if p == page %}
                         <span class="pagination-current">{{ p }}</span>
                     {% else %}

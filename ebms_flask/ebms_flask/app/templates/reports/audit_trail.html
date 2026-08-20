@@ -74,7 +74,7 @@
     <div class="export-section">
         <h3>Export Report</h3>
         <div class="export-buttons">
-            <a href="{{ url_for('reports.audit_trail_export') }}?{{ request.query_string.decode() }}" class="btn btn-success">
+            <a href="{{ url_for('reports.export_audit_trail') }}?{{ request.query_string.decode() }}" class="btn btn-success">
                 <i class="bi bi-file-earmark-excel me-2"></i> Export to Excel (.xlsx)
             </a>
         </div>
@@ -97,12 +97,12 @@
                 <div class="audit-log-header">
                     <div class="audit-log-info">
                         <h4 class="audit-log-action">
-                            <i class="bi bi-{{ log_icon(log.action) }} me-2"></i>
+                            <i class="bi bi-activity me-2"></i>
                             <strong>{{ log.action|upper }}</strong> on {{ log.entity_type }}
                         </h4>
                         <div class="audit-log-meta">
                             <span><i class="bi bi-person me-1"></i> {{ log.user.full_name() if log.user else 'System' }}</span>
-                            <span><i class="bi bi-calendar me-1"></i> {{ log.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+                            <span><i class="bi bi-calendar me-1"></i> {{ log.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
                             <span><i class="bi bi-globe me-1"></i> {{ log.ip_address or 'N/A' }}</span>
                         </div>
                     </div>
@@ -158,7 +158,7 @@
                     </a>
                 {% endif %}
 
-                {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                {% for p in range([1, page-2]|max, [pages, page+2]|min + 1) %}
                     {% if p == page %}
                         <span class="pagination-current">{{ p }}</span>
                     {% else %}

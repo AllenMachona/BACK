@@ -1,90 +1,257 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="{% if current_user.is_authenticated %}{{ 'dark' if current_user.get_preference('theme', 'light') == 'dark' else 'light' }}{% else %}light{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block meta %}{% endblock %}
     <title>{% block title %}EBMS Botswana{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='components.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    {% block styles %}{% endblock %}
 </head>
 <body {% if current_user.is_authenticated %}style="{{ current_user.theme_style() }}"{% else %}class="guest-auth"{% endif %}>
+
     {% if current_user.is_authenticated %}
-    <header class="navbar">
-        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
-            <svg class="navbar-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-                <defs>
-                    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <path d="M 60 10 L 95 30 L 95 55 Q 95 85 60 100 Q 25 85 25 55 L 25 30 Z" fill="url(#shieldGradient)" stroke="#0284c7" stroke-width="1"/>
-                <g transform="translate(60, 55) scale(1.2)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
-                    <rect x="-6" y="-2" width="12" height="10" rx="1.5"/>
-                    <path d="M -4 -2 Q -4 -8 0 -8 Q 4 -8 4 -2"/>
-                    <circle cx="0" cy="2" r="1.5" fill="white"/>
-                </g>
-            </svg>
-            <span class="navbar-brand-text">EBMS</span>
+    {% set endpoint = request.endpoint or '' %}
+    {% set is_admin = current_user.role.can_admin_system %}
+    {% set is_bidder = current_user.has_role('bidder') %}
+    {% set can_reports = current_user.role.can_view_all_records %}
+    {% set can_payverify = current_user.role.can_publish or current_user.role.can_approve_procurement or is_admin %}
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="ebms-topbar" role="banner">
+        <button type="button" class="ebms-sidebar-toggle" id="ebmsSidebarToggle" aria-label="Toggle navigation" aria-expanded="true">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+
+        <a class="ebms-brand" href="{{ url_for('dashboard.index') }}">
+            <span class="ebms-brand-mark" aria-hidden="true">EB</span>
+            <span class="ebms-brand-text">EBMS Botswana</span>
         </a>
-        <div class="navbar-user">
-            <div class="navbar-user-info">
-                <i class="bi bi-person-circle"></i>
-                <span>{{ current_user.full_name() }} <small>({{ current_user.role.name }})</small></span>
+
+        <!-- Global search -->
+        <form class="ebms-search" method="GET" action="{{ url_for('procurements.search') }}" role="search" aria-label="Global search">
+            <i class="bi bi-search search-icon" aria-hidden="true"></i>
+            <input type="text" name="q" class="search-input" placeholder="Search procurements, users…" aria-label="Search">
+        </form>
+
+        <div class="ebms-top-actions">
+            <!-- Notifications -->
+            <button type="button" class="topbar-icon-btn" id="notificationsBtn" data-dropdown-target="notificationsMenu" aria-label="Notifications" aria-haspopup="true">
+                <i class="bi bi-bell" aria-hidden="true"></i>
+                <span class="count-badge" id="notificationsCount" style="display:none;">0</span>
+            </button>
+
+            <!-- Messages -->
+            <button type="button" class="topbar-icon-btn" id="messagesBtn" data-dropdown-target="messagesMenu" aria-label="Messages" aria-haspopup="true">
+                <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                <span class="count-badge" id="messagesCount" style="display:none;">0</span>
+            </button>
+
+            <!-- Dark mode toggle -->
+            <button type="button" class="topbar-icon-btn" id="ebmsThemeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <i class="bi bi-moon-stars" aria-hidden="true"></i>
+            </button>
+
+            <!-- User menu -->
+            <div class="ebms-user-menu" id="ebmsUserMenu" data-dropdown-target="userMenu" role="button" tabindex="0" aria-haspopup="true" aria-label="Account menu">
+                <span class="ebms-user-avatar" aria-hidden="true">{{ current_user.full_name()[:1].upper() }}</span>
+                <span class="ebms-user-card">
+                    <span class="ebms-user-name">{{ current_user.full_name() }}</span>
+                    <span class="ebms-user-role">{{ current_user.role.name }}</span>
+                </span>
+                <i class="bi bi-chevron-down caret" aria-hidden="true"></i>
             </div>
-            <a href="{{ url_for('auth.user_settings') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-gear me-1"></i>My Settings</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
         </div>
     </header>
+<!-- Notifications dropdown -->
+    <div class="ebms-dropdown" id="notificationsMenu" role="menu" aria-label="Notifications">
+        <div class="ebms-dropdown-header">
+            <span>Notifications</span>
+            <a class="link-all" href="{{ url_for('notifications.index') }}">View all</a>
+        </div>
+        <div class="ebms-dropdown-empty">No new notifications.</div>
+        <div class="ebms-dropdown-footer">
+            <a href="{{ url_for('notifications.index') }}">
+                <i class="bi bi-inbox me-1"></i>Open notification centre
+            </a>
+        </div>
+    </div>
 
-    <div class="app-container">
-        <nav class="sidebar">
-            <div class="sidebar-profile">
-                <div class="avatar-badge"><i class="bi bi-person-fill"></i></div>
-                <div>
-                    <strong>{{ current_user.full_name() }}</strong>
-                    <small>{{ current_user.role.name }}</small>
-                </div>
-            </div>
-            <a class="nav-link {{ 'active' if active_nav == 'search' else '' }}" href="{{ url_for('procurements.search') }}"><i class="bi bi-search"></i>Search</a>
-            <a class="nav-link {{ 'active' if active_nav == 'notifications' else '' }}" href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i>Messages</a>
-            {% if not current_user.has_role('bidder') %}
-            <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
-            <a class="nav-link {{ 'active' if active_nav == 'procurements' else '' }}" href="{{ url_for('procurements.list_procurements') }}"><i class="bi bi-folder2-open"></i>Procurements</a>
-            {% if current_user.role.can_approve_procurement or current_user.role.can_publish or current_user.role.can_admin_system %}
-            <a class="nav-link {{ 'active' if active_nav == 'payment_verifications' else '' }}" href="{{ url_for('procurements.payment_verifications') }}"><i class="bi bi-credit-card-2-front"></i>Payment Verifications</a>
+    <!-- Messages dropdown -->
+    <div class="ebms-dropdown" id="messagesMenu" role="menu" aria-label="Messages">
+        <div class="ebms-dropdown-header">
+            <span>Messages</span>
+            <a class="link-all" href="{{ url_for('messages.inbox') }}">View all</a>
+        </div>
+        <div class="ebms-dropdown-empty">No new messages.</div>
+        <div class="ebms-dropdown-footer">
+            <a href="{{ url_for('messages.inbox') }}">
+                <i class="bi bi-envelope me-1"></i>Go to inbox
+            </a>
+        </div>
+    </div>
+
+    <!-- User menu dropdown -->
+    <div class="ebms-dropdown user-menu-dropdown" id="userMenu" role="menu" aria-label="Account">
+        <div class="ebms-dropdown-header">
+            <span>{{ current_user.full_name() }}</span>
+        </div>
+        <div class="menu-section">
+            <a class="menu-item" href="{{ url_for('auth.user_settings') }}">
+                <i class="bi bi-person" aria-hidden="true"></i>My Profile &amp; Settings
+            </a>
+            <a class="menu-item" href="{{ url_for('notifications.index') }}">
+                <i class="bi bi-bell" aria-hidden="true"></i>Notifications
+            </a>
+            <a class="menu-item" href="{{ url_for('messages.inbox') }}">
+                <i class="bi bi-chat-square-text" aria-hidden="true"></i>Messages
+            </a>
+            {% if is_admin %}
+            <div class="menu-divider"></div>
+            <a class="menu-item" href="{{ url_for('admin.users') }}">
+                <i class="bi bi-people" aria-hidden="true"></i>User Management
+            </a>
+            <a class="menu-item" href="{{ url_for('admin.settings') }}">
+                <i class="bi bi-gear" aria-hidden="true"></i>System Settings
+            </a>
+            {% endif %}
+        </div>
+        <div class="menu-footer">
+            <a class="menu-item" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out
+            </a>
+        </div>
+    </div>
+
+    <div class="ebms-app">
+        <!-- SIDEBAR -->
+        <nav class="ebms-sidebar" aria-label="Main navigation">
+            <div class="ebms-nav-section">Overview</div>
+
+            {% if not is_bidder %}
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('dashboard.') else '' }}"
+               href="{{ url_for('dashboard.dashboard') }}" data-title="Dashboard">
+                <i class="bi bi-speedometer2" aria-hidden="true"></i><span>Dashboard</span>
+            </a>
+            {% else %}
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('bidders.') else '' }}"
+               href="{{ url_for('bidders.portal') }}" data-title="Bidder Portal">
+                <i class="bi bi-shop" aria-hidden="true"></i><span>Bidder Portal</span>
+            </a>
+            {% endif %}
+
+            {% if not is_bidder %}
+            <div class="ebms-nav-section">Procurement</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('procurements.') and endpoint != 'procurements.payment_verifications' else '' }}"
+               href="{{ url_for('procurements.list_procurements') }}" data-title="Procurements">
+                <i class="bi bi-folder2-open" aria-hidden="true"></i><span>Procurements</span>
+            </a>
+            {% if can_payverify %}
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.payment_verifications' else '' }}"
+               href="{{ url_for('procurements.payment_verifications') }}" data-title="Payment Verifications">
+                <i class="bi bi-credit-card-2-front" aria-hidden="true"></i><span>Payment Verifications</span>
+            </a>
             {% endif %}
             {% if current_user.role.can_evaluate %}
-            <a class="nav-link {{ 'active' if active_nav == 'evaluations' else '' }}" href="{{ url_for('evaluations.index') }}"><i class="bi bi-clipboard-check"></i>Evaluations</a>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('evaluations.') else '' }}"
+               href="{{ url_for('evaluations.index') }}" data-title="Evaluations">
+                <i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Evaluations</span>
+            </a>
             {% endif %}
             {% endif %}
-            {% if current_user.has_role('bidder') %}
-            <a class="nav-link {{ 'active' if active_nav == 'bidders' else '' }}" href="{{ url_for('bidders.portal') }}"><i class="bi bi-shop"></i>Bidder Portal</a>
+{% if can_reports %}
+            <div class="ebms-nav-section">Reports</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.operational' else '' }}"
+               href="{{ url_for('reports.operational') }}" data-title="Operational Reports">
+                <i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Operational Reports</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.audit_trail' else '' }}"
+               href="{{ url_for('reports.audit_trail') }}" data-title="Audit Trail">
+                <i class="bi bi-shield-check" aria-hidden="true"></i><span>Audit Trail</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.bidder_participation' else '' }}"
+               href="{{ url_for('reports.bidder_participation') }}" data-title="Bidder Participation">
+                <i class="bi bi-people" aria-hidden="true"></i><span>Bidder Participation</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.complaints' else '' }}"
+               href="{{ url_for('reports.complaints') }}" data-title="Complaints">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>Complaints</span>
+            </a>
             {% endif %}
-            {% if current_user.role.can_view_all_records %}
-            <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="{{ url_for('reports.operational') }}"><i class="bi bi-graph-up-arrow"></i>Reports</a>
+
+            <div class="ebms-nav-section">Communication</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('messages.') else '' }}"
+               href="{{ url_for('messages.inbox') }}" data-title="Messages">
+                <i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Messages</span>
+                <span class="nav-badge" id="sidebarMessagesCount" style="display:none;">0</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('notifications.') else '' }}"
+               href="{{ url_for('notifications.index') }}" data-title="Notifications">
+                <i class="bi bi-bell" aria-hidden="true"></i><span>Notifications</span>
+                <span class="nav-badge" id="sidebarNotificationsCount" style="display:none;">0</span>
+            </a>
+
+            {% if is_bidder %}
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('bidders.') else '' }}"
+               href="{{ url_for('bidders.portal') }}" data-title="My Bids">
+                <i class="bi bi-briefcase" aria-hidden="true"></i><span>My Bids</span>
+            </a>
             {% endif %}
-            <a class="nav-link {{ 'active' if active_nav == 'account_settings' else '' }}" href="{{ url_for('auth.user_settings') }}"><i class="bi bi-sliders"></i>My Settings</a>
-            {% if current_user.role.can_admin_system %}
-            <a class="nav-link {{ 'active' if active_nav == 'admin' else '' }}" href="{{ url_for('admin.users') }}"><i class="bi bi-people"></i>Users</a>
-            <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="{{ url_for('admin.settings') }}"><i class="bi bi-gear"></i>System Settings</a>
+
+            {% if is_admin %}
+            <div class="ebms-nav-section">Administration</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'admin.users' else '' }}"
+               href="{{ url_for('admin.users') }}" data-title="Users">
+                <i class="bi bi-person-badge" aria-hidden="true"></i><span>Users</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'admin.settings' else '' }}"
+               href="{{ url_for('admin.settings') }}" data-title="System Settings">
+                <i class="bi bi-sliders" aria-hidden="true"></i><span>System Settings</span>
+            </a>
             {% endif %}
+
+            <div class="ebms-nav-section">Account</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'auth.user_settings' else '' }}"
+               href="{{ url_for('auth.user_settings') }}" data-title="My Settings">
+                <i class="bi bi-person-gear" aria-hidden="true"></i><span>My Settings</span>
+            </a>
         </nav>
-        <main class="main-content">
+
+        <div class="ebms-sidebar-backdrop" aria-hidden="true"></div>
+
+        <!-- MAIN CONTENT -->
+        <main class="ebms-main" id="ebmsMain">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">
-                            <i class="bi bi-info-circle me-1"></i> {{ message }}
-                        </div>
-                    {% endfor %}
+                    <div hidden>
+                        {% for category, message in messages %}
+                        <div data-ebms-flash="{{ 'danger' if category == 'error' else category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             {% endwith %}
-            {% block content %}{% endblock %}
+
+            <div class="ebms-page">
+                {% block breadcrumbs %}{% endblock %}
+                {% block page_header %}{% endblock %}
+                {% block content %}{% endblock %}
+            </div>
+
+            <footer class="ebms-footer" role="contentinfo">
+                <span>EBMS — Electronic Bid Management System · Botswana PPRA</span>
+                <span class="ebms-footer-version">v1.0</span>
+            </footer>
         </main>
     </div>
+
     {% else %}
-        {% block guest_content %}{% endblock %}
+    {% block guest_content %}{% endblock %}
     {% endif %}
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,11 @@
+login -> 200
+GET /messages/ -> 200
+GET /messages/search?q=test -> 200
+GET /reports/audit-trail -> 200
+GET /reports/bidder-participation -> 200
+GET /reports/complaints -> 200
+GET /reports/procurement-summary -> 200
+GET /reports/audit-trail/export -> 200
+GET /reports/bidder-participation/export -> 200
+GET /reports/complaints/export -> 200
+GET /reports/procurement-summary/export -> 200

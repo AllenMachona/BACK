@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Procurement Summary Report - EBMS Botswana{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <div class="page-header">
+        <div>
+            <h1><i class="bi bi-table me-2"></i> Procurement Summary Report</h1>
+            <p class="page-subtitle">Overview of all procurements and their lifecycle progress</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-panel">
+        <h3>Filter Report</h3>
+        <form method="GET" action="{{ url_for('reports.procurement_summary') }}" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for st in statuses %}
+                            <option value="{{ st }}" {% if request.args.get('status') == st %}selected{% endif %}>
+                                {{ st.replace('_', ' ').title() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="category" class="form-label">Category</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
+                                {{ cat.replace('_', ' ').title() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('reports.procurement_summary') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Export Options -->
+    <div class="export-section">
+        <h3>Export Report</h3>
+        <div class="export-buttons">
+            <a href="{{ url_for('reports.export_procurement_summary') }}?{{ request.query_string.decode() }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel me-2"></i> Export to Excel (.xlsx)
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Data -->
+    {% if data %}
+    <div class="report-section">
+        <h2>Procurements</h2>
+        <div class="report-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ data|length }}</div>
+                <div class="stat-label">Total Procurements</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ data|selectattr('Status', 'equalto', 'Open')|list|length }}</div>
+                <div class="stat-label">Open</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ data|selectattr('Submissions Received', 'gt', 0)|list|length }}</div>
+                <div class="stat-label">With Submissions</div>
+            </div>
+        </div>
+
+        <div class="report-table-container">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Tender Number</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Estimated Value</th>
+                        <th>Created Date</th>
+                        <th>Submission Deadline</th>
+                        <th>Submissions</th>
+                        <th>Bidders Evaluated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td><strong>{{ row['Tender Number'] }}</strong></td>
+                        <td>{{ row['Title'] }}</td>
+                        <td>{{ row['Category'] }}</td>
+                        <td>{{ row['Method'] }}</td>
+                        <td>
+                            <span class="badge badge-{{ row['Status']|lower|replace(' ', '_') }}">
+                                {{ row['Status'] }}
+                            </span>
+                        </td>
+                        <td>P {{ row['Estimated Value'] }}</td>
+                        <td>{{ row['Created Date'] }}</td>
+                        <td>{{ row['Submission Deadline'] }}</td>
+                        <td>{{ row['Submissions Received'] }}</td>
+                        <td>{{ row['Bidders Evaluated'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-clipboard-x"></i>
+        </div>
+        <h3>No Procurements</h3>
+        <p>No procurements match your filter criteria.</p>
+    </div>
+    {% endif %}
+</div>
+<style>
+.container-main { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; }
+.page-header { margin-bottom: 2rem; }
+.page-header h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; color: var(--text-main); }
+.page-subtitle { margin: 0; color: var(--text-muted); }
+.filter-panel { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+.filter-panel h3 { margin: 0 0 1.5rem 0; font-size: 1.1rem; color: var(--text-main); }
+.filter-form { display: flex; flex-direction: column; gap: 1rem; }
+.filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-actions { display: flex; gap: 1rem; }
+.form-label { font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
+.form-select, .form-control {
+    width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
+    border-radius: 8px; background: var(--bg-surface); color: var(--text-body);
+    font-size: 0.9rem; font-family: inherit;
+}
+.form-select:focus, .form-control:focus { outline: none; border-color: var(--ppra-accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+.export-section { background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+.export-section h3 { margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-main); }
+.export-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn {
+    padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.15s ease;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid transparent;
+    font-size: 0.9rem; text-decoration: none;
+}
+.btn-primary { background: var(--ppra-accent); color: white; border-color: var(--ppra-accent); }
+.btn-primary:hover { background: var(--ppra-accent-hover); border-color: var(--ppra-accent-hover); }
+.btn-success { background: #22c55e; color: white; border-color: #22c55e; }
+.btn-success:hover { background: #16a34a; border-color: #16a34a; }
+.btn-outline-secondary { background: transparent; color: var(--text-body); border: 1px solid var(--border-color); }
+.btn-outline-secondary:hover { background: var(--bg-subtle); }
+.report-section { margin-top: 2rem; }
+.report-section h2 { color: var(--text-main); margin-bottom: 1rem; }
+.report-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; text-align: center; }
+.stat-value { font-size: 1.75rem; font-weight: 700; color: var(--ppra-accent); margin-bottom: 0.5rem; }
+.stat-label { font-size: 0.85rem; color: var(--text-muted); }
+.report-table-container { overflow-x: auto; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.report-table thead { background: var(--ppra-accent); color: white; }
+.report-table th { padding: 1rem; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
+.report-table td { padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-body); }
+.report-table tbody tr:hover { background: rgba(37, 99, 235, 0.02); }
+.badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.badge-published, .badge-submission_open { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+.badge-under_review, .badge-clarification_period { background: rgba(217, 119, 6, 0.15); color: #d97706; }
+.badge-award_published, .badge-awarded { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+.badge-cancelled { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+.empty-state { text-align: center; padding: 4rem 2rem; background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border-color); }
+.empty-state-icon { font-size: 3.5rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.5; }
+.empty-state h3 { color: var(--text-main); margin-bottom: 0.5rem; }
+.empty-state p { color: var(--text-muted); margin: 0; }
+@media (max-width: 768px) {
+    .filter-row { grid-template-columns: 1fr; }
+    .filter-actions { flex-direction: column; }
+    .filter-actions .btn { width: 100%; justify-content: center; }
+    .export-buttons { flex-direction: column; }
+    .export-buttons .btn { width: 100%; justify-content: center; }
+}
+</style>
+{% endblock %}
