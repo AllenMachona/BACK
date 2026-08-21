@@ -10,9 +10,7 @@
             <p class="page-subtitle">Manage your procurement communications and clarifications</p>
         </div>
         <div class="page-actions">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">
-                <i class="bi bi-pencil-square me-2"></i> New Message
-            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">New Message</button>
         </div>
     </div>
 
@@ -26,103 +24,79 @@
                 {% endif %}
             </form>
             <div class="filter-tabs">
-                <a href="{{ url_for('messages.inbox') }}" class="filter-tab {{ 'active' if not request.args.get('filter') else '' }}">
+                <a href="{{ url_for('messages.inbox') }}" class="filter-tab {{ 'active' if not filter else '' }}">
                     All <span class="badge">{{ total_messages }}</span>
                 </a>
-                <a href="{{ url_for('messages.inbox', filter='unread') }}" class="filter-tab {{ 'active' if request.args.get('filter') == 'unread' else '' }}">
+                <a href="{{ url_for('messages.inbox', filter='unread') }}" class="filter-tab {{ 'active' if filter == 'unread' else '' }}">
                     Unread <span class="badge badge-alert">{{ unread_count }}</span>
                 </a>
             </div>
         </div>
     </div>
 
-    {% if messages %}
-    <div class="messages-list">
-        {% for message in messages %}
-        <div class="message-card {{ 'message-unread' if not message.is_read() else '' }}" onclick="window.location='{{ url_for('messages.view_message', message_id=message.message_id) }}'" style="cursor: pointer;">
-            <div class="message-card-header">
-                <div class="message-sender-info">
-                    <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
-                        {{ message.message.sender.full_name()[0].upper() }}
-                    </div>
-                    <div class="message-sender-details">
-                        <div class="message-sender-name">
-                            {{ message.message.sender.full_name() }}
-                            {% if message.message.message_type == 'broadcast' %}
-                                <span class="badge badge-info">Broadcast</span>
-                            {% elif message.message.message_type == 'targeted' %}
-                                <span class="badge badge-warning">Targeted</span>
-                            {% endif %}
-                        </div>
-                        <div class="message-sender-role">{{ message.message.sender.role.name if message.message.sender.role else 'User' }}</div>
-                    </div>
-                </div>
-                <div class="message-metadata">
-                    <div class="message-time">{{ message.message.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
-                    {% if not message.is_read() %}
-                        <div class="unread-indicator"><i class="bi bi-circle-fill"></i></div>
-                    {% endif %}
-                </div>
+    {% if conversations %}
+    <div class="conversation-list">
+        {% for conv in conversations %}
+        <a class="conversation-card {{ 'unread-conversation' if conv.unread else '' }}"
+           href="{{ url_for('messages.thread_view', thread_id=conv.thread_id) }}">
+            <div class="conversation-avatar">
+                {% if conv.is_broadcast %}
+                    <i class="bi bi-megaphone"></i>
+                {% elif conv.is_targeted %}
+                    <i class="bi bi-people"></i>
+                {% else %}
+                    {{ conv.label[:1].upper() }}
+                {% endif %}
             </div>
-
-            <div class="message-card-body">
-                <h4 class="message-subject">{{ message.message.subject }}</h4>
-                <p class="message-preview">{{ message.message.body[:150] }}{% if message.message.body|length > 150 %}...{% endif %}</p>
-            </div>
-
-            <div class="message-card-footer">
-                <div class="message-tags">
-                    {% if message.message.reply_to_id %}
-                        <span class="tag tag-secondary"><i class="bi bi-reply"></i> Reply</span>
-                    {% endif %}
+            <div class="conversation-body">
+                <div class="conversation-head">
+                    <span class="conversation-name">
+                        {{ conv.label }}
+                        {% if conv.is_broadcast %}<span class="badge badge-info">Broadcast</span>{% endif %}
+                        {% if conv.is_targeted %}<span class="badge badge-warning">Targeted</span>{% endif %}
+                    </span>
+                    <span class="conversation-time">{{ conv.last_at.strftime('%d %b %Y') }}</span>
                 </div>
+                <div class="conversation-subject">{{ conv.subject }}</div>
+                <div class="conversation-preview">{{ conv.last_body[:160] }}{% if conv.last_body|length > 160 %}...{% endif %}</div>
             </div>
-        </div>
+            <div class="conversation-meta">
+                {% if conv.unread %}<span class="badge badge-danger">{{ conv.unread }} unread</span>{% endif %}
+                <span class="conversation-count" title="Messages in thread"><i class="bi bi-chat-text"></i> {{ conv.message_count }}</span>
+                {% if conv.procurement_id %}
+                <i class="bi bi-pin" title="Linked to a procurement"></i>
+                {% endif %}
+            </div>
+        </a>
         {% endfor %}
-
-        {% if pages > 1 %}
-        <div class="pagination-center">
-            <nav class="pagination">
-                {% if page > 1 %}
-                    <a href="{{ url_for('messages.inbox', page=1, q=request.args.get('q', '')) }}" class="pagination-link">
-                        <i class="bi bi-chevron-double-left"></i>
-                    </a>
-                    <a href="{{ url_for('messages.inbox', page=page-1, q=request.args.get('q', '')) }}" class="pagination-link">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                {% endif %}
-
-                {% for p in range([1, page-2]|max, [pages, page+2]|min + 1) %}
-                    {% if p == page %}
-                        <span class="pagination-current">{{ p }}</span>
-                    {% else %}
-                        <a href="{{ url_for('messages.inbox', page=p, q=request.args.get('q', '')) }}" class="pagination-link">{{ p }}</a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page < pages %}
-                    <a href="{{ url_for('messages.inbox', page=page+1, q=request.args.get('q', '')) }}" class="pagination-link">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                    <a href="{{ url_for('messages.inbox', page=pages, q=request.args.get('q', '')) }}" class="pagination-link">
-                        <i class="bi bi-chevron-double-right"></i>
-                    </a>
-                {% endif %}
-            </nav>
-        </div>
-        {% endif %}
     </div>
+
+    {% if pages > 1 %}
+    <nav class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('messages.inbox', page=1, filter=filter) }}" class="pagination-link"><i class="bi bi-chevron-double-left"></i></a>
+            <a href="{{ url_for('messages.inbox', page=page-1, filter=filter) }}" class="pagination-link"><i class="bi bi-chevron-left"></i></a>
+        {% endif %}
+        {% for p in range([1, page-2]|max, [pages, page+2]|min + 1) %}
+            {% if p == page %}
+                <span class="pagination-current">{{ p }}</span>
+            {% else %}
+                <a href="{{ url_for('messages.inbox', page=p, filter=filter) }}" class="pagination-link">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page < pages %}
+            <a href="{{ url_for('messages.inbox', page=page+1, filter=filter) }}" class="pagination-link"><i class="bi bi-chevron-right"></i></a>
+            <a href="{{ url_for('messages.inbox', page=pages, filter=filter) }}" class="pagination-link"><i class="bi bi-chevron-double-right"></i></a>
+        {% endif %}
+    </nav>
+    {% endif %}
 
     {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon">
-            <i class="bi bi-inbox"></i>
-        </div>
+        <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
         <h3>No Messages</h3>
         <p>You don't have any messages yet. Start a conversation by sending a message.</p>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">
-            <i class="bi bi-pencil-square me-2"></i> Send First Message
-        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeMessageModal">Send First Message</button>
     </div>
     {% endif %}
 </div>
@@ -133,11 +107,12 @@
         <div class="modal-content">
             <div class="modal-header border-0">
                 <h5 class="modal-title" id="composeMessageLabel">
-                    <i class="bi bi-pencil-square me-2"></i> New Message
+                    <i class="bi bi-envelope-plus me-2"></i> New Message
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ url_for('messages.send_message') }}" method="POST" id="composeForm">
+            <form action="{{ url_for('messages.send_message') }}" method="POST" id="composeForm" novalidate>
+                <input type="hidden" name="procurement_id" id="composeProcurementId" value="{{ prefill_procurement_id or '' }}">
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="messageType" class="form-label">Message Type</label>
@@ -166,59 +141,43 @@
                     <div id="targetedRecipients" style="display: none;">
                         <div class="form-group">
                             <label class="form-label">Recipients</label>
-                            <div class="recipient-options">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="users" id="recipients_users">
-                                    <label class="form-check-label" for="recipients_users">
-                                        Specific Users
-                                    </label>
-                                </div>
-                                <div id="usersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
-                                    {% for user in all_users %}
-                                        {% if user.id != current_user.id %}
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="user_ids" value="{{ user.id }}">
-                                                <label class="form-check-label">
-                                                    {{ user.full_name() }} <small class="text-muted">({{ user.role.name }})</small>
-                                                </label>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="bidders" id="recipients_bidders">
-                                    <label class="form-check-label" for="recipients_bidders">
-                                        Specific Bidders
-                                    </label>
-                                </div>
-                                <div id="biddersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
-                                    {% for bidder in all_bidders %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="recipient_types" value="users" id="recipients_users">
+                                <label class="form-check-label" for="recipients_users">Specific Users</label>
+                            </div>
+                            <div id="usersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                {% for user in all_users %}
+                                    {% if user.id != current_user.id %}
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="bidder_ids" value="{{ bidder.id }}">
-                                            <label class="form-check-label">
-                                                {{ bidder.company_name or bidder.legal_name }} <small class="text-muted">({{ bidder.country }})</small>
-                                            </label>
+                                            <input class="form-check-input" type="checkbox" name="user_ids" value="{{ user.id }}">
+                                            <label class="form-check-label">{{ user.full_name() }} <small class="text-muted">({{ user.role.name }})</small></label>
                                         </div>
-                                    {% endfor %}
-                                </div>
-
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="recipient_types" value="roles" id="recipients_roles">
-                                    <label class="form-check-label" for="recipients_roles">
-                                        By Role
-                                    </label>
-                                </div>
-                                <div id="rolesList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
-                                    {% for role in all_roles %}
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="role_ids" value="{{ role.id }}">
-                                            <label class="form-check-label">
-                                                {{ role.name }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="recipient_types" value="bidders" id="recipients_bidders">
+                                <label class="form-check-label" for="recipients_bidders">Specific Bidders</label>
+                            </div>
+                            <div id="biddersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                {% for bidder in all_bidders %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="bidder_ids" value="{{ bidder.id }}">
+                                        <label class="form-check-label">{{ bidder.company_name or bidder.legal_name }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="recipient_types" value="roles" id="recipients_roles">
+                                <label class="form-check-label" for="recipients_roles">By Role</label>
+                            </div>
+                            <div id="rolesList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
+                                {% for role in all_roles %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="role_ids" value="{{ role.id }}">
+                                        <label class="form-check-label">{{ role.name }}</label>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -232,520 +191,33 @@
                         <label for="messageBody" class="form-label">Message</label>
                         <textarea class="form-control" id="messageBody" name="body" rows="6" required placeholder="Type your message..."></textarea>
                     </div>
+
+                    <div id="composeError" class="alert alert-danger" style="display: none;"></div>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send me-2"></i> Send Message
-                    </button>
+                    <button type="submit" class="btn btn-primary" id="composeSendBtn">Send Message</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: var(--bg-surface);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-}
-
-.page-title-section h1 {
-    margin-bottom: 0.5rem;
-    font-size: 1.75rem;
-}
-
-.page-subtitle {
-    color: var(--text-muted);
-    margin: 0;
-}
-
-.page-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.page-toolbar {
-    margin-bottom: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.toolbar-filters {
-    display: flex;
-    gap: 1rem;
-    flex: 1;
-}
-
-.toolbar-search {
-    position: relative;
-    flex: 1;
-    max-width: 400px;
-}
-
-.toolbar-search i {
-    position: absolute;
-    left: 12px;
-    top: 12px;
-    color: var(--text-muted);
-    pointer-events: none;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-surface);
-    color: var(--text-body);
-    font-size: 0.875rem;
-    transition: all 0.15s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--ppra-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.clear-search {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 1.2rem;
-}
-
-.filter-tabs {
-    display: flex;
-    gap: 1rem;
-}
-
-.filter-tab {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-surface);
-    color: var(--text-body);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-decoration: none;
-}
-
-.filter-tab:hover {
-    border-color: var(--ppra-accent);
-    color: var(--ppra-accent);
-}
-
-.filter-tab.active {
-    background: var(--ppra-accent);
-    border-color: var(--ppra-accent);
-    color: white;
-}
-
-.badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    background: rgba(37, 99, 235, 0.15);
-    color: var(--ppra-accent);
-    border-radius: 4px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.badge-alert {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-}
-
-.badge-info {
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
-}
-
-.badge-warning {
-    background: rgba(217, 119, 6, 0.15);
-    color: #d97706;
-}
-
-.messages-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.message-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.25rem;
-    transition: all 0.2s ease;
-    cursor: default;
-}
-
-.message-card:hover {
-    border-color: var(--ppra-accent);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-}
-
-.message-unread {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%);
-    border-left: 3px solid var(--ppra-accent);
-}
-
-.message-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.message-sender-info {
-    display: flex;
-    gap: 1rem;
-    flex: 1;
-}
-
-.avatar-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
-}
-
-.message-sender-details {
-    flex: 1;
-}
-
-.message-sender-name {
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.message-sender-role {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.message-metadata {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-}
-
-.message-time {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.unread-indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--ppra-accent);
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.message-card-body {
-    margin-bottom: 1rem;
-}
-
-.message-subject {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.05rem;
-    color: var(--text-main);
-}
-
-.message-preview {
-    margin: 0;
-    color: var(--text-body);
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.message-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.message-tags {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.tag {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 6px;
-    background: var(--bg-subtle);
-    color: var(--text-body);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-}
-
-.tag-secondary {
-    background: rgba(37, 99, 235, 0.1);
-    color: var(--ppra-accent);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: var(--bg-surface);
-    border-radius: 12px;
-    border: 1px dashed var(--border-color);
-}
-
-.empty-state-icon {
-    font-size: 3.5rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-.empty-state h3 {
-    color: var(--text-main);
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-}
-
-.pagination-center {
-    display: flex;
-    justify-content: center;
-    margin-top: 2rem;
-}
-
-.pagination {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.pagination-link {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-surface);
-    color: var(--text-body);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.pagination-link:hover {
-    border-color: var(--ppra-accent);
-    color: var(--ppra-accent);
-    background: rgba(37, 99, 235, 0.05);
-}
-
-.pagination-current {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    background: var(--ppra-accent);
-    color: white;
-    font-weight: 600;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.form-control, .form-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-surface);
-    color: var(--text-body);
-    font-size: 0.9rem;
-    transition: all 0.15s ease;
-    font-family: inherit;
-}
-
-.form-control:focus, .form-select:focus {
-    outline: none;
-    border-color: var(--ppra-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.form-check {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.form-check-input {
-    width: 18px;
-    height: 18px;
-    margin-right: 0.75rem;
-    cursor: pointer;
-    accent-color: var(--ppra-accent);
-}
-
-.form-check-label {
-    cursor: pointer;
-    color: var(--text-body);
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-.recipient-options {
-    background: var(--bg-subtle);
-    padding: 1rem;
-    border-radius: 8px;
-}
-
-.container-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
-
-.modal-content {
-    border: 1px solid var(--border-color);
-    background: var(--bg-surface);
-    border-radius: 12px;
-}
-
-.modal-header, .modal-footer {
-    border-color: var(--border-color);
-    background: var(--bg-subtle);
-}
-
-.modal-title {
-    color: var(--text-main);
-    font-weight: 600;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    border: 1px solid transparent;
-    font-size: 0.9rem;
-}
-
-.btn-primary {
-    background: var(--ppra-accent);
-    color: white;
-    border-color: var(--ppra-accent);
-}
-
-.btn-primary:hover {
-    background: var(--ppra-accent-hover);
-    border-color: var(--ppra-accent-hover);
-}
-
-.btn-outline-secondary {
-    background: transparent;
-    color: var(--text-body);
-    border: 1px solid var(--border-color);
-}
-
-.btn-outline-secondary:hover {
-    background: var(--bg-subtle);
-    border-color: var(--text-body);
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .toolbar-filters {
-        flex-direction: column;
-    }
-
-    .filter-tabs {
-        width: 100%;
-    }
-
-    .message-card {
-        padding: 1rem;
-    }
-
-    .message-card-header {
-        flex-direction: column;
-    }
-
-    .message-metadata {
-        align-items: flex-start;
-    }
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const messageTypeSelect = document.getElementById('messageType');
-    const directRecipient = document.getElementById('directRecipient');
-    const targetedRecipients = document.getElementById('targetedRecipients');
-    
-    messageTypeSelect.addEventListener('change', updateRecipientFields);
-});
-
+function showComposeError(message) {
+    const box = document.getElementById('composeError');
+    box.textContent = message;
+    box.style.display = 'block';
+}
+function clearComposeError() {
+    const box = document.getElementById('composeError');
+    box.textContent = '';
+    box.style.display = 'none';
+}
 function updateRecipientFields() {
     const messageType = document.getElementById('messageType').value;
     const directRecipient = document.getElementById('directRecipient');
     const targetedRecipients = document.getElementById('targetedRecipients');
-    
     if (messageType === 'direct') {
         directRecipient.style.display = 'block';
         targetedRecipients.style.display = 'none';
@@ -757,27 +229,123 @@ function updateRecipientFields() {
         directRecipient.style.display = 'none';
         targetedRecipients.style.display = 'none';
     }
+    clearComposeError();
+}
+function updateTargetedCheckboxes() {
+    const usersList = document.getElementById('usersList');
+    const usersCheck = document.getElementById('recipients_users');
+    const biddersList = document.getElementById('biddersList');
+    const biddersCheck = document.getElementById('recipients_bidders');
+    const rolesList = document.getElementById('rolesList');
+    const rolesCheck = document.getElementById('recipients_roles');
+    if (usersCheck) usersList.style.display = usersCheck.checked ? 'block' : 'none';
+    if (biddersCheck) biddersList.style.display = biddersCheck.checked ? 'block' : 'none';
+    if (rolesCheck) rolesList.style.display = rolesCheck.checked ? 'block' : 'none';
 }
 
-function updateTargetedCheckboxes() {
+document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect = document.getElementById('messageType');
+    if (typeSelect) typeSelect.addEventListener('change', updateRecipientFields);
     const usersCheck = document.getElementById('recipients_users');
-    const bidderCheck = document.getElementById('recipients_bidders');
+    if (usersCheck) usersCheck.addEventListener('change', updateTargetedCheckboxes);
+    const biddersCheck = document.getElementById('recipients_bidders');
+    if (biddersCheck) biddersCheck.addEventListener('change', updateTargetedCheckboxes);
     const rolesCheck = document.getElementById('recipients_roles');
-    const usersList = document.getElementById('usersList');
-    const biddersList = document.getElementById('biddersList');
-    const rolesList = document.getElementById('rolesList');
-    
-    usersCheck.addEventListener('change', () => {
-        usersList.style.display = usersCheck.checked ? 'block' : 'none';
+    if (rolesCheck) rolesCheck.addEventListener('change', updateTargetedCheckboxes);
+
+    const composeForm = document.getElementById('composeForm');
+    if (composeForm) composeForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearComposeError();
+        const type = document.getElementById('messageType');
+        const recipient = document.getElementById('recipientUser');
+        const subject = document.getElementById('messageSubject');
+        const body = document.getElementById('messageBody');
+        if (!type.value) return showComposeError('Select a message type.');
+        if (type.value === 'direct' && (!recipient || !recipient.value)) return showComposeError('Please select a recipient.');
+        if (!subject.value.trim() || !body.value.trim()) return showComposeError('Subject and message are required.');
+        subject.value = subject.value.trim();
+        body.value = body.value.trim();
+        const btn = document.getElementById('composeSendBtn');
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        fetch(composeForm.getAttribute('action'), {
+            method: 'POST',
+            body: new URLSearchParams(new FormData(composeForm)),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (res) {
+            return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        }).then(function (result) {
+            if (result.ok) {
+                const toast = window.EBMS && (window.EBMS.showToast || window.EBMS.toast);
+                if (toast) toast(result.data.message, 'success');
+                window.location.href = '/messages/thread/' + result.data.thread_id;
+            } else {
+                showComposeError(result.data.message || 'Message could not be sent. Please try again.');
+                btn.disabled = false;
+                btn.textContent = original;
+            }
+        }).catch(function () {
+            showComposeError('A network error occurred. The message was not sent.');
+            btn.disabled = false;
+            btn.textContent = original;
+        });
     });
-    
-    bidderCheck.addEventListener('change', () => {
-        biddersList.style.display = bidderCheck.checked ? 'block' : 'none';
-    });
-    
-    rolesCheck.addEventListener('change', () => {
-        rolesList.style.display = rolesCheck.checked ? 'block' : 'none';
-    });
-}
+});
 </script>
+
+<style>
+.container-main { max-width: 1050px; margin: 0 auto; padding: 2rem 1rem; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.page-title-section h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; color: var(--text-main, #0f172a); }
+.page-subtitle { margin: 0; color: var(--text-muted, #64748b); }
+.page-toolbar { margin-bottom: 1.5rem; }
+.toolbar-filters { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.toolbar-search { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 0.65rem 1rem; }
+.toolbar-search input { flex: 1; border: none; background: transparent; color: var(--text-body, #334155); font-size: 0.9rem; }
+.filter-tabs { display: flex; gap: 0.5rem; }
+.filter-tab { padding: 0.5rem 1rem; border-radius: 8px; background: var(--bg-subtle, #f1f5f9); color: var(--text-body, #334155); text-decoration: none; font-weight: 500; }
+.filter-tab.active { background: var(--ppra-accent, #2563eb); color: #fff; }
+.conversation-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.conversation-card { display: flex; align-items: center; gap: 1rem; background: var(--bg-surface, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 1rem 1.1rem; text-decoration: none; transition: all 0.15s ease; }
+.conversation-card:hover { border-color: var(--ppra-accent, #2563eb); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); }
+.conversation-card.unread-conversation { background: rgba(37, 99, 235, 0.04); border-left: 3px solid var(--ppra-accent, #2563eb); }
+.conversation-avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); color: #fff; font-weight: 700; font-size: 1rem; }
+.conversation-body { flex: 1; min-width: 0; }
+.conversation-head { display: flex; justify-content: space-between; align-items: center; }
+.conversation-name { font-weight: 600; color: var(--text-main, #0f172a); }
+.conversation-time { font-size: 0.8rem; color: var(--text-muted, #64748b); }
+.conversation-subject { margin: 0.15rem 0 0.15rem 0; font-weight: 600; color: var(--text-main, #0f172a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conversation-preview { margin: 0; color: var(--text-body, #334155); font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conversation-meta { display: flex; align-items: center; gap: 0.5rem; }
+.conversation-count { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; color: var(--text-muted, #64748b); }
+.pagination { display: flex; justify-content: center; gap: 0.4rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.pagination-link { min-width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--bg-subtle, #f1f5f9); color: var(--text-body, #334155); text-decoration: none; }
+.pagination-current { min-width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--ppra-accent, #2563eb); color: #fff; }
+.empty-state { text-align: center; padding: 4rem 2rem; background: var(--bg-surface, #fff); border-radius: 12px; border: 1px dashed var(--border-color, #cbd5e1); }
+.empty-state-icon { font-size: 3.5rem; color: var(--text-muted, #94a3b8); margin-bottom: 1rem; opacity: 0.6; }
+.badge { background: rgba(37, 99, 235, 0.15); color: var(--ppra-accent, #2563eb); border-radius: 4px; font-weight: 600; font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+.badge-alert, .badge-danger { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+.badge-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.badge-warning { background: rgba(217, 119, 6, 0.15); color: #d97706; }
+.btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid transparent; font-size: 0.9rem; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+.btn-primary { background: var(--ppra-accent, #2563eb); color: #fff; border-color: var(--ppra-accent, #2563eb); }
+.btn-outline-secondary { background: transparent; color: var(--text-body, #334155); border: 1px solid var(--border-color, #e2e8f0); }
+.modal-content { border-radius: 14px; }
+.modal-header, .modal-footer { border-color: var(--border-color, #e2e8f0); background: var(--bg-subtle, #f8fafc); }
+.modal-title { color: var(--text-main, #0f172a); font-weight: 600; }
+.alert-danger { background: rgba(220, 38, 38, 0.08); color: #b91c1c; border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 8px; padding: 0.75rem 1rem; }
+.form-group { margin-bottom: 1.25rem; }
+.form-label { font-weight: 600; font-size: 0.88rem; color: var(--text-body, #334155); }
+.form-control, .form-select { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-surface, #fff); color: var(--text-body, #334155); font-size: 0.9rem; font-family: inherit; }
+textarea.form-control { resize: vertical; }
+.clear-search { margin-left: 0.5rem; color: var(--text-muted, #94a3b8); text-decoration: none; }
+@media (max-width: 768px) {
+    .page-header { flex-direction: column; gap: 1rem; }
+    .toolbar-filters { flex-direction: column; }
+    .filter-tabs { width: 100%; }
+    .conversation-card { padding: 0.9rem; }
+}
+</style>
 {% endblock %}

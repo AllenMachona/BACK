@@ -266,8 +266,14 @@
         .catch(function () { /* silent — badge simply stays hidden */ });
     }
 
-    fetchCount('/notifications/unread-count', 'notificationsCount');
-    fetchCount('/messages/unread-count', 'messagesCount');
+    function refresh() {
+      fetchCount('/notifications/unread-count', 'notificationsCount');
+      fetchCount('/messages/unread-count', 'messagesCount');
+    }
+
+    refresh();
+    // Near-real-time badge updates without a full page refresh
+    window.setInterval(refresh, 20000);
   }
 
   /* ---------- Init ---------- */

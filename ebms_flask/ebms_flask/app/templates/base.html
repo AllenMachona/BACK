@@ -39,13 +39,13 @@
 
         <div class="ebms-top-actions">
             <!-- Notifications -->
-            <button type="button" class="topbar-icon-btn" id="notificationsBtn" data-dropdown-target="notificationsMenu" aria-label="Notifications" aria-haspopup="true">
+            <button type="button" class="topbar-icon-btn" id="notificationsBtn" data-dropdown-target="notificationsMenu" aria-label="Notifications" aria-haspopup="true" title="Notifications">
                 <i class="bi bi-bell" aria-hidden="true"></i>
                 <span class="count-badge" id="notificationsCount" style="display:none;">0</span>
             </button>
 
             <!-- Messages -->
-            <button type="button" class="topbar-icon-btn" id="messagesBtn" data-dropdown-target="messagesMenu" aria-label="Messages" aria-haspopup="true">
+            <button type="button" class="topbar-icon-btn" id="messagesBtn" data-dropdown-target="messagesMenu" aria-label="Messages" aria-haspopup="true" title="Messages">
                 <i class="bi bi-chat-square-text" aria-hidden="true"></i>
                 <span class="count-badge" id="messagesCount" style="display:none;">0</span>
             </button>
@@ -95,19 +95,23 @@
     </div>
 
     <!-- User menu dropdown -->
-    <div class="ebms-dropdown user-menu-dropdown" id="userMenu" role="menu" aria-label="Account">
-        <div class="ebms-dropdown-header">
-            <span>{{ current_user.full_name() }}</span>
+    <div class="ebms-dropdown user-menu-dropdown" id="userMenu" role="menu" aria-label="Account menu">
+        <div class="ebms-dropdown-header user-menu-identity">
+            <span class="ebms-user-avatar" aria-hidden="true">{{ current_user.full_name()[:1].upper() }}</span>
+            <span class="user-menu-id-text">
+                <span class="ebms-user-name">{{ current_user.full_name() }}</span>
+                <span class="ebms-user-role">{{ current_user.role.name }}</span>
+            </span>
         </div>
-        <div class="menu-section">
+        <div class="ebms-dropdown-body">
             <a class="menu-item" href="{{ url_for('auth.user_settings') }}">
-                <i class="bi bi-person" aria-hidden="true"></i>My Profile &amp; Settings
+                <i class="bi bi-person-gear" aria-hidden="true"></i>My Profile &amp; Settings
             </a>
             <a class="menu-item" href="{{ url_for('notifications.index') }}">
                 <i class="bi bi-bell" aria-hidden="true"></i>Notifications
             </a>
             <a class="menu-item" href="{{ url_for('messages.inbox') }}">
-                <i class="bi bi-chat-square-text" aria-hidden="true"></i>Messages
+                <i class="bi bi-chat-text" aria-hidden="true"></i>Messages
             </a>
             {% if is_admin %}
             <div class="menu-divider"></div>
@@ -118,10 +122,9 @@
                 <i class="bi bi-gear" aria-hidden="true"></i>System Settings
             </a>
             {% endif %}
-        </div>
-        <div class="menu-footer">
-            <a class="menu-item" href="{{ url_for('auth.logout') }}">
-                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out
+            <div class="menu-divider"></div>
+            <a class="menu-item menu-item-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-left" aria-hidden="true"></i>Logout
             </a>
         </div>
     </div>
@@ -185,7 +188,7 @@
             <div class="ebms-nav-section">Communication</div>
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('messages.') else '' }}"
                href="{{ url_for('messages.inbox') }}" data-title="Messages">
-                <i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Messages</span>
+                <i class="bi bi-chat-text" aria-hidden="true"></i><span>Messages</span>
                 <span class="nav-badge" id="sidebarMessagesCount" style="display:none;">0</span>
             </a>
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('notifications.') else '' }}"

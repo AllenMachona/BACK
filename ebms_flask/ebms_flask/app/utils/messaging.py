@@ -16,10 +16,16 @@ class MessagingService:
     """Service for sending and managing messages with comprehensive delivery tracking."""
     
     @staticmethod
-    def send_direct_message(subject, body, recipient_id, attachment_path=None, 
-                           attachment_filename=None, procurement_id=None, reason=None):
-        """Send a direct message to a single user.
-        
+    def send_direct_message(subject, body, recipient_id, attachment_path=None,
+                           attachment_filename=None, procurement_id=None,
+                           reason=None, thread_id=None):
+        """Send a direct message to a single user as a persistent conversation.
+
+        Creates a self-copy recipient row for the sender as well, so the sent
+        message survives in the sender's own inbox. Brand-new conversations
+        become a thread whose root is this first message; follow-up messages
+        reuse the same thread_id so the exchange accumulates chronologically.
+
         Args:
             subject: Message subject
             body: Message body
@@ -28,7 +34,8 @@ class MessagingService:
             attachment_filename: Optional file name
             procurement_id: Optional related procurement
             reason: Optional reason for audit
-            
+            thread_id: Optional root message id to continue an existing thread
+
         Returns:
             Message object
         """
@@ -40,22 +47,34 @@ class MessagingService:
             attachment_path=attachment_path,
             attachment_filename=attachment_filename,
             procurement_id=procurement_id,
+            reply_to_id=thread_id,
+            thread_id=thread_id,
         )
         db.session.add(message)
         db.session.flush()  # Get message ID
-        
-        # Add recipient
+
+        if message.thread_id is None:
+            message.thread_id = message.id  # this message roots a new thread
+
+        # Recipient copy (unread) + sender self-copy (already read)
+        now = datetime.utcnow()
         recipient = MessageRecipient(
             message_id=message.id,
             user_id=recipient_id,
-            delivered_at=datetime.utcnow()
+            delivered_at=now
         )
-        db.session.add(recipient)
+        self_copy = MessageRecipient(
+            message_id=message.id,
+            user_id=current_user.id,
+            delivered_at=now,
+            read_at=now
+        )
+        db.session.add_all([recipient, self_copy])
         db.session.commit()
-        
+
         # Audit log
-        log_message_delivery(message.id, 1, 'direct', reason)
-        
+        log_message_delivery(message.id, 2, 'direct', reason)
+
         return message
 
     @staticmethod
@@ -85,27 +104,38 @@ class MessagingService:
         )
         db.session.add(message)
         db.session.flush()
-        
+        message.thread_id = message.id
+
         # Get all active users except sender
         recipients = User.query.filter(
             User.is_active == True,
             User.id != current_user.id
         ).all()
-        
+
+        now = datetime.utcnow()
         # Add recipients
         for recipient_user in recipients:
             recipient = MessageRecipient(
                 message_id=message.id,
                 user_id=recipient_user.id,
-                delivered_at=datetime.utcnow()
+                delivered_at=now
             )
             db.session.add(recipient)
-        
+
+        # Sender self-copy so broadcasts persist in the sender's inbox too
+        self_copy = MessageRecipient(
+            message_id=message.id,
+            user_id=current_user.id,
+            delivered_at=now,
+            read_at=now
+        )
+        db.session.add(self_copy)
+
         db.session.commit()
-        
+
         # Audit log
         log_message_delivery(message.id, len(recipients), 'broadcast', reason)
-        
+
         return message
 
     @staticmethod
@@ -139,6 +169,7 @@ class MessagingService:
         )
         db.session.add(message)
         db.session.flush()
+        message.thread_id = message.id
         
         # Collect all target users
         target_user_ids = set()
@@ -166,14 +197,25 @@ class MessagingService:
         # Remove sender
         target_user_ids.discard(current_user.id)
         
+        now = datetime.utcnow()
         # Add recipients
         for user_id in target_user_ids:
             recipient = MessageRecipient(
                 message_id=message.id,
                 user_id=user_id,
-                delivered_at=datetime.utcnow()
+                delivered_at=now
             )
             db.session.add(recipient)
+
+        # Sender self-copy so the message persists in the sender's inbox
+        if target_user_ids:
+            self_copy = MessageRecipient(
+                message_id=message.id,
+                user_id=current_user.id,
+                delivered_at=now,
+                read_at=now
+            )
+            db.session.add(self_copy)
         
         db.session.commit()
         

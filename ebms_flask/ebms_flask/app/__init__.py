@@ -57,6 +57,8 @@ def create_app(config_class=Config):
         Procurement.ensure_schema_columns()
         from app.models.communication import Communication
         Communication.ensure_schema_columns()
+        from app.models.message import Message
+        Message.ensure_schema_columns()
         from app.models.role import Role
         if Role.query.count() == 0:
             try:

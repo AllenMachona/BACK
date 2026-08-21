@@ -32,20 +32,94 @@ class Message(db.Model):
     attachment_filename = db.Column(db.String(255))
     
     # Threading
+    # thread_id points at the ROOT message of the conversation. A brand-new
+    # conversation's first message is itself the root (thread_id == own id);
+    # every follow-up message in the thread shares that same thread_id.
     reply_to_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
-    
+    thread_id = db.Column(db.Integer, db.ForeignKey('messages.id'), index=True)
+
     # Audit
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
     recipients = db.relationship('MessageRecipient', backref='message', lazy='dynamic', cascade='all, delete-orphan')
-    # Self-referential relationship for message threading
-    replies = db.relationship('Message', remote_side=[reply_to_id], backref=db.backref('parent_message', remote_side=[id]))
-    
+    # Self-referential relationship for message threading.
+    # reply_to_id and thread_id BOTH reference messages.id, so the foreign key
+    # must be given explicitly to disambiguate the joins.
+    replies = db.relationship(
+        'Message',
+        foreign_keys=[reply_to_id],
+        backref=db.backref('parent_message', remote_side=[id]),
+    )
+
+    def thread_root_id(self):
+        """ID of the root message for this message's conversation thread."""
+        return self.thread_id or self.id
+
+    def is_thread_root(self):
+        return (self.id == (self.thread_id or self.id))
+
+    def participant_user_ids(self):
+        """Unique user IDs involved in this thread (senders + recipients)."""
+        ids = {self.sender_id}
+        thread_id = self.thread_root_id()
+        from app.models.message import Message
+        from app.models.message import MessageRecipient
+        messages = Message.query.filter(
+            Message.thread_id == thread_id
+        ).all()
+        for m in messages:
+            if m.sender_id:
+                ids.add(m.sender_id)
+            for r in m.recipients.all():
+                if r.user_id:
+                    ids.add(r.user_id)
+                if r.bidder_id:
+                    # Bidder-targeted messages resolve via the bidder's users
+                    from app.models.bidder import Bidder
+                    bidder = Bidder.query.get(r.bidder_id)
+                    if bidder and bidder.users:
+                        ids.update(u.id for u in bidder.users)
+        return ids
+
+    @classmethod
+    def ensure_schema_columns(cls):
+        """Add the thread_id column to pre-existing SQLite databases and
+        backfill root values so old one-off messages become conversation roots."""
+        from sqlalchemy import text
+        try:
+            db.session.execute(text('SELECT thread_id FROM messages LIMIT 1'))
+        except Exception:
+            try:
+                db.session.execute(text('ALTER TABLE messages ADD COLUMN thread_id INTEGER'))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                return
+
+        try:
+            rows = cls.query.all()
+            changed = False
+            for m in rows:
+                if not m.thread_id:
+                    if m.reply_to_id:
+                        parent = cls.query.get(m.reply_to_id)
+                        if parent:
+                            m.thread_id = parent.thread_id if parent.thread_id else parent.id
+                        else:
+                            m.thread_id = m.id
+                    else:
+                        m.thread_id = m.id
+                    changed = True
+            if changed:
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     def __repr__(self):
-        return f'<Message {self.id} type={self.message_type}>'
+        return f'<Message {self.id} type={self.message_type} thread={self.thread_id}>'
 
 
 class MessageRecipient(db.Model):
