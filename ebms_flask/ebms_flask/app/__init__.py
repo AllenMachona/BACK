@@ -31,8 +31,12 @@ def create_app(config_class=Config):
         # HSTS (Strict-Transport-Security) - only in production
         if not app.debug:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        # CSP (Content-Security-Policy)
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self'"
+        # CSP (Content-Security-Policy).
+        # Icons (Bootstrap Icons) are self-hosted under /static/vendor so "self" covers
+        # their CSS + woff/woff2 fonts — the previous jsDelivr CDN link was blocked here
+        # because style-src did not allow cdn.jsdelivr.net, which made every icon render
+        # as an empty box. Google Fonts are still allowed for the public/auth pages.
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"
         return response
     
     # SECURITY: Enforce HTTPS in production

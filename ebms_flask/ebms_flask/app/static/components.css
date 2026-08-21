@@ -137,7 +137,17 @@
   pointer-events: none;
 }
 
-/* Right-side action cluster */
+/* =============================================================
+   ICON CONVENTION (Bootstrap Icons — self-hosted)
+   Icons are <i class="bi bi-*"> glyphs that inherit currentColor,
+   so they auto-match text/theme/hover/active states — never set a
+   hard-coded icon colour. Sizing:
+     - Sidebar nav icons: 1rem / 1.3rem fixed column (see .ebms-nav-item i)
+     - Topbar icon buttons: 1.05rem (see .topbar-icon-btn)
+     - Inline / button / badge / status icons: 1em (inherit font-size)
+   ============================================================= */
+
+/* Right-side action buttons */
 .ebms-top-actions {
   display: flex;
   align-items: center;
