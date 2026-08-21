@@ -1,8 +1,10 @@
 import secrets
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from markupsafe import Markup, escape
 from app.extensions import db
+from app.models.bidder import Bidder
 from app.models.role import Role
 from app.models.user import User
 from app.utils.audit import log_action
@@ -40,6 +42,13 @@ def login():
             log_action('LOGIN_FAILED', entity_type='User', entity_id=user.id if user else None,
                        reason='bad credentials')
             flash('Invalid username or password.', 'danger')
+            return render_template('login.html')
+
+        if user.has_role('bidder') and user.email_confirmation_token:
+            if user.email_confirmation_valid():
+                flash('Please confirm your email address using the link we sent you before signing in.', 'warning')
+            else:
+                flash('Your confirmation link has expired. Please register again.', 'danger')
             return render_template('login.html')
 
         if not user.is_active:
@@ -117,7 +126,16 @@ def register():
             flash('Bidder role not configured. Please contact support.', 'danger')
             return render_template('register.html')
 
-        # Create new bidder user with validated data
+        # Public registration always creates a bidder company and a pending account.
+        bidder = Bidder(
+            company_name=department,
+            contact_email=email,
+            active=True,
+            verified=False,
+        )
+        db.session.add(bidder)
+        db.session.flush()
+
         user = User(
             username=username,
             email=email,
@@ -126,19 +144,51 @@ def register():
             department=department,
             designation=designation,
             role_id=role.id,
-            is_active=True,
+            bidder_id=bidder.id,
+            is_active=False,
         )
         user.set_password(password)
+        confirmation_token = user.generate_email_confirmation_token()
         db.session.add(user)
         db.session.commit()
 
+        confirmation_url = url_for('auth.confirm_email', token=confirmation_token, _external=True)
+        email_sent = send_email(
+            user.email,
+            'Confirm your EBMS Botswana bidder account',
+            f"Hello {user.full_name()},\n\n"
+            "Confirm your email address and activate your bidder account using this link:\n\n"
+            f"{confirmation_url}\n\n"
+            "This link expires in 24 hours. If you did not create this account, ignore this message.",
+        )
         log_action('USER_REGISTERED', entity_type='User', entity_id=user.id,
                    new_value={'username': user.username, 'role': 'bidder', 'company': department})
-        login_user(user)
-        flash('Account created successfully. Welcome to EBMS Botswana.', 'success')
-        return redirect(url_for('dashboard.index'))
+        if email_sent:
+            flash('Account created. Check your email and confirm your address before signing in.', 'success')
+        elif not current_app.config.get('MAIL_CONFIGURED') and current_app.config.get('APP_ENV') != 'production':
+            flash(Markup(
+                'Email delivery is not configured for this development server. '
+                f'<a href="{escape(confirmation_url)}">Confirm the bidder account here</a>.'
+            ), 'warning')
+        else:
+            flash('Account created, but the confirmation email could not be sent. Please contact support.', 'warning')
+        return redirect(url_for('auth.login'))
 
     return render_template('register.html')
+
+
+@auth_bp.route('/confirm-email/<token>')
+def confirm_email(token):
+    user = User.query.filter_by(email_confirmation_token=token).first()
+    if not user or not user.email_confirmation_valid():
+        flash('This email confirmation link is invalid or expired. Please register again.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    user.confirm_email()
+    db.session.commit()
+    log_action('EMAIL_CONFIRMED', entity_type='User', entity_id=user.id)
+    flash('Your email has been confirmed and your bidder account is active. You can now sign in.', 'success')
+    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])

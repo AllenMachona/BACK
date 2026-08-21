@@ -8,10 +8,10 @@ from app.models.notification import Notification
 
 
 def send_email(to_address, subject, body):
-    server = current_app.config.get('MAIL_SERVER')
-    if not server:
+    if not current_app.config.get('MAIL_CONFIGURED'):
         print(f"[MAILER — console fallback, MAIL_SERVER not configured]\nTo: {to_address}\nSubject: {subject}\n{body}\n")
         return False
+    server = current_app.config['MAIL_SERVER']
     try:
         import smtplib
         from email.mime.text import MIMEText

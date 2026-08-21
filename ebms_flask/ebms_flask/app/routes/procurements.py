@@ -1,8 +1,9 @@
+import io
 import os
 import random
 import secrets
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_from_directory, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_file, send_from_directory, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
@@ -17,6 +18,7 @@ from app.models.bidder import Bidder
 from app.models.payment import BidderPayment, BidderDocumentAccess
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
+from app.utils.crypto import decrypt_bytes
 from app.utils.notify import notify_user, notify_bidders_on_procurement
 
 procurements_bp = Blueprint('procurements', __name__, url_prefix='/procurements')
@@ -715,9 +717,18 @@ def download_submission(procurement_id, submission_id):
     if not submission.file_path or not submission.original_filename:
         abort(404)
 
-    directory = submission.file_path.rsplit('/', 1)[0] if '/' in submission.file_path else '.'
-    filename = submission.file_path.rsplit('/', 1)[-1]
-    return send_from_directory(directory, filename, as_attachment=True, download_name=submission.original_filename)
+    if not os.path.isfile(submission.file_path):
+        abort(404)
+
+    with open(submission.file_path, 'rb') as encrypted_file:
+        plaintext = decrypt_bytes(encrypted_file.read())
+
+    return send_file(
+        io.BytesIO(plaintext),
+        as_attachment=True,
+        download_name=submission.original_filename,
+        mimetype='application/octet-stream',
+    )
 
 
 @procurements_bp.route('/<int:procurement_id>/transition', methods=['POST'])

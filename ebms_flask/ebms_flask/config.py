@@ -22,16 +22,34 @@ def _required_env(name, dev_default=None):
     return ''
 
 
+def _development_submission_key():
+    """Keep the local encryption key stable across development restarts."""
+    key_path = os.path.join(basedir, 'instance', 'submission_encryption.key')
+    os.makedirs(os.path.dirname(key_path), exist_ok=True)
+
+    try:
+        with open(key_path, 'r', encoding='ascii') as key_file:
+            key = key_file.read().strip()
+        Fernet(key)
+        return key
+    except (FileNotFoundError, ValueError):
+        key = Fernet.generate_key().decode('ascii')
+        with open(key_path, 'w', encoding='ascii') as key_file:
+            key_file.write(key)
+        return key
+
+
 if _is_production():
     SECRET_KEY = _required_env('SECRET_KEY')
     SUBMISSION_ENCRYPTION_KEY = _required_env('SUBMISSION_ENCRYPTION_KEY')
 else:
     SECRET_KEY = _required_env('SECRET_KEY', secrets.token_hex(32))
-    SUBMISSION_ENCRYPTION_KEY = _required_env('SUBMISSION_ENCRYPTION_KEY', Fernet.generate_key().decode())
+    SUBMISSION_ENCRYPTION_KEY = _required_env('SUBMISSION_ENCRYPTION_KEY', _development_submission_key())
 
 
 class Config:
     SECRET_KEY = SECRET_KEY
+    APP_ENV = os.environ.get('APP_ENV', os.environ.get('FLASK_ENV', 'development')).lower()
 
     # Defaults to a local SQLite file so the project runs with zero external
     # setup. Point DATABASE_URL at Postgres for anything beyond a demo.
@@ -54,11 +72,16 @@ class Config:
 
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
 
-    # Email (optional). If MAIL_SERVER is blank, notifications are printed to
-    # the console instead of sent, so the app runs without SMTP configured.
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
+    # SMTP email settings. MAIL_USERNAME and MAIL_PASSWORD may be empty for a
+    # trusted unauthenticated relay, but server and sender are always required
+    # for real delivery.
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', '').strip()
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in {'1', 'true', 'yes', 'on'}
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '').strip()
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'no-reply@your-domain.example'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', '').strip()
+    MAIL_CONFIGURED = bool(MAIL_SERVER and MAIL_DEFAULT_SENDER)
+
+    if APP_ENV == 'production' and not MAIL_CONFIGURED:
+        raise RuntimeError('MAIL_SERVER and MAIL_DEFAULT_SENDER must be configured in production.')

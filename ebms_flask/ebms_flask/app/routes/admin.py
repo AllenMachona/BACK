@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
+from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
@@ -65,9 +66,23 @@ def create_user():
         flash('Select a valid role.', 'danger')
         return redirect(url_for('admin.users'))
 
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    if not username or not email or not request.form.get('password'):
+        flash('Username, email, and password are required.', 'danger')
+        return redirect(url_for('admin.users'))
+
+    if User.query.filter((User.username == username) | (User.email == email)).first():
+        flash('A user with that username or email already exists.', 'danger')
+        return redirect(url_for('admin.users'))
+
+    if role.code == 'bidder':
+        flash('Bidder accounts must be created through public registration.', 'danger')
+        return redirect(url_for('admin.users'))
+
     user = User(
-        username=request.form['username'],
-        email=request.form['email'],
+        username=username,
+        email=email,
         first_name=request.form['first_name'],
         last_name=request.form['last_name'],
         department=request.form.get('department'),
@@ -77,7 +92,12 @@ def create_user():
     )
     user.set_password(request.form['password'])
     db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash('A user with that username or email already exists.', 'danger')
+        return redirect(url_for('admin.users'))
 
     log_action('USER_CREATED', entity_type='User', entity_id=user.id, new_value={'username': user.username, 'role': role.code})
     flash(f'User {user.username} created.', 'success')

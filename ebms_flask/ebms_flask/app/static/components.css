@@ -39,7 +39,8 @@
   left: 0;
   right: 0;
   height: var(--topbar-height);
-  z-index: 1000;
+  z-index: 2000;
+  overflow: visible;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -153,6 +154,7 @@
   align-items: center;
   gap: 0.5rem;
   margin-left: auto;
+  overflow: visible;
 }
 
 .topbar-icon-btn {
@@ -254,7 +256,7 @@
 /* DROPDOWN PANELS */
 .ebms-dropdown {
   position: fixed;
-  z-index: 1100;
+  z-index: 3000;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);

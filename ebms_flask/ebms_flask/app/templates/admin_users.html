@@ -23,7 +23,7 @@
                 <div class="col-md-3">
                     <select name="role_id" class="form-select" required>
                         <option value="">Select system role...</option>
-                        {% for r in roles %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+                        {% for r in roles if r.code != 'bidder' %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3"><input type="text" name="department" class="form-control" placeholder="Department"></div>

@@ -201,8 +201,8 @@
         var isOpen = menu.classList.contains('show');
         closeAll();
         if (!isOpen) {
-          positionDropdown(trigger, menu);
           menu.classList.add('show');
+          positionDropdown(trigger, menu);
           trigger.classList.add('active');
           openMenu = menu;
           loadMenuPreview(menu);

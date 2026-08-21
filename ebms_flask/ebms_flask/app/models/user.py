@@ -52,6 +52,9 @@ class User(UserMixin, db.Model):
     password_expiry_days = db.Column(db.Integer, default=90)
     reset_token = db.Column(db.String(255))
     reset_token_expires_at = db.Column(db.DateTime)
+    email_confirmation_token = db.Column(db.String(255), index=True)
+    email_confirmation_expires_at = db.Column(db.DateTime)
+    email_confirmed_at = db.Column(db.DateTime)
 
     # Personalization / user settings
     preferences = db.Column(db.Text, default='{}')
@@ -159,6 +162,9 @@ class User(UserMixin, db.Model):
             'preferences': 'ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"',
             'reset_token': 'ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)',
             'reset_token_expires_at': 'ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME',
+            'email_confirmation_token': 'ALTER TABLE users ADD COLUMN email_confirmation_token VARCHAR(255)',
+            'email_confirmation_expires_at': 'ALTER TABLE users ADD COLUMN email_confirmation_expires_at DATETIME',
+            'email_confirmed_at': 'ALTER TABLE users ADD COLUMN email_confirmed_at DATETIME',
         }.items():
             try:
                 db.session.execute(text(f'SELECT {column_name} FROM users LIMIT 1'))
@@ -174,6 +180,24 @@ class User(UserMixin, db.Model):
     def clear_reset_token(self):
         self.reset_token = None
         self.reset_token_expires_at = None
+
+    def generate_email_confirmation_token(self):
+        self.email_confirmation_token = secrets.token_urlsafe(32)
+        self.email_confirmation_expires_at = datetime.utcnow() + timedelta(hours=24)
+        return self.email_confirmation_token
+
+    def confirm_email(self):
+        self.email_confirmed_at = datetime.utcnow()
+        self.email_confirmation_token = None
+        self.email_confirmation_expires_at = None
+        self.is_active = True
+
+    def email_confirmation_valid(self):
+        return bool(
+            self.email_confirmation_token
+            and self.email_confirmation_expires_at
+            and self.email_confirmation_expires_at >= datetime.utcnow()
+        )
 
     def is_password_expired(self):
         if not self.password_changed_at:
