@@ -69,12 +69,15 @@
         </div>
     </header>
 <!-- Notifications dropdown -->
-    <div class="ebms-dropdown" id="notificationsMenu" role="menu" aria-label="Notifications">
+    <div class="ebms-dropdown" id="notificationsMenu" role="menu" aria-label="Notifications"
+         data-preview-url="{{ url_for('notifications.preview') }}">
         <div class="ebms-dropdown-header">
             <span>Notifications</span>
             <a class="link-all" href="{{ url_for('notifications.index') }}">View all</a>
         </div>
-        <div class="ebms-dropdown-empty">No new notifications.</div>
+        <div class="ebms-preview-list" id="notificationsPreviewList">
+            <div class="ebms-dropdown-loading"><i class="bi bi-arrow-repeat spin me-1"></i>Loading…</div>
+        </div>
         <div class="ebms-dropdown-footer">
             <a href="{{ url_for('notifications.index') }}">
                 <i class="bi bi-inbox me-1"></i>Open notification centre
@@ -83,12 +86,15 @@
     </div>
 
     <!-- Messages dropdown -->
-    <div class="ebms-dropdown" id="messagesMenu" role="menu" aria-label="Messages">
+    <div class="ebms-dropdown" id="messagesMenu" role="menu" aria-label="Messages"
+         data-preview-url="{{ url_for('messages.preview') }}">
         <div class="ebms-dropdown-header">
             <span>Messages</span>
             <a class="link-all" href="{{ url_for('messages.inbox') }}">View all</a>
         </div>
-        <div class="ebms-dropdown-empty">No new messages.</div>
+        <div class="ebms-preview-list" id="messagesPreviewList">
+            <div class="ebms-dropdown-loading"><i class="bi bi-arrow-repeat spin me-1"></i>Loading…</div>
+        </div>
         <div class="ebms-dropdown-footer">
             <a href="{{ url_for('messages.inbox') }}">
                 <i class="bi bi-envelope me-1"></i>Go to inbox

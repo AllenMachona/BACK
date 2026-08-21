@@ -1,4 +1,5 @@
 """Enhanced messaging system supporting direct, broadcast, and targeted messages."""
+import os
 from datetime import datetime
 from app.extensions import db
 
@@ -45,6 +46,11 @@ class Message(db.Model):
     # Relationships
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
     recipients = db.relationship('MessageRecipient', backref='message', lazy='dynamic', cascade='all, delete-orphan')
+    # Multiple file attachments (documents + images).
+    attachments = db.relationship(
+        'MessageAttachment', back_populates='message', lazy='select',
+        cascade='all, delete-orphan',
+    )
     # Self-referential relationship for message threading.
     # reply_to_id and thread_id BOTH reference messages.id, so the foreign key
     # must be given explicitly to disambiguate the joins.
@@ -164,3 +170,39 @@ class MessageRecipient(db.Model):
 
     def __repr__(self):
         return f'<MessageRecipient message={self.message_id} user={self.user_id} read={self.is_read()}>'
+
+
+class MessageAttachment(db.Model):
+    """A file attached to a message (documents like PDF/DOCX/XLSX, and images).
+
+    Each message may carry zero or more attachments, stored under
+    ``UPLOAD_FOLDER/message_attachments``. ``stored_name`` is the unique,
+    sanitised filename on disk while ``filename`` preserves the original
+    saved name shown to users in the UI.
+    """
+    __tablename__ = 'message_attachments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id'), nullable=False, index=True)
+
+    # Original user-facing filename (used for download_name)
+    filename = db.Column(db.String(255), nullable=False)
+    # Sanitised, unique name the file is actually stored under
+    stored_name = db.Column(db.String(255), nullable=False)
+    # MIME type (e.g. application/pdf) — used for safe serving + file-type icons
+    file_type = db.Column(db.String(100), nullable=False, default='application/octet-stream')
+    # Size in bytes (used for validation + UI display)
+    file_size = db.Column(db.Integer, nullable=False, default=0)
+    # Absolute path on disk
+    storage_path = db.Column(db.String(500), nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    message = db.relationship('Message', back_populates='attachments')
+
+    @property
+    def extension(self):
+        return os.path.splitext(self.filename or '')[1].lstrip('.').lower()
+
+    def __repr__(self):
+        return f'<MessageAttachment {self.id} message={self.message_id} {self.filename}>'

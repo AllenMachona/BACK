@@ -133,6 +133,51 @@
     }
   }
 /* ---------- Topbar dropdowns ---------- */
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function renderPreviewItem(it) {
+    var href = (typeof it.thread_id !== 'undefined' && it.thread_id !== null)
+      ? '/messages/thread/' + it.thread_id
+      : (it.url || '#');
+    var unread = it.unread
+      ? '<span class="ebms-preview-dot"></span>' : '';
+    var icon = it.is_outbound ? 'bi-send'
+      : (typeof it.thread_id !== 'undefined' && it.thread_id !== null ? 'bi-chat-text' : 'bi-bell');
+    var title = it.is_outbound ? 'You' : (it.sender || 'System');
+    return '<a class="ebms-dropdown-preview-item" href="' + href + '">' + unread +
+      '<span class="ebms-preview-icon"><i class="bi ' + icon + '"></i></span>' +
+      '<span class="ebms-preview-body">' +
+        '<span class="ebms-preview-title">' + escapeHtml(title) + '</span>' +
+        '<span class="ebms-preview-text">' + escapeHtml(it.subject || '') +
+          (it.snippet ? ' — ' + escapeHtml(it.snippet) : '') + '</span>' +
+        '<span class="ebms-preview-time">' + escapeHtml(it.created_fmt || '') + '</span>' +
+      '</span></a>';
+  }
+
+  function loadMenuPreview(menu) {
+    var url = menu.getAttribute('data-preview-url');
+    if (!url) return;
+    var list = menu.querySelector('.ebms-preview-list');
+    if (!list) return;
+    list.innerHTML = '<div class="ebms-dropdown-loading">Loading…</div>';
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (!data || !data.items || !data.items.length) {
+          list.innerHTML = '<div class="ebms-dropdown-empty">Nothing here yet.</div>';
+          return;
+        }
+        list.innerHTML = data.items.map(renderPreviewItem).join('');
+      })
+      .catch(function () {
+        list.innerHTML = '<div class="ebms-dropdown-empty">Could not load.</div>';
+      });
+  }
+
   function initDropdowns() {
     var triggers = document.querySelectorAll('[data-dropdown-target]');
     var openMenu = null;
@@ -160,6 +205,7 @@
           menu.classList.add('show');
           trigger.classList.add('active');
           openMenu = menu;
+          loadMenuPreview(menu);
         }
       });
     });

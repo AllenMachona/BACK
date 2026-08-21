@@ -11,11 +11,14 @@ sent or received -- persists in each participant's inbox and survives reloads.
 - Paginated, thread-grouped inbox
 """
 from collections import OrderedDict
-from flask import Blueprint, render_template, redirect, url_for, request, jsonify, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, request, jsonify, flash, abort, current_app, send_from_directory
 from flask_login import login_required, current_user
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
+import secrets
 from app.extensions import db
-from app.models.message import Message, MessageRecipient
+from app.models.message import Message, MessageRecipient, MessageAttachment
 from app.models.user import User
 from app.models.bidder import Bidder
 from app.models.role import Role
@@ -23,6 +26,106 @@ from app.utils.messaging import MessagingService
 from app.utils.audit_enhanced import log_message_delivery, log_message_read
 
 messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
+
+# ---------------------------------------------------------------------------
+# Attachment policy (reuses the existing UPLOAD_FOLDER pattern from
+# procurements: subfolder + token-prefixed secure_filename)
+# ---------------------------------------------------------------------------
+# Max file size per attachment: 10 MB
+MAX_MESSAGE_ATTACHMENT_BYTES = 10 * 1024 * 1024
+# Max number of files per message
+MAX_MESSAGE_ATTACHMENTS = 5
+ALLOWED_MESSAGE_ATTACHMENT_EXTS = {
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'txt', 'csv', 'png', 'jpg', 'jpeg', 'gif', 'webp',
+}
+
+
+def _attachment_ext(filename):
+    return os.path.splitext(filename or '')[1].lstrip('.').lower()
+
+
+def _save_message_attachment(file_storage):
+    """Validate and persist one message attachment.
+
+    Mirrors the procurement-document upload pattern (secure_filename +
+    ``UPLOAD_FOLDER/<subfolder>`` + a random token prefix). Returns a dict
+    describing the stored file, or raises ValueError on validation failure.
+    """
+    if not file_storage or not file_storage.filename:
+        return None
+
+    original = file_storage.filename
+    ext = _attachment_ext(original)
+    if ext not in ALLOWED_MESSAGE_ATTACHMENT_EXTS:
+        raise ValueError(
+            f"File type '.{ext}' is not allowed. Use one of: "
+            + ', '.join(sorted(ALLOWED_MESSAGE_ATTACHMENT_EXTS))
+        )
+
+    file_storage.seek(0, os.SEEK_END)
+    size = file_storage.tell()
+    file_storage.seek(0)
+    if size > MAX_MESSAGE_ATTACHMENT_BYTES:
+        raise ValueError(
+            f'"{original}" exceeds the {MAX_MESSAGE_ATTACHMENT_BYTES // (1024 * 1024)} MB attachment limit.'
+        )
+
+    att_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'message_attachments')
+    os.makedirs(att_dir, exist_ok=True)
+    stored_name = secure_filename(f"{current_user.id}_{secrets.token_hex(4)}_{original}")
+    filepath = os.path.join(att_dir, stored_name)
+    file_storage.save(filepath)
+
+    return {
+        'filename': original,
+        'stored_name': stored_name,
+        'storage_path': filepath,
+        'file_type': file_storage.mimetype or 'application/octet-stream',
+        'file_size': size,
+    }
+
+
+def _link_attachments(message_id, saved_attachments):
+    """Persist MessageAttachment rows for a newly saved message."""
+    for att in saved_attachments or []:
+        db.session.add(MessageAttachment(
+            message_id=message_id,
+            filename=att['filename'],
+            stored_name=att['stored_name'],
+            file_type=att['file_type'],
+            file_size=att['file_size'],
+            storage_path=att['storage_path'],
+        ))
+
+
+def _delete_saved_files(saved_attachments):
+    for att in saved_attachments or []:
+        try:
+            os.remove(att['storage_path'])
+        except OSError:
+            pass
+
+
+def _all_recipient_snapshot(message):
+    """List of recipient details for a message (excludes the sender self-copy).
+
+    Returns (count, [ {name, role, read, read_at}, ... ]).
+    """
+    details = []
+    for r in (message.recipients.all() if hasattr(message.recipients, 'all') else message.recipients):
+        user = r.user
+        if user is None:
+            continue
+        details.append({
+            'name': user.full_name(),
+            'role': user.role.name if user.role else '—',
+            'username': user.username,
+            'read': r.read_at is not None,
+            'read_at': r.read_at.strftime('%d %b %Y, %I:%M %p') if r.read_at else None,
+            'delivered_at': r.delivered_at.strftime('%d %b %Y, %I:%M %p') if r.delivered_at else None,
+        })
+    return details
 
 
 def _is_thread_participant(thread_id, user_id):
@@ -185,7 +288,18 @@ def send_message():
     if not subject or not body:
         return _fail('Subject and message body are required.')
 
+    saved_attachments = []
     try:
+        # Persist + validate uploaded files (documents/images). Raise ValueError
+        # on disallowed type / oversize; cleanup any already-saved files on error.
+        uploads = request.files.getlist('attachments')
+        if len(uploads) > MAX_MESSAGE_ATTACHMENTS:
+            return _fail(f'You can attach at most {MAX_MESSAGE_ATTACHMENTS} files per message.')
+        for f in uploads:
+            saved = _save_message_attachment(f)
+            if saved:
+                saved_attachments.append(saved)
+
         if message_type == 'direct':
             recipient_id = request.form.get('recipient_user_id', type=int) or \
                 request.form.get('recipient_id', type=int)
@@ -238,6 +352,11 @@ def send_message():
         else:
             return _fail('Invalid message type.')
 
+        # Link uploaded files to the newly-created message (multiple allowed).
+        _link_attachments(message.id, saved_attachments)
+        if saved_attachments:
+            db.session.commit()
+
         if is_ajax:
             return jsonify({
                 'status': 'ok',
@@ -250,6 +369,7 @@ def send_message():
         return redirect(url_for('messages.thread_view', thread_id=message.thread_root_id()))
 
     except Exception as e:
+        _delete_saved_files(saved_attachments)
         db.session.rollback()
         return _fail(f'Error sending message: {str(e)}')
 
@@ -269,11 +389,19 @@ def thread_view(thread_id):
     # Opening the thread marks its messages as read
     _mark_thread_read(thread_id, current_user.id)
 
+    # Per-message recipient snapshots for messages the current user sent
+    # (broadcast/targeted/direct) so the sender can see who received it + status.
+    recipient_map = {}
+    for m in thread_msgs:
+        if m.sender_id == current_user.id:
+            recipient_map[m.id] = _all_recipient_snapshot(m)
+
     return render_template(
         'messages/view.html',
         thread_msgs=thread_msgs,
         root=root,
         thread_id=thread_id,
+        recipient_map=recipient_map,
     )
 
 
@@ -294,9 +422,114 @@ def thread_messages_api(thread_id):
             'body': m.body,
             'is_mine': m.sender_id == current_user.id,
             'created_at': m.created_at.strftime('%d %b %Y, %I:%M %p'),
+            'attachments': [
+                {
+                    'id': a.id,
+                    'filename': a.filename,
+                    'file_type': a.file_type,
+                    'file_size': a.file_size,
+                    'url': url_for('messages.download_attachment', attachment_id=a.id),
+                }
+                for a in m.attachments
+            ],
         }
         for m in thread_msgs
     ]})
+
+
+@messages_bp.route('/attachment/<int:attachment_id>/download')
+@login_required
+def download_attachment(attachment_id):
+    """Download a message attachment (participants only)."""
+    attachment = MessageAttachment.query.get_or_404(attachment_id)
+    message = attachment.message
+    if not _is_thread_participant(message.thread_root_id(), current_user.id):
+        abort(403)
+
+    try:
+        return send_from_directory(
+            os.path.dirname(attachment.storage_path) or '.',
+            os.path.basename(attachment.storage_path),
+            as_attachment=True,
+            download_name=attachment.filename,
+            mimetype=attachment.file_type,
+        )
+    except OSError:
+        abort(404)
+
+
+@messages_bp.route('/preview')
+@login_required
+def preview():
+    """Recent messages for the current user, for the nav-preview dropdown.
+
+    Returns up to 8 recent threads (sent + received) with a short text
+    snippet, sender, timestamp and unread state.
+    """
+    limit = request.args.get('limit', 8, type=int)
+    limit = max(1, min(limit, 15))
+
+    # Inbound (recipient rows) + outbound (sent) messages, newest first.
+    inbound = [
+        (r.created_at or r.message.created_at, r)
+        for r in MessageRecipient.query.filter_by(
+            user_id=current_user.id, archived_at=None
+        ).all()
+        if r.message is not None
+    ]
+    outbound = [
+        (m.created_at, m) for m in Message.query.filter_by(
+            sender_id=current_user.id
+        ).all()
+    ]
+
+    # Collapse by thread root, keep most recent activity per thread.
+    threads = {}
+    for ts, r in inbound:
+        m = r.message
+        root_id = m.thread_root_id()
+        item = {
+            'is_outbound': False,
+            'sender': m.sender.full_name() if m.sender else 'Unknown',
+            'sender_role': m.sender.role.name if m.sender and m.sender.role else 'User',
+            'subject': m.subject,
+            'body': m.body,
+            'ts': ts,
+            'created_fmt': m.created_at.strftime('%d %b, %I:%M %p'),
+            'unread': r.read_at is None,
+            'type': m.message_type,
+            'thread_id': root_id,
+        }
+        if root_id not in threads or ts >= threads[root_id]['ts']:
+            threads[root_id] = item
+
+    for ts, m in outbound:
+        root_id = m.thread_root_id()
+        item = {
+            'is_outbound': True,
+            'sender': 'You',
+            'sender_role': current_user.role.name if current_user.role else 'User',
+            'subject': m.subject,
+            'body': m.body,
+            'ts': ts,
+            'created_fmt': m.created_at.strftime('%d %b, %I:%M %p'),
+            'unread': False,
+            'type': m.message_type,
+            'thread_id': root_id,
+        }
+        if root_id not in threads or ts >= threads[root_id]['ts']:
+            threads[root_id] = item
+
+    items = list(threads.values())
+    items.sort(key=lambda x: x['ts'], reverse=True)
+    items = items[:limit]
+
+    for it in items:
+        it.pop('ts', None)
+        snippet = (it.get('body') or '').strip()
+        it['snippet'] = snippet[:140] + ('…' if len(snippet) > 140 else '')
+
+    return jsonify({'items': items})
 
 
 @messages_bp.route('/thread/<int:thread_id>/reply', methods=['POST'])
@@ -323,7 +556,16 @@ def reply_thread(thread_id):
     if not body:
         return _fail('Reply message cannot be empty.')
 
+    saved_attachments = []
     try:
+        uploads = request.files.getlist('attachments')
+        if len(uploads) > MAX_MESSAGE_ATTACHMENTS:
+            return _fail(f'You can attach at most {MAX_MESSAGE_ATTACHMENTS} files per message.')
+        for f in uploads:
+            saved = _save_message_attachment(f)
+            if saved:
+                saved_attachments.append(saved)
+
         reply = Message(
             sender_id=current_user.id,
             subject=f"Re: {root.subject}",
@@ -335,6 +577,8 @@ def reply_thread(thread_id):
         )
         db.session.add(reply)
         db.session.flush()
+
+        _link_attachments(reply.id, saved_attachments)
 
         # Deliver to every other participant; keep a read self-copy
         participant_ids = root.participant_user_ids()
@@ -364,11 +608,22 @@ def reply_thread(thread_id):
                 'message_id': reply.id,
                 'sender': current_user.full_name(),
                 'created_at': reply.created_at.strftime('%d %b %Y, %I:%M %p'),
+                'attachments': [
+                    {
+                        'id': a.id,
+                        'filename': a.filename,
+                        'file_type': a.file_type,
+                        'file_size': a.file_size,
+                        'url': url_for('messages.download_attachment', attachment_id=a.id),
+                    }
+                    for a in reply.attachments
+                ],
             })
 
         flash('Reply sent successfully.', 'success')
         return redirect(url_for('messages.thread_view', thread_id=thread_id))
     except Exception as e:
+        _delete_saved_files(saved_attachments)
         db.session.rollback()
         return _fail(f'Error sending reply: {str(e)}')
 

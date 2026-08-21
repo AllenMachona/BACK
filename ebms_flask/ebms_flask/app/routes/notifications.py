@@ -108,6 +108,34 @@ def unread_count():
     return jsonify({'count': count})
 
 
+@notifications_bp.route('/preview')
+@login_required
+def preview():
+    """Recent notifications for the current user, for the bell preview dropdown."""
+    limit = request.args.get('limit', 8, type=int)
+    limit = max(1, min(limit, 15))
+    items = Notification.query.filter_by(user_id=current_user.id).order_by(
+        Notification.created_at.desc()
+    ).limit(limit).all()
+
+    result = []
+    for n in items:
+        snippet = (n.body or '').strip()
+        result.append({
+            'id': n.id,
+            'type': n.type,
+            'subject': n.title,
+            'snippet': snippet[:140] + ('…' if len(snippet) > 140 else ''),
+            'sender': n.sender.full_name() if n.sender else 'System',
+            'created_fmt': n.created_at.strftime('%d %b, %I:%M %p'),
+            'read': n.is_read,
+            'read_url': url_for('notifications.mark_read', notification_id=n.id),
+            'url': url_for('notifications.index'),
+        })
+
+    return jsonify({'items': result})
+
+
 @notifications_bp.route('/<int:notification_id>/read', methods=['POST'])
 @login_required
 def mark_read(notification_id):

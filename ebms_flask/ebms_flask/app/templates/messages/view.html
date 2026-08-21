@@ -44,6 +44,59 @@
             </div>
             <div class="message-item-body">
                 <div class="message-item-content">{{ m.body | safe }}</div>
+
+                {% if m.attachments %}
+                <div class="message-attachments">
+                    {% for att in m.attachments %}
+                    <a class="attachment-chip" href="{{ url_for('messages.download_attachment', attachment_id=att.id) }}" title="{{ att.filename }}">
+                        {% set _e = att.extension %}
+                        {% if _e == 'pdf' %}<i class="bi bi-file-earmark-pdf"></i>
+                        {% elif _e in ['doc', 'docx'] %}<i class="bi bi-file-earmark-word"></i>
+                        {% elif _e in ['xls', 'xlsx', 'csv'] %}<i class="bi bi-file-earmark-spreadsheet"></i>
+                        {% elif _e in ['ppt', 'pptx'] %}<i class="bi bi-file-earmark-slides"></i>
+                        {% elif _e in ['png', 'jpg', 'jpeg', 'gif', 'webp'] %}<i class="bi bi-file-earmark-image"></i>
+                        {% else %}<i class="bi bi-paperclip"></i>{% endif %}
+                        <span class="attachment-chip-name">{{ att.filename }}</span>
+                        {% if att.file_size %}<span class="attachment-chip-size">{{ (att.file_size / 1024 / 1024)|round(2) }} MB</span>{% endif %}
+                        <i class="bi bi-download"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if m.sender_id == current_user.id and recipient_map.get(m.id) %}
+                <div class="message-recipients">
+                    {% set recips = recipient_map.get(m.id) %}
+                    <button type="button" class="recipients-toggle btn btn-sm btn-outline-secondary"
+                            data-toggle-target="#messageRecipients{{ m.id }}"
+                            data-message-id="{{ m.id }}">
+                        <i class="bi bi-people me-1"></i>Sent to {{ recips|length }} user{{ 's' if recips|length != 1 else '' }}
+                        <i class="bi bi-chevron-down ms-1"></i>
+                    </button>
+                    <div class="recipients-list" id="messageRecipients{{ m.id }}" style="display: none;">
+                        {% set read_count = recips | selectattr('read', 'equalto', true) | list | length %}
+                        <div class="recipients-summary">
+                            <span class="badge badge-success">{{ read_count }} read</span>
+                            <span class="badge badge-alert">{{ recips|length - read_count }} unread</span>
+                        </div>
+                        <ul class="recipients-items">
+                            {% for r in recips %}
+                            <li>
+                                <span class="recipient-name">{{ r.name }}</span>
+                                <span class="recipient-role">{{ r.role }}</span>
+                                {% if r.read %}
+                                <span class="badge badge-success" title="{{ r.read_at }}">Read</span>
+                                {% elif r.delivered_at %}
+                                <span class="badge badge-warning" title="Delivered {{ r.delivered_at }}">Unread</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Delivered</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% else %}
@@ -56,8 +109,17 @@
 
     <div class="message-reply-form">
         <h3 class="replies-title">Reply</h3>
-        <form method="POST" id="replyForm" action="{{ url_for('messages.reply_thread', thread_id=thread_id) }}" novalidate>
+        <form method="POST" id="replyForm" action="{{ url_for('messages.reply_thread', thread_id=thread_id) }}" enctype="multipart/form-data" novalidate>
             <textarea class="form-control" id="replyBody" name="body" rows="3" placeholder="Write your reply..."></textarea>
+            <div class="reply-attachments-field">
+                <input type="file" id="replyAttachments" name="attachments" multiple hidden
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg,.gif,.webp">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="replyAttachBtn">
+                    <i class="bi bi-paperclip me-1"></i>Attach files
+                </button>
+                <span class="text-muted small">Max 10 MB each · 5 files</span>
+                <div class="compose-attachment-chips" id="replyAttachmentChips"></div>
+            </div>
             <div id="replyError" class="alert alert-danger" style="display: none;"></div>
             <div class="form-actions">
                 <button type="reset" class="btn btn-outline-secondary">Cancel</button>
@@ -69,6 +131,75 @@
 
 <script>
 const threadId = document.getElementById('threadMessages') ? document.getElementById('threadMessages').getAttribute('data-thread-id') : null;
+
+// ---- Attachment helpers (thread reply form) ----
+const MAX_ATTACH_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_ATTACH_COUNT = 5;
+const ATTACH_OK_EXTS = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','csv','png','jpg','jpeg','gif','webp'];
+
+function attachExt(name) {
+    const i = name.lastIndexOf('.');
+    return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+}
+function attachIcon(name) {
+    const e = attachExt(name);
+    if (['png','jpg','jpeg','gif','webp'].includes(e)) return 'bi-file-earmark-image';
+    if (e === 'pdf') return 'bi-file-earmark-pdf';
+    if (['doc','docx'].includes(e)) return 'bi-file-earmark-word';
+    if (['xls','xlsx','csv'].includes(e)) return 'bi-file-earmark-spreadsheet';
+    if (['ppt','pptx'].includes(e)) return 'bi-file-earmark-slides';
+    return 'bi-paperclip';
+}
+function formatSize(bytes) {
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+}
+function wireAttachmentInput(fileInput, chipsContainer, errorBox, errorFn) {
+    if (!fileInput || !chipsContainer) return;
+    fileInput.addEventListener('change', function () {
+        const chips = chipsContainer;
+        chips.innerHTML = '';
+        const files = Array.prototype.slice.call(fileInput.files);
+        if (files.length > MAX_ATTACH_COUNT) {
+            if (errorFn) errorFn('You can attach at most ' + MAX_ATTACH_COUNT + ' files per message.');
+            fileInput.value = '';
+            chips.innerHTML = '';
+            return;
+        }
+        for (const file of files) {
+            const ext = attachExt(file.name);
+            if (!ATTACH_OK_EXTS.includes(ext)) {
+                if (errorFn) errorFn('"' + file.name + '" has a disallowed file type.');
+                continue;
+            }
+            if (file.size > MAX_ATTACH_BYTES) {
+                if (errorFn) errorFn('"' + file.name + '" exceeds the 10 MB limit.');
+                continue;
+            }
+            const chip = document.createElement('div');
+            chip.className = 'attach-chip';
+            chip.innerHTML =
+                '<i class="bi ' + attachIcon(file.name) + '"></i>' +
+                '<span class="attach-chip-name" title="' + file.name + '">' + file.name + '</span>' +
+                '<span class="attach-chip-size">' + formatSize(file.size) + '</span>' +
+                '<button type="button" class="attach-chip-remove" title="Remove" aria-label="Remove ' + file.name + '">&times;</button>';
+            chip.querySelector('.attach-chip-remove').addEventListener('click', function () {
+                removeFileFromInput(fileInput, file);
+                fileInput.dispatchEvent(new Event('change'));
+            });
+            chips.appendChild(chip);
+        }
+    });
+}
+function removeFileFromInput(fileInput, fileToRemove) {
+    const dt = new DataTransfer();
+    Array.prototype.slice.call(fileInput.files).forEach(function (f) {
+        if (f !== fileToRemove && (f.name !== fileToRemove.name || f.size !== fileToRemove.size || f.lastModified !== fileToRemove.lastModified)) {
+            dt.items.add(f);
+        }
+    });
+    try { fileInput.files = dt.files; } catch (e) { /* some browsers; ignore */ }
+}
 
 function renderMessage(m) {
     const isMine = m.is_mine;
@@ -89,9 +220,37 @@ function renderMessage(m) {
             '<div class="message-item-meta"><span class="message-item-date">' + m.created_at + '</span></div>' +
         '</div>' +
         '<div class="message-item-body"><div class="message-item-content"></div></div>';
+    const body = div.querySelector('.message-item-body');
     const content = div.querySelector('.message-item-content');
     content.textContent = m.body || '';
+    if (m.attachments && m.attachments.length) {
+        const wrap = document.createElement('div');
+        wrap.className = 'message-attachments';
+        m.attachments.forEach(function (att) {
+            const a = document.createElement('a');
+            a.className = 'attachment-chip';
+            a.href = att.url;
+            a.title = att.filename;
+            a.innerHTML = '<i class="bi ' + attachmentGlyph(att.filename) + '"></i>' +
+                '<span class="attachment-chip-name"></span>' +
+                '<i class="bi bi-download"></i>';
+            a.querySelector('.attachment-chip-name').textContent = att.filename;
+            wrap.appendChild(a);
+        });
+        body.appendChild(wrap);
+    }
     return div;
+}
+
+function attachmentGlyph(name) {
+    const i = name.lastIndexOf('.');
+    const e = i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+    if (e === 'pdf') return 'bi-file-earmark-pdf';
+    if (['doc', 'docx'].includes(e)) return 'bi-file-earmark-word';
+    if (['xls', 'xlsx', 'csv'].includes(e)) return 'bi-file-earmark-spreadsheet';
+    if (['ppt', 'pptx'].includes(e)) return 'bi-file-earmark-slides';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(e)) return 'bi-file-earmark-image';
+    return 'bi-paperclip';
 }
 
 function clearReplyError() {
@@ -104,12 +263,35 @@ function showReplyError(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Recipient list toggle (sent messages)
+    Array.prototype.forEach.call(document.querySelectorAll('.recipients-toggle'), function (btn) {
+        btn.addEventListener('click', function () {
+            const target = document.querySelector(btn.getAttribute('data-toggle-target'));
+            if (!target) return;
+            const show = target.style.display === 'none';
+            target.style.display = show ? 'block' : 'none';
+            const caret = btn.querySelector('.bi-chevron-down, .bi-chevron-up');
+            if (caret) {
+                caret.className = (show ? 'bi bi-chevron-up' : 'bi bi-chevron-down') + ' ms-1';
+            }
+        });
+    });
+
+    const replyAttachBtn = document.getElementById('replyAttachBtn');
+    const replyAttInput = document.getElementById('replyAttachments');
+    if (replyAttachBtn && replyAttInput) {
+        replyAttachBtn.addEventListener('click', function () { replyAttInput.click(); });
+        wireAttachmentInput(replyAttInput, document.getElementById('replyAttachmentChips'), null, showReplyError);
+    }
+
     const replyForm = document.getElementById('replyForm');
     if (replyForm) replyForm.addEventListener('submit', function (e) {
         e.preventDefault();
         clearReplyError();
         const body = document.getElementById('replyBody');
+        const attInput = document.getElementById('replyAttachments');
         if (!body.value.trim()) return showReplyError('Reply cannot be empty.');
+        if (attInput && attInput.files.length > MAX_ATTACH_COUNT) return showReplyError('You can attach at most ' + MAX_ATTACH_COUNT + ' files per message.');
         body.value = body.value.trim();
         const btn = document.getElementById('replySendBtn');
         const original = btn.innerHTML;
@@ -117,20 +299,24 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.innerHTML = 'Sending...';
         fetch(replyForm.getAttribute('action'), {
             method: 'POST',
-            body: new URLSearchParams(new FormData(replyForm)),
+            body: new FormData(replyForm),
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         }).then(function (res) {
             return res.json().then(function (data) { return { ok: res.ok, data: data }; });
         }).then(function (result) {
             if (result.ok) {
                 body.value = '';
+                if (attInput) attInput.value = '';
+                const chips = document.getElementById('replyAttachmentChips');
+                if (chips) chips.innerHTML = '';
                 renderMessage({
                     id: result.data.message_id,
                     sender: result.data.sender,
                     role: '',
                     body: replyForm.querySelector('textarea').value || '',
                     is_mine: true,
-                    created_at: result.data.created_at
+                    created_at: result.data.created_at,
+                    attachments: result.data.attachments || []
                 });
                 // Use polling to pull the authoritative list within a moment
                 setTimeout(pollMessages, 800);
@@ -193,6 +379,28 @@ function pollMessages() {
 .message-item-sender-role { margin: 0; font-size: 0.8rem; color: var(--text-muted, #64748b); }
 .message-item-meta { font-size: 0.8rem; color: var(--text-muted, #64748b); display: flex; gap: 0.6rem; align-items: center; }
 .message-item-content { color: var(--text-body, #334155); font-size: 0.93rem; line-height: 1.6; }
+
+/* ---- Thread attachments ---- */
+.message-attachments { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+.attachment-chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-subtle, #f1f5f9); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 0.82rem; color: var(--ppra-accent, #2563eb); text-decoration: none; max-width: 100%; }
+.attachment-chip:hover { border-color: var(--ppra-accent, #2563eb); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15); }
+.attachment-chip > i { font-size: 1rem; }
+.attachment-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.attachment-chip-size { color: var(--text-muted, #94a3b8); font-size: 0.75rem; flex-shrink: 0; }
+
+/* ---- Recipient list (sent messages) ---- */
+.message-recipients { margin-top: 0.7rem; }
+.recipients-toggle { font-size: 0.82rem; }
+.recipients-summary { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+.recipients-items { list-style: none; margin: 0.4rem 0 0 0; padding: 0; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; }
+.recipients-items li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border-color, #e2e8f0); }
+.recipients-items li:last-child { border-bottom: none; }
+.recipient-name { font-weight: 600; font-size: 0.86rem; color: var(--text-main, #0f172a); }
+.recipient-role { font-size: 0.78rem; color: var(--text-muted, #64748b); }
+
+/* ---- Reply attachments field ---- */
+.reply-attachments-field { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+
 .message-reply-form { background: var(--bg-surface, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 1.25rem; }
 .replies-title { margin: 0 0 0.75rem 0; font-size: 1.05rem; color: var(--text-main, #0f172a); }
 .form-control { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--bg-surface, #fff); color: var(--text-body, #334155); font-size: 0.9rem; font-family: inherit; resize: vertical; }
