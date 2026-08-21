@@ -113,18 +113,10 @@
 
   --border-color: var(--border);
   --border-hover: var(--border-strong);
-  --border: var(--border);
 
   --text-main: var(--text-primary);
   --text-body: var(--text-secondary);
-  --text-muted: var(--text-muted);
   --text-light: var(--text-muted);
-
-  --shadow-sm: var(--shadow-sm);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-
-  --sidebar-width: var(--sidebar-width);
 
   --primary-rgb: 15, 76, 143;
 }
@@ -146,7 +138,7 @@
 
   --text-main: var(--text-primary);
   --text-body: var(--text-secondary);
-  --text-muted: var(--text-muted);
+  --text-muted: #6f7d92;
   --text-light: #6f7d92;
 
   --primary-rgb: 93, 156, 232;
