@@ -17,7 +17,8 @@
   flex: 1;
   min-width: 0;
   margin-left: var(--sidebar-width);
-  padding: 1.75rem 2rem;
+  /* Offset the fixed topbar so content never slides underneath it */
+  padding: calc(var(--topbar-height) + 1.75rem) 2rem 1.75rem;
   box-sizing: border-box;
   transition: margin-left 0.2s ease;
 }
@@ -1391,7 +1392,7 @@ textarea::placeholder {
   }
 
   .ebms-main {
-    padding: 1.25rem 1.25rem;
+    padding: calc(var(--topbar-height) + 1.25rem) 1.25rem 1.25rem;
   }
 }
 
@@ -1495,7 +1496,7 @@ textarea::placeholder {
 
 @media (max-width: 480px) {
   .ebms-main {
-    padding: 1rem 0.85rem;
+    padding: calc(var(--topbar-height) + 1rem) 0.85rem 1rem;
   }
 
   .btn {
