@@ -51,8 +51,8 @@
   --sidebar-width-collapsed: 72px;
 
   /* Typography */
-  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -155,6 +155,13 @@ body {
   color: var(--text-primary);
   background: var(--background);
   font-feature-settings: 'cv02', 'cv03';
+}
+
+:root[data-theme='dark'] .form-control,
+:root[data-theme='dark'] .form-select,
+:root[data-theme='dark'] option {
+  color: var(--text-primary);
+  background-color: var(--surface);
 }
 
 /* =============================================================

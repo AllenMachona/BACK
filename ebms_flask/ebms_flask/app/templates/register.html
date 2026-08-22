@@ -14,7 +14,7 @@
         --text-primary: #e8ecf4;
         --text-muted: #8b96ac;
         --danger: #f87171;
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     #network-canvas {
@@ -83,7 +83,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: inherit;
         font-size: 12px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -101,7 +101,7 @@
     }
 
     .page-title {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: inherit;
         font-weight: 600;
         font-size: 30px;
         letter-spacing: -0.01em;
@@ -155,7 +155,7 @@
     }
 
     .section-heading {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: inherit;
         font-weight: 600;
         font-size: 15px;
         color: #fff;
@@ -166,7 +166,7 @@
     }
 
     .section-heading span.tag {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: inherit;
         font-size: 11px;
         color: var(--accent);
         font-weight: 400;
@@ -192,7 +192,7 @@
         color: var(--text-primary);
         padding: 11px 13px;
         font-size: 14.5px;
-        font-family: 'Inter', sans-serif;
+        font-family: inherit;
         transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
@@ -239,7 +239,7 @@
         border: none;
         border-radius: 10px;
         padding: 13px 18px;
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: inherit;
         font-weight: 600;
         font-size: 15px;
         color: #062621;
@@ -271,10 +271,6 @@
         #network-canvas { display: none; }
     }
 </style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <div class="ebms-theme-wrap">
     <canvas id="network-canvas"></canvas>

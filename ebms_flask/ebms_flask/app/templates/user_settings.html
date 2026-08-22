@@ -35,15 +35,6 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label" for="font_family">Font Family</label>
-                        <select class="form-select" id="font_family" name="font_family">
-                            <option value="Segoe UI" {% if user.get_preference('font_family', 'Segoe UI') == 'Segoe UI' %}selected{% endif %}>Segoe UI</option>
-                            <option value="Inter" {% if user.get_preference('font_family', 'Segoe UI') == 'Inter' %}selected{% endif %}>Inter (Recommended)</option>
-                            <option value="Plus Jakarta Sans" {% if user.get_preference('font_family', 'Segoe UI') == 'Plus Jakarta Sans' %}selected{% endif %}>Plus Jakarta Sans</option>
-                            <option value="Arial" {% if user.get_preference('font_family', 'Segoe UI') == 'Arial' %}selected{% endif %}>Arial</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label" for="accent_color">Brand Accent</label>
                         <input class="form-control form-control-color w-100" type="color" id="accent_color" name="accent_color" value="{{ user.get_preference('accent_color', '#2563eb') }}" style="height: 38px;">
                     </div>

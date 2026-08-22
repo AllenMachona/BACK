@@ -123,7 +123,6 @@ class User(UserMixin, db.Model):
     def theme_style(self):
         prefs = self.get_preferences()
         theme = prefs.get('theme', 'light')
-        font_family = prefs.get('font_family', 'Segoe UI')
         accent = prefs.get('accent_color', '#2563eb')
 
         if theme == 'dark':
@@ -142,7 +141,6 @@ class User(UserMixin, db.Model):
             border = 'rgba(148, 163, 184, 0.18)'
 
         return (
-            f"font-family: '{font_family}', sans-serif; "
             f"--app-bg: {bg}; --app-surface: {surface}; --app-card: {card}; "
             f"--app-text: {text}; --app-muted: {muted}; --app-border: {border}; "
             f"--app-accent: {accent}; --app-accent-soft: {accent}22;"

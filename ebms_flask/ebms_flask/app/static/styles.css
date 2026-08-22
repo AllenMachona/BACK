@@ -1,6 +1,6 @@
 /* EBMS Botswana — Premium Front-End Design System (bocra-ui & callab-ui inspired) */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   --ppra-navy: #0f172a;
@@ -32,8 +32,11 @@
   box-sizing: border-box;
 }
 
+html, body, button, input, select, textarea, optgroup {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
 html {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-canvas);
   color: var(--text-main);
   scroll-behavior: smooth;
@@ -58,7 +61,7 @@ body {
 
 /* Typography Hierarchy */
 h1, h2, h3, h4, h5, h6, .display-1, .dashboard-title {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--text-main);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -1611,7 +1614,7 @@ a:hover {
 
 /* Code tag */
 code {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: inherit;
   font-size: 0.8rem;
   background: var(--bg-subtle);
   padding: 0.15rem 0.4rem;

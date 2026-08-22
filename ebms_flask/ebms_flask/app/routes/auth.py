@@ -245,7 +245,6 @@ def reset_password(token):
 def user_settings():
     if request.method == 'POST':
         current_user.set_preference('theme', request.form.get('theme', current_user.get_preference('theme', 'light')))
-        current_user.set_preference('font_family', request.form.get('font_family', current_user.get_preference('font_family', 'Segoe UI')))
         current_user.set_preference('accent_color', request.form.get('accent_color', current_user.get_preference('accent_color', '#2563eb')))
         current_user.set_preference('compact_view', request.form.get('compact_view') == 'on')
         current_user.set_preference('show_tips', request.form.get('show_tips') == 'on')

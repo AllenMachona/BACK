@@ -433,6 +433,25 @@
   margin: 0.35rem 0;
 }
 
+:root[data-theme='dark'] .ebms-dropdown {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+:root[data-theme='dark'] .ebms-dropdown a,
+:root[data-theme='dark'] .ebms-dropdown span {
+  color: var(--text-primary);
+}
+
+:root[data-theme='dark'] .ebms-dropdown .ebms-user-role,
+:root[data-theme='dark'] .ebms-dropdown .ebms-preview-text,
+:root[data-theme='dark'] .ebms-dropdown .ebms-preview-time,
+:root[data-theme='dark'] .ebms-dropdown .ebms-preview-icon,
+:root[data-theme='dark'] .ebms-dropdown .ebms-dropdown-loading,
+:root[data-theme='dark'] .ebms-dropdown .ebms-dropdown-empty {
+  color: var(--text-secondary);
+}
+
 /* User menu identity header & body */
 .ebms-dropdown .ebms-dropdown-body {
   padding: 0.3rem 0;
