@@ -149,9 +149,11 @@ class User(UserMixin, db.Model):
     @classmethod
     def ensure_preferences_column(cls):
         try:
-            db.session.execute(text('SELECT preferences FROM users LIMIT 1'))
+            probe = 'SELECT preferences FROM users LIMIT 1' if db.engine.name == 'sqlite' else 'SELECT TOP 1 preferences FROM users'
+            db.session.execute(text(probe))
         except Exception:
-            db.session.execute(text('ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT "{}"'))
+            add_column = 'ADD COLUMN' if db.engine.name == 'sqlite' else 'ADD'
+            db.session.execute(text(f"ALTER TABLE users {add_column} preferences VARCHAR(MAX) DEFAULT '{{}}'"))
             db.session.commit()
 
     @classmethod
@@ -165,8 +167,11 @@ class User(UserMixin, db.Model):
             'email_confirmed_at': 'ALTER TABLE users ADD COLUMN email_confirmed_at DATETIME',
         }.items():
             try:
-                db.session.execute(text(f'SELECT {column_name} FROM users LIMIT 1'))
+                probe = f'SELECT {column_name} FROM users LIMIT 1' if db.engine.name == 'sqlite' else f'SELECT TOP 1 {column_name} FROM users'
+                db.session.execute(text(probe))
             except Exception:
+                if db.engine.name != 'sqlite':
+                    column_sql = column_sql.replace(' ADD COLUMN ', ' ADD ')
                 db.session.execute(text(column_sql))
         db.session.commit()
 

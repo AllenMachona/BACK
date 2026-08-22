@@ -9,6 +9,7 @@ Covers the requirements:
   Procurement-role restriction on the management API.
 """
 import os
+import io
 import unittest
 import uuid
 from werkzeug.utils import secure_filename
@@ -21,6 +22,7 @@ from app.models.bidder import Bidder
 from app.models.procurement import Procurement
 from app.models.submission import Submission
 from app.models.evaluator_assignment import EvaluatorAssignment
+from app.models.evaluator_feedback import EvaluatorFeedback
 from app.models.audit import AuditLog
 from app.utils.crypto import encrypt_bytes
 
@@ -37,7 +39,7 @@ class EvaluatorAssignmentTests(unittest.TestCase):
 
         self._created = {
             'assignments': [], 'submissions': [], 'procurements': [],
-            'users': [], 'bidders': [], 'files': [],
+            'users': [], 'bidders': [], 'feedback': [], 'files': [],
         }
         self._tender_numbers = {}
         with self.app.app_context():
@@ -45,6 +47,8 @@ class EvaluatorAssignmentTests(unittest.TestCase):
 
     def tearDown(self):
         with self.app.app_context():
+            for fid in self._created['feedback']:
+                db.session.query(EvaluatorFeedback).filter_by(id=fid).delete()
             for pid in self._created['procurements']:
                 db.session.query(EvaluatorAssignment).filter_by(procurement_id=pid).delete()
             for aid in self._created['assignments']:
@@ -316,6 +320,64 @@ class EvaluatorAssignmentTests(unittest.TestCase):
         self.assertEqual(updated.json['assignment']['id'], assignment_id)
         self.assertEqual(updated.json['assignment']['document_scope'], 'both')
         self.assertIn('EVALUATOR_ASSIGNMENT_UPDATED', self._audit_actions_for(assignment_id))
+
+    def test_revoked_evaluator_can_be_reassigned(self):
+        procurement_id = self._make_procurement()
+        self._login(self.manager_name)
+
+        first = self._assign(procurement_id, self.eval_a_id, 'technical')
+        self.assertEqual(first.status_code, 201)
+        assignment_id = first.json['assignment']['id']
+
+        revoked = self.client.post(
+            f'/api/evaluator-assignments/{assignment_id}/revoke',
+            json={'reason': 'Test revocation'},
+        )
+        self.assertEqual(revoked.status_code, 200)
+
+        reassigned = self._assign(procurement_id, self.eval_a_id, 'single')
+
+        self.assertEqual(reassigned.status_code, 200)
+        self.assertEqual(reassigned.json['assignment']['id'], assignment_id)
+        self.assertEqual(reassigned.json['assignment']['document_scope'], 'single')
+        self.assertEqual(reassigned.json['assignment']['status'], 'active')
+
+    def test_evaluator_can_submit_feedback_and_procurement_can_download_it(self):
+        procurement_id = self._make_procurement()
+        self._login(self.manager_name)
+        assignment = self._assign(procurement_id, self.eval_a_id, 'technical')
+        self.assertEqual(assignment.status_code, 201)
+
+        self._login(self.eval_a_name)
+        response = self.client.post(
+            f'/evaluations/{procurement_id}/feedback',
+            data={
+                'feedback_text': 'Technical review completed; proceed to the next stage.',
+                'feedback_file': (io.BytesIO(b'Encrypted evaluator recommendation'), 'evaluation_result.pdf'),
+            },
+            content_type='multipart/form-data',
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Feedback document submitted', response.data)
+
+        with self.app.app_context():
+            feedback = EvaluatorFeedback.query.filter_by(procurement_id=procurement_id).first()
+            self.assertIsNotNone(feedback)
+            self._created['feedback'].append(feedback.id)
+            self._created['files'].append(feedback.file_path)
+            feedback_id = feedback.id
+
+        self._login(self.manager_name)
+        detail_response = self.client.get(f'/procurements/{procurement_id}')
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIn(b'Evaluator Results', detail_response.data)
+        self.assertIn(b'evaluation_result.pdf', detail_response.data)
+        response = self.client.get(
+            f'/procurements/{procurement_id}/evaluator-feedback/{feedback_id}/download'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, b'Encrypted evaluator recommendation')
 
     def test_non_procurement_user_cannot_manage_assignments(self):
         procurement_id = self._make_procurement()

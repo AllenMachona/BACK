@@ -45,9 +45,12 @@ class Communication(db.Model):
         }
         for column_name, column_sql in columns_to_add.items():
             try:
-                db.session.execute(text(f'SELECT {column_name} FROM communications LIMIT 1'))
+                probe = f'SELECT {column_name} FROM communications LIMIT 1' if db.engine.name == 'sqlite' else f'SELECT TOP 1 {column_name} FROM communications'
+                db.session.execute(text(probe))
             except Exception:
                 try:
+                    if db.engine.name != 'sqlite':
+                        column_sql = column_sql.replace(' ADD COLUMN ', ' ADD ')
                     db.session.execute(text(column_sql))
                 except Exception:
                     pass  # Column might already exist

@@ -245,7 +245,7 @@ def inbox():
     ).count()
 
     # Available recipients for composition
-    all_users = User.query.filter(User.id != current_user.id, User.is_active.is_(True)).order_by(
+    all_users = User.query.filter(User.id != current_user.id, User.is_active == True).order_by(
         User.first_name, User.last_name
     ).all()
     all_bidders = Bidder.query.filter_by(active=True, suspended=False).all()

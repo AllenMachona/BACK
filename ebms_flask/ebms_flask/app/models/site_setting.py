@@ -18,7 +18,8 @@ class SiteSetting(db.Model):
     @classmethod
     def ensure_defaults(cls):
         try:
-            db.session.execute(db.text('SELECT 1 FROM site_settings LIMIT 1'))
+            probe = 'SELECT 1 FROM site_settings LIMIT 1' if db.engine.name == 'sqlite' else 'SELECT TOP 1 1 FROM site_settings'
+            db.session.execute(db.text(probe))
         except (OperationalError, ProgrammingError):
             db.create_all()
 

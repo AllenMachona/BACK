@@ -59,7 +59,7 @@ def notify_bidders_on_procurement(procurement, notif_type, title, body):
     if bidder_ids:
         users = User.query.filter(User.bidder_id.in_(bidder_ids)).all()
     else:
-        users = User.query.join(Bidder, User.bidder_id == Bidder.id).filter(Bidder.verified.is_(True)).all()
+        users = User.query.join(Bidder, User.bidder_id == Bidder.id).filter(Bidder.verified == True).all()
 
     for u in users:
         notify_user(u, notif_type, title, body, procurement_id=procurement.id)

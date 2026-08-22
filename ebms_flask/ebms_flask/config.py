@@ -51,12 +51,20 @@ class Config:
     SECRET_KEY = SECRET_KEY
     APP_ENV = os.environ.get('APP_ENV', os.environ.get('FLASK_ENV', 'development')).lower()
 
-    # Defaults to a local SQLite file so the project runs with zero external
-    # setup. Point DATABASE_URL at Postgres for anything beyond a demo.
+    # SQL Server is the active local development database after migration.
+    # The original SQLite URI remains available for rollback/testing.
     # Uses `or` rather than get(key, default) so an empty DATABASE_URL= line
     # in .env (present but blank) still falls through to the SQLite default,
     # rather than handing Flask-SQLAlchemy an empty string as the URI.
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f"sqlite:///{os.path.join(basedir, 'instance', 'ebms.db')}"
+    SQLITE_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'ebms.db')}"
+    SQLSERVER_DATABASE_URI = os.environ.get(
+        'SQLSERVER_DATABASE_URL',
+        'mssql+pyodbc:///?odbc_connect='
+        'DRIVER%3D%7BODBC%2BDriver%2B17%2Bfor%2BSQL%2BServer%7D%3B'
+        'SERVER%3Dlocalhost%255CSQLEXPRESS%3BDATABASE%3DProcurementDB%3B'
+        'Trusted_Connection%3Dyes%3BTrustServerCertificate%3Dyes',
+    )
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or SQLSERVER_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(basedir, 'uploads')

@@ -32,6 +32,87 @@
         <span class="badge badge-primary">{{ procurements|length }} Tenders</span>
     </div>
     <div class="card-body">
+        <form method="get" action="{{ url_for('procurements.list_procurements') }}" class="row g-3 mb-4 p-3 border rounded bg-light">
+            <div class="col-12 col-lg-4">
+                <label class="form-label small fw-bold" for="procurement-search">Keyword</label>
+                <input class="form-control" id="procurement-search" type="search" name="q" value="{{ search_term }}" placeholder="Tender number, title, entity or PPRA code">
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-status">Status</label>
+                <select class="form-select" id="procurement-status" name="status">
+                    <option value="all">All statuses</option>
+                    {% for value, label in [('draft', 'Draft'), ('internal_review', 'Internal Review'), ('approved_for_publication', 'Approved'), ('published', 'Published'), ('clarification_period', 'Clarification'), ('submission_open', 'Submission Open'), ('closed', 'Closed'), ('technical_opening', 'Technical Opening'), ('compliance_evaluation', 'Compliance Evaluation'), ('technical_evaluation', 'Technical Evaluation'), ('financial_opening', 'Financial Opening'), ('financial_evaluation', 'Financial Evaluation'), ('award_pending_approval', 'Award Pending'), ('award_published', 'Award Published'), ('cooling_off', 'Cooling Off'), ('complaint_hold', 'Complaint Hold'), ('ready_for_contract', 'Ready for Contract'), ('archived', 'Archived'), ('cancelled', 'Cancelled')] %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-category">Category</label>
+                <select class="form-select" id="procurement-category" name="category">
+                    <option value="all">All categories</option>
+                    {% for value, label in [('works', 'Works'), ('services', 'Services'), ('consultancy', 'Consultancy'), ('supplies', 'Supplies'), ('combination', 'Combination')] %}
+                    <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-method">Method</label>
+                <select class="form-select" id="procurement-method" name="method">
+                    <option value="all">All methods</option>
+                    {% for value, label in [('open_domestic', 'Open Domestic'), ('open_international', 'Open International'), ('restricted', 'Restricted'), ('rfq', 'RFQ'), ('direct', 'Direct'), ('rfp', 'RFP')] %}
+                    <option value="{{ value }}" {% if method_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-envelope">Envelope</label>
+                <select class="form-select" id="procurement-envelope" name="envelope_type">
+                    <option value="all">All envelopes</option>
+                    <option value="single" {% if envelope_filter == 'single' %}selected{% endif %}>Single</option>
+                    <option value="dual" {% if envelope_filter == 'dual' %}selected{% endif %}>Dual</option>
+                </select>
+            </div>
+            <div class="col-6 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-evaluation">Evaluation</label>
+                <select class="form-select" id="procurement-evaluation" name="evaluation_method">
+                    <option value="all">All evaluation methods</option>
+                    {% for value, label in [('pass_fail', 'Pass / Fail'), ('scored', 'Scored'), ('weighted', 'Weighted'), ('least_cost', 'Least Cost'), ('quality_cost', 'Quality & Cost')] %}
+                    <option value="{{ value }}" {% if evaluation_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label small fw-bold" for="procurement-entity">Procuring entity / department</label>
+                <input class="form-control" id="procurement-entity" type="text" name="entity" value="{{ entity_filter }}" placeholder="Entity or department">
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label small fw-bold" for="procurement-ppra">PPRA code</label>
+                <input class="form-control" id="procurement-ppra" type="text" name="ppra_code" value="{{ ppra_filter }}" placeholder="e.g. 100-01">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-min-value">Minimum value</label>
+                <input class="form-control" id="procurement-min-value" type="number" min="0" step="0.01" name="min_value" value="{{ min_value }}" placeholder="BWP">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-bold" for="procurement-max-value">Maximum value</label>
+                <input class="form-control" id="procurement-max-value" type="number" min="0" step="0.01" name="max_value" value="{{ max_value }}" placeholder="BWP">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-bold" for="deadline-from">Deadline from</label>
+                <input class="form-control" id="deadline-from" type="date" name="deadline_from" value="{{ deadline_from }}">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-bold" for="deadline-to">Deadline to</label>
+                <input class="form-control" id="deadline-to" type="date" name="deadline_to" value="{{ deadline_to }}">
+            </div>
+            <div class="col-12 col-lg-2 d-flex align-items-end gap-2">
+                <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-funnel me-1"></i>Filter</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('procurements.list_procurements') }}" title="Reset filters" aria-label="Reset filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">{{ procurements|length }} matching tender{{ '' if procurements|length == 1 else 's' }}</span>
+        </div>
         {% if procurements %}
         <div class="table-responsive">
             <table class="table table-hover align-middle">

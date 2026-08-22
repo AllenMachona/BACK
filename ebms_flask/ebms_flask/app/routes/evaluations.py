@@ -1,11 +1,15 @@
 from collections import defaultdict
-from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
+import os
+import secrets
+from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, current_app
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.evaluation import Evaluation
 from app.models.committee import EvaluationCriteria, CommitteeMember
 from app.models.evaluator_assignment import EvaluatorAssignment
+from app.models.evaluator_feedback import EvaluatorFeedback
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
 from app.utils.evaluator_assignment import EvaluatorAssignmentService
@@ -112,7 +116,62 @@ def detail(procurement_id):
         matrix=matrix,
         evaluator_scope_label=evaluator_scope_label,
         visible_submissions=visible_submissions,
+        can_submit_feedback=bool(assignment),
     )
+
+
+@evaluations_bp.route('/<int:procurement_id>/feedback', methods=['POST'])
+@login_required
+@permission_required('can_evaluate')
+def submit_feedback(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    assignment = EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    if not assignment:
+        abort(403)
+
+    feedback_file = request.files.get('feedback_file')
+    if not feedback_file or not feedback_file.filename:
+        flash('Attach a feedback document before submitting.', 'danger')
+        return redirect(url_for('evaluations.detail', procurement_id=procurement.id))
+
+    plaintext = feedback_file.read()
+    if not plaintext:
+        flash('The feedback document is empty.', 'danger')
+        return redirect(url_for('evaluations.detail', procurement_id=procurement.id))
+
+    procurement_folder = secure_filename(
+        f'{procurement.tender_number}_{procurement.title}'
+    ) or f'procurement_{procurement.id}'
+    feedback_dir = os.path.join(
+        current_app.config['UPLOAD_FOLDER'], procurement_folder, 'evaluation_feedback'
+    )
+    os.makedirs(feedback_dir, exist_ok=True)
+    filename = secure_filename(
+        f'{current_user.id}_{secrets.token_hex(4)}_{feedback_file.filename}.sealed'
+    )
+    filepath = os.path.join(feedback_dir, filename)
+
+    from app.utils.crypto import encrypt_bytes
+    with open(filepath, 'wb') as encrypted_file:
+        encrypted_file.write(encrypt_bytes(plaintext))
+
+    feedback = EvaluatorFeedback(
+        procurement_id=procurement.id,
+        evaluator_id=current_user.id,
+        feedback_text=request.form.get('feedback_text', '').strip() or None,
+        file_path=filepath,
+        original_filename=feedback_file.filename,
+    )
+    db.session.add(feedback)
+    db.session.commit()
+    log_action(
+        'EVALUATOR_FEEDBACK_SUBMITTED',
+        entity_type='EvaluatorFeedback',
+        entity_id=feedback.id,
+        new_value={'procurement_id': procurement.id, 'filename': feedback.original_filename},
+    )
+    flash('Feedback document submitted to the Procurement team.', 'success')
+    return redirect(url_for('evaluations.detail', procurement_id=procurement.id))
 
 
 @evaluations_bp.route('/<int:procurement_id>/score', methods=['POST'])

@@ -43,9 +43,12 @@ def _ensure_columns(table_name, columns):
     """Upgrade request tables created by an earlier version of the workflow."""
     for column_name, column_sql in columns.items():
         try:
-            db.session.execute(text(f'SELECT {column_name} FROM {table_name} LIMIT 1'))
+            probe = f'SELECT {column_name} FROM {table_name} LIMIT 1' if db.engine.name == 'sqlite' else f'SELECT TOP 1 {column_name} FROM {table_name}'
+            db.session.execute(text(probe))
         except Exception:
             try:
+                if db.engine.name != 'sqlite':
+                    column_sql = column_sql.replace(' ADD COLUMN ', ' ADD ')
                 db.session.execute(text(column_sql))
             except Exception:
                 pass

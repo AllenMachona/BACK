@@ -109,6 +109,36 @@
     </div>
 </div>
 
+{% if can_submit_feedback %}
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>Return Evaluation Feedback</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Attach your evaluation results or recommendation for the Procurement team.</p>
+        <form method="POST" action="{{ url_for('evaluations.submit_feedback', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold" for="feedback_file">Feedback document</label>
+                    <input class="form-control" type="file" id="feedback_file" name="feedback_file" required
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold" for="feedback_text">Summary or recommendation</label>
+                    <textarea class="form-control" id="feedback_text" name="feedback_text" rows="2"
+                              placeholder="Optional note for the Procurement team"></textarea>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-send me-1"></i>Send Results
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <div class="card mb-4">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Evaluation Criteria Specifications</h5></div>
     <div class="card-body">

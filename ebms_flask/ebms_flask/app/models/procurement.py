@@ -178,8 +178,11 @@ class Procurement(db.Model):
             'rfq_filename': 'ALTER TABLE procurements ADD COLUMN rfq_filename VARCHAR(300)',
         }.items():
             try:
-                db.session.execute(text(f'SELECT {column_name} FROM procurements LIMIT 1'))
+                probe = f'SELECT {column_name} FROM procurements LIMIT 1' if db.engine.name == 'sqlite' else f'SELECT TOP 1 {column_name} FROM procurements'
+                db.session.execute(text(probe))
             except Exception:
+                if db.engine.name != 'sqlite':
+                    column_sql = column_sql.replace(' ADD COLUMN ', ' ADD ')
                 db.session.execute(text(column_sql))
         db.session.commit()
 

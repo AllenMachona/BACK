@@ -96,10 +96,12 @@ class Message(db.Model):
         backfill root values so old one-off messages become conversation roots."""
         from sqlalchemy import text
         try:
-            db.session.execute(text('SELECT thread_id FROM messages LIMIT 1'))
+            probe = 'SELECT thread_id FROM messages LIMIT 1' if db.engine.name == 'sqlite' else 'SELECT TOP 1 thread_id FROM messages'
+            db.session.execute(text(probe))
         except Exception:
             try:
-                db.session.execute(text('ALTER TABLE messages ADD COLUMN thread_id INTEGER'))
+                add_column = 'ADD COLUMN' if db.engine.name == 'sqlite' else 'ADD'
+                db.session.execute(text(f'ALTER TABLE messages {add_column} thread_id INTEGER'))
                 db.session.commit()
             except Exception:
                 db.session.rollback()

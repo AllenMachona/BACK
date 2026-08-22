@@ -682,6 +682,54 @@
         </div>
         {% endif %}
 
+        {% if can_assign_evaluators %}
+        <div class="card mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clipboard2-check me-2 text-primary"></i>Evaluator Results</h5>
+                <span class="badge badge-primary">{{ evaluator_feedback|length }} Document(s)</span>
+            </div>
+            <div class="card-body">
+                {% if not evaluator_feedback %}
+                <p class="text-muted small mb-0">No evaluator feedback has been submitted for this procurement yet.</p>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Evaluator</th>
+                                <th>Summary</th>
+                                <th>Document</th>
+                                <th>Submitted At</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for feedback in evaluator_feedback %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ feedback.evaluator.full_name() }}</td>
+                                <td class="text-muted">{{ feedback.feedback_text or 'No summary provided' }}</td>
+                                <td><i class="bi bi-file-earmark-text me-1 text-primary"></i>{{ feedback.original_filename }}</td>
+                                <td class="text-muted">{{ feedback.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('procurements.view_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" target="_blank" class="btn btn-outline-secondary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('procurements.download_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" class="btn btn-outline-primary" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="card mb-3">
             <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Committee Members</h5>

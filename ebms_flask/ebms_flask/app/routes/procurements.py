@@ -1,4 +1,5 @@
 import io
+import mimetypes
 import os
 import random
 import secrets
@@ -17,6 +18,7 @@ from app.models.role import Role
 from app.models.bidder import Bidder
 from app.models.payment import BidderPayment, BidderDocumentAccess
 from app.models.evaluator_assignment import EvaluatorAssignment
+from app.models.evaluator_feedback import EvaluatorFeedback
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
 from app.utils.crypto import decrypt_bytes
@@ -95,8 +97,81 @@ def generate_tender_number():
 def list_procurements():
     if current_user.has_role('bidder'):
         abort(403)
-    procurements = Procurement.query.order_by(Procurement.created_at.desc()).all()
-    return render_template('procurement_list.html', procurements=procurements)
+
+    query = Procurement.query
+    search_term = (request.args.get('q') or '').strip()
+    status_filter = (request.args.get('status') or 'all').strip().lower()
+    category_filter = (request.args.get('category') or 'all').strip().lower()
+    method_filter = (request.args.get('method') or 'all').strip().lower()
+    evaluation_filter = (request.args.get('evaluation_method') or 'all').strip().lower()
+    envelope_filter = (request.args.get('envelope_type') or 'all').strip().lower()
+    entity_filter = (request.args.get('entity') or '').strip()
+    ppra_filter = (request.args.get('ppra_code') or '').strip()
+    min_value = request.args.get('min_value', type=float)
+    max_value = request.args.get('max_value', type=float)
+    deadline_from = (request.args.get('deadline_from') or '').strip()
+    deadline_to = (request.args.get('deadline_to') or '').strip()
+
+    if search_term:
+        like_term = f'%{search_term}%'
+        query = query.filter(
+            (Procurement.tender_number.ilike(like_term)) |
+            (Procurement.title.ilike(like_term)) |
+            (Procurement.description.ilike(like_term)) |
+            (Procurement.procurement_entity.ilike(like_term)) |
+            (Procurement.user_department.ilike(like_term)) |
+            (Procurement.ppra_code.ilike(like_term))
+        )
+    if status_filter != 'all':
+        query = query.filter(Procurement.status == status_filter)
+    if category_filter != 'all':
+        query = query.filter(Procurement.category == category_filter)
+    if method_filter != 'all':
+        query = query.filter(Procurement.method == method_filter)
+    if evaluation_filter != 'all':
+        query = query.filter(Procurement.evaluation_method == evaluation_filter)
+    if envelope_filter != 'all':
+        query = query.filter(Procurement.envelope_type == envelope_filter)
+    if entity_filter:
+        like_entity = f'%{entity_filter}%'
+        query = query.filter(
+            (Procurement.procurement_entity.ilike(like_entity)) |
+            (Procurement.user_department.ilike(like_entity))
+        )
+    if ppra_filter:
+        query = query.filter(Procurement.ppra_code.ilike(f'%{ppra_filter}%'))
+    if min_value is not None:
+        query = query.filter(Procurement.estimated_value >= min_value)
+    if max_value is not None:
+        query = query.filter(Procurement.estimated_value <= max_value)
+    if deadline_from:
+        try:
+            query = query.filter(Procurement.submission_deadline >= datetime.fromisoformat(deadline_from))
+        except ValueError:
+            deadline_from = ''
+    if deadline_to:
+        try:
+            query = query.filter(Procurement.submission_deadline <= datetime.fromisoformat(deadline_to).replace(hour=23, minute=59, second=59))
+        except ValueError:
+            deadline_to = ''
+
+    procurements = query.order_by(Procurement.created_at.desc()).all()
+    return render_template(
+        'procurement_list.html',
+        procurements=procurements,
+        search_term=search_term,
+        status_filter=status_filter,
+        category_filter=category_filter,
+        method_filter=method_filter,
+        evaluation_filter=evaluation_filter,
+        envelope_filter=envelope_filter,
+        entity_filter=entity_filter,
+        ppra_filter=ppra_filter,
+        min_value=request.args.get('min_value', ''),
+        max_value=request.args.get('max_value', ''),
+        deadline_from=deadline_from,
+        deadline_to=deadline_to,
+    )
 
 
 @procurements_bp.route('/create', methods=['GET', 'POST'])
@@ -357,6 +432,9 @@ def detail(procurement_id):
         can_create_assignment=can_create_assignment,
         evaluator_assignments=evaluator_assignments,
         evaluator_candidates=evaluator_candidates,
+        evaluator_feedback=procurement.evaluator_feedback.order_by(
+            EvaluatorFeedback.submitted_at.desc()
+        ).all(),
     )
 
 
@@ -839,6 +917,62 @@ def download_submission(procurement_id, submission_id):
         as_attachment=True,
         download_name=submission.original_filename,
         mimetype='application/octet-stream',
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/evaluator-feedback/<int:feedback_id>/download')
+@login_required
+def download_evaluator_feedback(procurement_id, feedback_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    feedback = EvaluatorFeedback.query.filter_by(
+        id=feedback_id, procurement_id=procurement.id
+    ).first_or_404()
+
+    if current_user.has_role('bidder') or not current_user.can_access_procurement(procurement):
+        abort(403)
+    if not feedback.file_path or not os.path.isfile(feedback.file_path):
+        abort(404)
+
+    with open(feedback.file_path, 'rb') as encrypted_file:
+        plaintext = decrypt_bytes(encrypted_file.read())
+    log_action(
+        'EVALUATOR_FEEDBACK_DOWNLOADED',
+        entity_type='EvaluatorFeedback',
+        entity_id=feedback.id,
+        reason=f'Procurement user {current_user.id} accessed evaluator feedback',
+    )
+    return send_file(
+        io.BytesIO(plaintext),
+        as_attachment=True,
+        download_name=feedback.original_filename,
+        mimetype=mimetypes.guess_type(feedback.original_filename)[0] or 'application/octet-stream',
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/evaluator-feedback/<int:feedback_id>/view')
+@login_required
+def view_evaluator_feedback(procurement_id, feedback_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    feedback = EvaluatorFeedback.query.filter_by(
+        id=feedback_id, procurement_id=procurement.id
+    ).first_or_404()
+    if current_user.has_role('bidder') or not current_user.can_access_procurement(procurement):
+        abort(403)
+    if not feedback.file_path or not os.path.isfile(feedback.file_path):
+        abort(404)
+    with open(feedback.file_path, 'rb') as encrypted_file:
+        plaintext = decrypt_bytes(encrypted_file.read())
+    log_action(
+        'EVALUATOR_FEEDBACK_VIEWED',
+        entity_type='EvaluatorFeedback',
+        entity_id=feedback.id,
+        reason=f'Procurement user {current_user.id} viewed evaluator feedback',
+    )
+    return send_file(
+        io.BytesIO(plaintext),
+        as_attachment=False,
+        download_name=feedback.original_filename,
+        mimetype=mimetypes.guess_type(feedback.original_filename)[0] or 'application/octet-stream',
     )
 
 

@@ -131,9 +131,9 @@ def _notify_procurement_staff(title, body):
     staff = (
         User.query.join(Role, User.role_id == Role.id)
         .filter(
-            Role.can_view_all_records.is_(True)
-            | Role.can_approve_procurement.is_(True)
-            | Role.can_create_procurement.is_(True)
+            (Role.can_view_all_records == True)
+            | (Role.can_approve_procurement == True)
+            | (Role.can_create_procurement == True)
         )
         .filter(User.id != current_user.id)
         .all()

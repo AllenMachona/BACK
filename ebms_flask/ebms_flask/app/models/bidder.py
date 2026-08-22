@@ -9,7 +9,7 @@ class Bidder(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(200), nullable=False)
-    ppra_registration_number = db.Column(db.String(50), unique=True)
+    ppra_registration_number = db.Column(db.String(50), index=True)
     ppra_grade = db.Column(db.String(10))
     category = db.Column(db.String(50))  # matches PPRA registration category, e.g. WRK-EDU
     contact_email = db.Column(db.String(120), nullable=False)
@@ -26,6 +26,15 @@ class Bidder(db.Model):
     submissions = db.relationship('Submission', backref='bidder', lazy='dynamic')
     evaluations = db.relationship('Evaluation', backref='bidder', lazy='dynamic')
     complaints = db.relationship('Complaint', backref='bidder', lazy='dynamic')
+
+    __table_args__ = (
+        db.Index(
+            'uq_bidders_ppra_registration_number',
+            'ppra_registration_number',
+            unique=True,
+            mssql_where=db.text('[ppra_registration_number] IS NOT NULL'),
+        ),
+    )
 
     def registration_status(self):
         if self.suspended:

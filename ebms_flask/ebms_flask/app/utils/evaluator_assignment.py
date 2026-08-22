@@ -83,7 +83,7 @@ class EvaluatorAssignmentService:
         """IDs of every active user whose role grants can_evaluate."""
         rows = (
             User.query.join(Role, User.role_id == Role.id)
-            .filter(Role.can_evaluate.is_(True), User.is_active.is_(True))
+            .filter(Role.can_evaluate == True, User.is_active == True)
             .all()
         )
         return [u.id for u in rows]
@@ -93,7 +93,7 @@ class EvaluatorAssignmentService:
         """Every active user whose role grants can_evaluate (for the picker UI)."""
         return (
             User.query.join(Role, User.role_id == Role.id)
-            .filter(Role.can_evaluate.is_(True), User.is_active.is_(True))
+            .filter(Role.can_evaluate == True, User.is_active == True)
             .order_by(User.first_name, User.last_name)
             .all()
         )
@@ -152,6 +152,13 @@ class EvaluatorAssignmentService:
             raise EvaluatorAssignmentError('The selected user is not an eligible evaluator.')
 
         existing = EvaluatorAssignment.active_for(procurement.id, evaluator.id)
+        if existing is None:
+            # Reuse revoked rows because the database intentionally enforces
+            # one assignment record per evaluator and procurement.
+            existing = EvaluatorAssignment.query.filter_by(
+                procurement_id=procurement.id,
+                evaluator_id=evaluator.id,
+            ).first()
         created = existing is None
 
         if created:
@@ -177,18 +184,18 @@ class EvaluatorAssignmentService:
             )
         else:
             previous_scope = existing.document_scope
+            previous_status = existing.status
             existing.document_scope = scope
             existing.assigned_by_id = assigned_by.id
             existing.assigned_at = datetime.utcnow()
-            if existing.status != 'active':
-                existing.status = 'active'
+            existing.status = 'active'
             db.session.flush()
             log_action(
                 'EVALUATOR_ASSIGNMENT_UPDATED',
                 entity_type='EvaluatorAssignment',
                 entity_id=existing.id,
-                previous_value={'scope': previous_scope},
-                new_value={'scope': scope},
+                previous_value={'scope': previous_scope, 'status': previous_status},
+                new_value={'scope': scope, 'status': 'active'},
                 reason=reason,
             )
             assignment = existing

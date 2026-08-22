@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
-from sqlalchemy import func
+from sqlalchemy import case, func
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.bidder import Bidder
@@ -33,6 +33,13 @@ def _build_category_counts(queryset):
     return counts
 
 
+def _deadline_order(descending=False):
+    """Order scheduled procurements before records without a deadline."""
+    deadline = Procurement.submission_deadline
+    direction = deadline.desc() if descending else deadline.asc()
+    return case((deadline.is_(None), 1), else_=0).asc(), direction
+
+
 @dashboard_bp.route('/')
 def index():
     if current_user.is_authenticated:
@@ -41,11 +48,11 @@ def index():
         return redirect(url_for('dashboard.dashboard'))
 
     public_query = Procurement.query.filter(Procurement.status.in_(PUBLIC_PROCUREMENT_STATUSES))
-    public_tenders = public_query.order_by(Procurement.submission_deadline.asc().nullslast()).limit(6).all()
-    opened_tenders = public_query.filter(Procurement.status == 'submission_open').order_by(Procurement.submission_deadline.asc().nullslast()).limit(4).all()
-    awarded_tenders = Procurement.query.filter(Procurement.status == 'award_published').order_by(Procurement.submission_deadline.asc().nullslast()).limit(3).all()
+    public_tenders = public_query.order_by(*_deadline_order()).limit(6).all()
+    opened_tenders = public_query.filter(Procurement.status == 'submission_open').order_by(*_deadline_order()).limit(4).all()
+    awarded_tenders = Procurement.query.filter(Procurement.status == 'award_published').order_by(*_deadline_order()).limit(3).all()
     annual_plan_tenders = public_query.filter(Procurement.status == 'published').order_by(Procurement.created_at.desc()).limit(3).all()
-    current_tenders = Procurement.query.filter(Procurement.status.in_(['published', 'submission_open'])).order_by(Procurement.submission_deadline.asc().nullslast()).limit(4).all()
+    current_tenders = Procurement.query.filter(Procurement.status.in_(['published', 'submission_open'])).order_by(*_deadline_order()).limit(4).all()
     category_counts = _build_category_counts(public_query.all())
     closing_soon = public_query.filter(
         Procurement.submission_deadline.isnot(None),
@@ -159,15 +166,15 @@ def public_tenders():
         query = query.filter(Procurement.status == 'award_published')
 
     if sort == 'deadline_asc':
-        query = query.order_by(Procurement.submission_deadline.asc().nullslast())
+        query = query.order_by(*_deadline_order())
     elif sort == 'deadline_desc':
-        query = query.order_by(Procurement.submission_deadline.desc().nullslast())
+        query = query.order_by(*_deadline_order(descending=True))
     elif sort == 'newest':
         query = query.order_by(Procurement.created_at.desc())
     elif sort == 'value_desc':
         query = query.order_by(Procurement.estimated_value.desc())
     else:
-        query = query.order_by(Procurement.submission_deadline.asc().nullslast())
+        query = query.order_by(*_deadline_order())
 
     total_results = query.count()
     total_pages = max((total_results + page_size - 1) // page_size, 1) if total_results else 1

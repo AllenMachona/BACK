@@ -22,6 +22,7 @@ from app.models.clarification import ClarificationVisibility, ClarificationAcces
 from app.models.history import ProcurementHistory, SubmissionHistory
 from app.models.request import FormDRequest, FormERequest, FormDERequest
 from app.models.evaluator_assignment import EvaluatorAssignment
+from app.models.evaluator_feedback import EvaluatorFeedback
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
@@ -33,4 +34,5 @@ __all__ = [
     'ClarificationVisibility', 'ClarificationAccess',
     'ProcurementHistory', 'SubmissionHistory',
     'EvaluatorAssignment',
+    'EvaluatorFeedback',
 ]

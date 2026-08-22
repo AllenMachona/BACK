@@ -56,6 +56,8 @@ def create_app(config_class=Config):
         db.create_all()
         from app.models.evaluator_assignment import EvaluatorAssignment
         EvaluatorAssignment.__table__.create(db.engine, checkfirst=True)
+        from app.models.evaluator_feedback import EvaluatorFeedback
+        EvaluatorFeedback.__table__.create(db.engine, checkfirst=True)
         SiteSetting.ensure_defaults()
         from app.models.user import User
         User.ensure_auth_columns()
