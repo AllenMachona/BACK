@@ -21,6 +21,43 @@
 <div class="row">
     <div class="col-md-8">
 
+        <!-- Free Tender Documents (RFQ) Card -->
+        {% if procurement.has_rfq() %}
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>Free Tender Documents (RFQ)</h5>
+                    <small class="text-muted">Free-to-view documents — no payment required.</small>
+                </div>
+                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>Free Access</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="p-3 border rounded bg-light border-success">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="fw-bold text-dark">
+                                    <i class="bi bi-file-earmark-arrow-down me-1 text-success"></i>RFQ Document
+                                    <small class="d-block text-muted">Request for Quotation / free tender information</small>
+                                </div>
+                                <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Available</span>
+                            </div>
+                            <div class="small text-muted mb-3"><i class="bi bi-file-earmark-check me-1 text-success"></i>{{ procurement.rfq_filename }}</div>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='rfq') }}" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill">
+                                    <i class="bi bi-eye me-1"></i>View Document
+                                </a>
+                                <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='rfq') }}" class="btn btn-sm btn-success flex-fill">
+                                    <i class="bi bi-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Gated Official Tender Documents (RFCE & ITT) Card -->
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">

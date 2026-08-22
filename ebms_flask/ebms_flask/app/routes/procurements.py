@@ -101,15 +101,29 @@ def list_procurements():
 @login_required
 @permission_required('can_create_procurement')
 def create():
+    from app.models.request import FormDERequest
+
     ppra_codes = Procurement.ppra_code_options()
     ppra_sub_codes = Procurement.ppra_sub_code_options()
+
+    # Optional combined Form D & E request that spawned this creation. The
+    # request's documents and justification carry over into the record, and the
+    # request is linked + marked converted once the procurement is created.
+    request_id = request.args.get('request_id', type=int) or request.form.get('request_id', type=int)
+    source_request = None
+    if request_id:
+        source_request = FormDERequest.query.get_or_404(request_id)
+        if source_request.status == 'converted' and source_request.procurement_id:
+            flash('This request has already been converted — see its linked procurement record.', 'warning')
+            return redirect(url_for('procurements.detail', procurement_id=source_request.procurement_id))
 
     if request.method == 'POST':
         try:
             estimated_value = float(request.form['estimated_value'])
         except (KeyError, ValueError):
             flash('A valid estimated value is required.', 'danger')
-            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request)
 
         tender_fee = 0.0
         if request.form.get('tender_fee'):
@@ -121,12 +135,14 @@ def create():
         procurement_entity = request.form.get('procurement_entity') or request.form.get('user_department')
         if not procurement_entity:
             flash('A procurement entity is required.', 'danger')
-            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request)
 
         advertisement = request.files.get('advertisement_document')
         if not advertisement or not advertisement.filename:
             flash('An advertisement document is required before creating the procurement.', 'danger')
-            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request)
 
         ppra_base = request.form.get('ppra_code', '').strip()
         ppra_sub_code = request.form.get('ppra_sub_code', '').strip()
@@ -154,7 +170,8 @@ def create():
 
         if governance['errors']:
             flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')
-            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request)
 
         if governance['warnings']:
             flash('Governance check noted a review risk: lot splitting or high-value procedure review required.', 'warning')
@@ -166,11 +183,18 @@ def create():
 
         tender_number = generate_tender_number()
 
-        # Handle document uploads
+        # Handle document uploads. When created from a combined Form D & E
+        # request, the request's attached forms are carried over automatically
+        # (they may still be replaced on this screen).
         form_d_path, form_d_name = _save_procurement_document(request.files.get('form_d_document'), tender_number, 'form_d')
+        if source_request and source_request.has_form_d() and not form_d_path:
+            form_d_path, form_d_name = source_request.form_d_file_path, source_request.form_d_filename
         form_e_path, form_e_name = _save_procurement_document(request.files.get('form_e_document'), tender_number, 'form_e')
+        if source_request and source_request.has_form_e() and not form_e_path:
+            form_e_path, form_e_name = source_request.form_e_file_path, source_request.form_e_filename
         rfce_path, rfce_name = _save_procurement_document(request.files.get('rfce_document'), tender_number, 'rfce')
         itt_path, itt_name = _save_procurement_document(request.files.get('itt_document'), tender_number, 'itt')
+        rfq_path, rfq_name = _save_procurement_document(request.files.get('rfq_document'), tender_number, 'rfq')
 
         procurement = Procurement(
             tender_number=tender_number,
@@ -196,6 +220,8 @@ def create():
             rfce_filename=rfce_name,
             itt_file_path=itt_path,
             itt_filename=itt_name,
+            rfq_file_path=rfq_path,
+            rfq_filename=rfq_name,
             created_by_id=current_user.id,
             status='draft',
         )
@@ -221,11 +247,34 @@ def create():
         log_action('PROCUREMENT_CREATED', entity_type='Procurement', entity_id=procurement.id,
                    new_value={'tender_number': procurement.tender_number, 'title': procurement.title,
                               'has_form_d': bool(form_d_path), 'has_form_e': bool(form_e_path),
-                              'has_rfce': bool(rfce_path), 'has_itt': bool(itt_path)})
+                              'has_rfce': bool(rfce_path), 'has_itt': bool(itt_path),
+                              'has_rfq': bool(rfq_path)})
+
+        if source_request is not None:
+            source_request.procurement_id = procurement.id
+            source_request.status = 'converted'
+            source_request.converted_by_id = current_user.id
+            source_request.converted_at = datetime.utcnow()
+            db.session.commit()
+
+            log_action('REQUEST_DE_CONVERTED', entity_type='FormDERequest', entity_id=source_request.id,
+                       new_value={'tender_number': procurement.tender_number, 'procurement_id': procurement.id,
+                                  'status': 'converted'})
+            try:
+                notify_user(
+                    source_request.requester, 'request_converted',
+                    f'Your Form D & E request was converted ({procurement.tender_number})',
+                    f'Your procurement request from {source_request.department or "your department"} has been '
+                    f'converted into procurement record {procurement.tender_number}. Track it under Procurements.',
+                )
+            except Exception as exc:
+                print(f"Requester notification failed (non-fatal): {exc}")
+
         flash(f'Procurement {procurement.tender_number} created as Draft with submitted documents.', 'success')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
-    return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes)
+    return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                           source_request=source_request)
 
 
 @procurements_bp.route('/search')
@@ -330,6 +379,13 @@ def upload_documents(procurement_id):
             procurement.itt_filename = name
             uploaded.append('ITT')
 
+    if request.files.get('rfq_document'):
+        path, name = _save_procurement_document(request.files['rfq_document'], procurement.tender_number, 'rfq')
+        if path:
+            procurement.rfq_file_path = path
+            procurement.rfq_filename = name
+            uploaded.append('RFQ')
+
     if request.form.get('tender_fee'):
         try:
             procurement.tender_fee = float(request.form.get('tender_fee'))
@@ -365,6 +421,9 @@ def download_tender_document(procurement_id, doc_type):
     elif doc_type == 'itt':
         filepath = procurement.itt_file_path
         filename = procurement.itt_filename
+    elif doc_type == 'rfq':
+        filepath = procurement.rfq_file_path
+        filename = procurement.rfq_filename
     else:
         abort(404)
 
@@ -381,6 +440,8 @@ def download_tender_document(procurement_id, doc_type):
     elif doc_type in ('rfce', 'itt'):
         # Gated by payment approval for bidders
         if current_user.has_role('bidder'):
+            if procurement.status not in ('published', 'submission_open', 'clarification_period'):
+                abort(404)
             if not current_user.bidder_id:
                 abort(403)
 
@@ -389,6 +450,10 @@ def download_tender_document(procurement_id, doc_type):
                 log_action('UNAUTHORIZED_DOCUMENT_ACCESS_BLOCKED', entity_type='ProcurementDocument', entity_id=procurement.id,
                            reason=f"Unapproved Bidder {current_user.bidder_id} attempted direct access to {doc_type.upper()}")
                 abort(403)
+
+    elif doc_type == 'rfq' and current_user.has_role('bidder'):
+        if procurement.status not in ('published', 'submission_open', 'clarification_period'):
+            abort(404)
 
     if not filepath or not filename or not os.path.exists(filepath):
         abort(404)
@@ -421,6 +486,9 @@ def view_tender_document(procurement_id, doc_type):
     elif doc_type == 'itt':
         filepath = procurement.itt_file_path
         filename = procurement.itt_filename
+    elif doc_type == 'rfq':
+        filepath = procurement.rfq_file_path
+        filename = procurement.rfq_filename
     else:
         abort(404)
 
@@ -433,10 +501,16 @@ def view_tender_document(procurement_id, doc_type):
 
     elif doc_type in ('rfce', 'itt'):
         if current_user.has_role('bidder'):
+            if procurement.status not in ('published', 'submission_open', 'clarification_period'):
+                abort(404)
             if not current_user.bidder_id or not BidderDocumentAccess.can_bidder_access(procurement.id, current_user.bidder_id, doc_type):
                 log_action('UNAUTHORIZED_DOCUMENT_ACCESS_BLOCKED', entity_type='ProcurementDocument', entity_id=procurement.id,
                            reason=f"Unapproved Bidder {current_user.bidder_id} attempted direct inline view of {doc_type.upper()}")
                 abort(403)
+
+    elif doc_type == 'rfq' and current_user.has_role('bidder'):
+        if procurement.status not in ('published', 'submission_open', 'clarification_period'):
+            abort(404)
 
     if not filepath or not filename or not os.path.exists(filepath):
         abort(404)

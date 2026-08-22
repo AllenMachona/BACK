@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}My Requests - EBMS Botswana{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>My Requests</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-list-check me-2"></i>My Requests</h1>
+        <p class="ebms-page-subtitle">Track the status and history of your Form D / Form E submissions</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('requests.hub') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>New Request
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0"><i class="bi bi-collection me-2 text-primary"></i>Your Submissions</h5>
+        <span class="badge badge-secondary">{{ items|length }} request(s)</span>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Form</th>
+                        <th>Title</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Linked Procurement</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    {% set r = item.request %}
+                    <tr>
+                        <td>
+                            {% if item.form_type == 'form_d' %}
+                            <span class="badge badge-secondary">Form D</span>
+                            {% elif item.form_type == 'de' %}
+                            <span class="badge badge-primary">Form D &amp; E</span>
+                            {% else %}
+                            <span class="badge badge-info">Form E</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ r.title }}</div>
+                            <small class="text-muted">{{ r.form_type_label }} · {{ r.department or r.procurement_entity or '—' }}</small>
+                        </td>
+                        <td class="small text-muted">{{ r.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                        <td>
+                            {% if r.status == 'submitted' %}
+                            <span class="badge badge-info"><i class="bi bi-hourglass-split me-1"></i>Submitted</span>
+                            {% elif r.status == 'under_review' %}
+                            <span class="badge badge-warning"><i class="bi bi-search me-1"></i>Under Review</span>
+                            {% elif r.status == 'converted' %}
+                            <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Converted</span>
+                            {% elif r.status == 'rejected' %}
+                            <span class="badge badge-danger"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ status_labels.get(r.status, r.status) }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.procurement %}
+                            <a href="{{ url_for('procurements.detail', procurement_id=r.procurement.id) }}" class="fw-bold text-decoration-none">
+                                {{ r.procurement.tender_number }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.form_type == 'form_d' %}
+                            <a href="{{ url_for('requests.detail_form_d', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            {% elif item.form_type == 'de' %}
+                            <a href="{{ url_for('requests.detail_de', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('requests.detail_form_e', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if r.rejection_reason %}
+                    <tr class="table-light">
+                        <td colspan="6" class="small text-muted py-1 ps-4">
+                            <i class="bi bi-chat-left-text me-1 text-danger"></i><strong>Rejection reason:</strong> {{ r.rejection_reason }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+            <p class="mb-1">You haven't submitted any requests yet.</p>
+            <a href="{{ url_for('requests.hub') }}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle me-1"></i>Submit your first request
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

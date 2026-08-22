@@ -49,6 +49,10 @@ class Procurement(db.Model):
     rfce_filename = db.Column(db.String(300))
     itt_file_path = db.Column(db.String(500))
     itt_filename = db.Column(db.String(300))
+    # Bidder-facing document that is free to view (no payment required),
+    # e.g. a Request for Quotation document.
+    rfq_file_path = db.Column(db.String(500))
+    rfq_filename = db.Column(db.String(300))
 
     # Relationships
     lots = db.relationship('Lot', backref='procurement', lazy='dynamic', cascade='all, delete-orphan')
@@ -73,8 +77,11 @@ class Procurement(db.Model):
     def has_itt(self):
         return bool(self.itt_file_path and self.itt_filename)
 
+    def has_rfq(self):
+        return bool(self.rfq_file_path and self.rfq_filename)
+
     def has_tender_documents(self):
-        return self.has_rfce() or self.has_itt()
+        return self.has_rfce() or self.has_itt() or self.has_rfq()
 
     @staticmethod
     def ppra_code_options():
@@ -167,6 +174,8 @@ class Procurement(db.Model):
             'rfce_filename': 'ALTER TABLE procurements ADD COLUMN rfce_filename VARCHAR(300)',
             'itt_file_path': 'ALTER TABLE procurements ADD COLUMN itt_file_path VARCHAR(500)',
             'itt_filename': 'ALTER TABLE procurements ADD COLUMN itt_filename VARCHAR(300)',
+            'rfq_file_path': 'ALTER TABLE procurements ADD COLUMN rfq_file_path VARCHAR(500)',
+            'rfq_filename': 'ALTER TABLE procurements ADD COLUMN rfq_filename VARCHAR(300)',
         }.items():
             try:
                 db.session.execute(text(f'SELECT {column_name} FROM procurements LIMIT 1'))

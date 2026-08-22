@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}New Procurement Request - EBMS Botswana{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>New Procurement Request</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-file-earmark-arrow-up me-2"></i>New Procurement Request</h1>
+        <p class="ebms-page-subtitle">Submit your Form D and Form E documents together with your justification in a single window</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('requests.my_requests') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-list-check"></i>My Requests
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card h-100 border">
+            <div class="card-body d-flex flex-column align-items-center text-center p-5">
+                <span class="step-badge mb-3" style="font-size:1.4rem;"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                <h4 class="mb-2">Combined Form D &amp; E Submission</h4>
+                <p class="text-muted">
+                    Attach the signed <strong>Form D</strong> (Procurement Requisition) and signed
+                    <strong>Form E</strong> (Specification &amp; Budget Clearance) documents, add a short
+                    justification, and submit. The Procurement Unit will then create the procurement and
+                    fill in all the tender details (title, category, method, value, ITT / RFQ documents).
+                </p>
+                <a href="{{ url_for('requests.new_form') }}" class="btn btn-primary px-5 mt-2">
+                    <i class="bi bi-plus-circle me-1"></i>Submit New Request
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

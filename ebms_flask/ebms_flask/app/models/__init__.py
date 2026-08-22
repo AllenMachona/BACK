@@ -20,6 +20,7 @@ from app.models.message import Message, MessageRecipient, MessageAttachment
 from app.models.document_version import DocumentVersion
 from app.models.clarification import ClarificationVisibility, ClarificationAccess
 from app.models.history import ProcurementHistory, SubmissionHistory
+from app.models.request import FormDRequest, FormERequest, FormDERequest
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',

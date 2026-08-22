@@ -63,7 +63,10 @@ def create_app(config_class=Config):
         Communication.ensure_schema_columns()
         from app.models.message import Message
         Message.ensure_schema_columns()
+        from app.models.request import ensure_schema_columns
+        ensure_schema_columns()
         from app.models.role import Role
+        Role.ensure_default_roles()
         if Role.query.count() == 0:
             try:
                 import seed
@@ -85,6 +88,7 @@ def create_app(config_class=Config):
     from app.routes.notifications import notifications_bp
     from app.routes.messages import messages_bp
     from app.routes.clarifications import clarifications_bp
+    from app.routes.requests import requests_bp
     from app.models.site_setting import SiteSetting
 
     app.register_blueprint(auth_bp)
@@ -97,6 +101,7 @@ def create_app(config_class=Config):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(clarifications_bp)
+    app.register_blueprint(requests_bp)
 
     @app.context_processor
     def inject_globals():

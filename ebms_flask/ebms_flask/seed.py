@@ -38,6 +38,8 @@ ROLES = [
     dict(code='evaluator', name='Evaluator', can_evaluate=True),
     dict(code='opening_panel', name='Opening Panel', can_open_bids=True),
     dict(code='bidder', name='Bidder', can_bid=True),
+    dict(code='requester', name='Requester',
+         description='User department staff who submit Form D / Form E procurement requests.'),
 ]
 
 USERS = [
@@ -59,6 +61,10 @@ USERS = [
          role_code='committee_chair', department='Engineering'),
     dict(username='n.kgosi', email='n.kgosi@pe.gov.bw', first_name='Naledi', last_name='Kgosi',
          role_code='evaluator', department='Engineering'),
+    dict(username='t.mmutle', email='t.mmutle@health.gov.bw', first_name='Thabo', last_name='Mmutle',
+         role_code='requester', department='Ministry of Health'),
+    dict(username='a.seretse', email='a.seretse@moe.gov.bw', first_name='Ame', last_name='Seretse',
+         role_code='requester', department='Ministry of Education'),
 ]
 
 

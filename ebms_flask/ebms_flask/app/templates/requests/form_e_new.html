@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Form E - Specification &amp; Budget Clearance - EBMS Botswana{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('requests.hub') }}">New Request</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Form E</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-file-earmark-ruled me-2"></i>Form E — Specification &amp; Budget Clearance</h1>
+        <p class="ebms-page-subtitle">Submit the technical specification and evidence of budget clearance to the Procurement Unit</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('requests.hub') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>Back
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <form method="POST" action="{{ url_for('requests.submit_form_e') }}" enctype="multipart/form-data" id="form-e-form">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">1</span>
+                    <h5 class="mb-0">Specification Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Specification Title <span class="text-danger">*</span></label>
+                            <input type="text" name="specification_title" class="form-control" required
+                                   value="{{ form.get('specification_title', '') if form else '' }}"
+                                   placeholder="e.g. Supply and delivery of 45 kW solar water pumps">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                            <select name="category" class="form-select" required>
+                                <option value="">Select category...</option>
+                                {% for c in categories %}
+                                <option value="{{ c }}" {{ 'selected' if form and form.get('category') == c else '' }}>{{ c|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Requesting Department / Entity <span class="text-danger">*</span></label>
+                            <input type="text" name="procurement_entity" class="form-control" required
+                                   value="{{ (form.get('procurement_entity', '') if form else current_user.department) }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Technical Specification <span class="text-danger">*</span></label>
+                            <textarea name="technical_specification" class="form-control" rows="5" required
+                                      placeholder="Detailed technical specification, standards, quantities and deliverables...">{{ form.get('technical_specification', '') if form else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">2</span>
+                    <h5 class="mb-0">Budget Clearance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Budget Line Reference</label>
+                            <input type="text" name="budget_line" class="form-control"
+                                   value="{{ form.get('budget_line', '') if form else '' }}"
+                                   placeholder="e.g. BLDG-2026-045">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Budget Allocated (BWP) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text fw-bold">BWP</span>
+                                <input type="number" step="0.01" min="0" name="budget_allocated" class="form-control"
+                                       required value="{{ form.get('budget_allocated', '') if form else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Budget Status <span class="text-danger">*</span></label>
+                            <select name="budget_status" class="form-select" required>
+                                {% set selected_status = form.get('budget_status', 'available') if form else 'available' %}
+                                <option value="available" {{ 'selected' if selected_status == 'available' else '' }}>Available</option>
+                                <option value="insufficient" {{ 'selected' if selected_status == 'insufficient' else '' }}>Insufficient</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cleared By (Finance Authority)</label>
+                            <input type="text" name="clearance_authority" class="form-control"
+                                   value="{{ form.get('clearance_authority', '') if form else '' }}"
+                                   placeholder="Name of finance/accounting officer">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Clearance Date</label>
+                            <input type="date" name="clearance_date" class="form-control"
+                                   value="{{ form.get('clearance_date', '') if form else '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">3</span>
+                    <h5 class="mb-0">Signed Form E Document</h5>
+                </div>
+                <div class="card-body">
+                    <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-primary me-1"></i>Upload signed / certified FORM E <span class="text-danger">*</span></label>
+                    <input type="file" name="signed_form_e_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls" required>
+                    <div class="form-text">Scanned, signed copy of the specification &amp; budget clearance form. Stored internally — never exposed to bidders.</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('requests.hub') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-send me-1"></i>Submit to Procurement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

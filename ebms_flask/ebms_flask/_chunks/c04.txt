@@ -1,0 +1,63 @@
+@requests_bp.route('/form-e', methods=['POST'])
+@login_required
+@role_required('requester')
+def submit_form_e():
+    title = (request.form.get('specification_title') or '').strip()
+    category = (request.form.get('category') or '').strip()
+    specification = (request.form.get('technical_specification') or '').strip()
+    budget_line = (request.form.get('budget_line') or '').strip()
+    entity = (request.form.get('procurement_entity') or '').strip()
+    clearance_authority = (request.form.get('clearance_authority') or '').strip()
+    budget_allocated = _parse_value(request.form.get('budget_allocated'))
+    budget_status = (request.form.get('budget_status') or 'available').strip()
+    clearance_date = _parse_date_field(request.form.get('clearance_date'))
+
+    errors = []
+    if not title:
+        errors.append('A specification title is required.')
+    if category not in CATEGORY_OPTIONS:
+        errors.append('Select a valid procurement category.')
+    if not specification:
+        errors.append('The technical specification is required.')
+    if budget_allocated is None or budget_allocated < 0:
+        errors.append('A valid budget allocation is required.')
+    if not entity:
+        errors.append('The requesting department / procurement entity is required.')
+    if not request.files.get('signed_form_e_document') or not request.files['signed_form_e_document'].filename:
+        errors.append('Please attach the signed/certified copy of Form E.')
+
+    if errors:
+        for error in errors:
+            flash(error, 'danger')
+        return render_template('requests/form_e_new.html',
+                               categories=CATEGORY_OPTIONS, form=request.form)
+
+    signed_path, signed_name = _save_signed_form(request.files['signed_form_e_document'], 'form_e')
+    request_obj = FormERequest(
+        requester_id=current_user.id,
+        submitted_by_id=current_user.id,
+        status='submitted',
+        specification_title=title,
+        category=category,
+        technical_specification=specification,
+        budget_line=budget_line,
+        budget_allocated=budget_allocated,
+        budget_status=budget_status,
+        procurement_entity=entity,
+        clearance_authority=clearance_authority,
+        clearance_date=clearance_date,
+        submitted_form_path=signed_path,
+        submitted_form_filename=signed_name,
+    )
+    db.session.add(request_obj)
+    db.session.commit()
+
+    log_action('REQUEST_E_SUBMITTED', entity_type='FormERequest', entity_id=request_obj.id,
+               new_value={'title': title, 'budget_allocated': budget_allocated, 'status': 'submitted'})
+    _notify_procurement_staff(
+        f'New Form E request: {title}',
+        f'{current_user.full_name()} submitted a Specification & Budget Clearance (Form E) for '
+        f'"{title}" with budget allocation BWP {budget_allocated:.2f}. Please review it.',
+    )
+    flash(f'Form E request "{title}" submitted to Procurement for review.', 'success')
+    return redirect(url_for('requests.my_requests'))

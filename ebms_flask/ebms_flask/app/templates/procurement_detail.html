@@ -130,8 +130,12 @@
                                 <input type="file" name="rfce_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">ITT (Invitation to Tender)</label>
+                                <label class="form-label small fw-bold">ITT (Invitation to Tender) — Paid</label>
                                 <input type="file" name="itt_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">RFQ Document — Free</label>
+                                <input type="file" name="rfq_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Tender Fee (BWP)</label>
@@ -192,7 +196,7 @@
                         <div class="p-3 border rounded bg-light h-100">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="eyebrow text-warning">Bidder-Facing Documents</span>
-                                <span class="badge badge-warning"><i class="bi bi-shield-lock me-1"></i>Payment Gated</span>
+                                <span class="badge badge-warning"><i class="bi bi-shield-lock me-1"></i>ITT: Paid · RFQ: Free</span>
                             </div>
 
                             <!-- RFCE -->
@@ -221,6 +225,22 @@
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='itt') }}" target="_blank" class="btn btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
                                     <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='itt') }}" class="btn btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
+                                </div>
+                                {% else %}
+                                <span class="badge badge-secondary">Pending</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- RFQ (free for bidders) -->
+                            <div class="d-flex justify-content-between align-items-center p-2 bg-white rounded border mt-2">
+                                <div>
+                                    <strong class="d-block text-dark"><i class="bi bi-file-earmark-arrow-down text-success me-1"></i>RFQ Document (Free)</strong>
+                                    <small class="text-muted">{{ procurement.rfq_filename or 'Not uploaded yet' }}</small>
+                                </div>
+                                {% if procurement.has_rfq() %}
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='rfq') }}" target="_blank" class="btn btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                    <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='rfq') }}" class="btn btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
                                 </div>
                                 {% else %}
                                 <span class="badge badge-secondary">Pending</span>

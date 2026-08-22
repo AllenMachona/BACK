@@ -34,6 +34,8 @@ def migrate():
                 'rfce_filename': 'ALTER TABLE procurements ADD COLUMN rfce_filename VARCHAR(300)',
                 'itt_file_path': 'ALTER TABLE procurements ADD COLUMN itt_file_path VARCHAR(500)',
                 'itt_filename': 'ALTER TABLE procurements ADD COLUMN itt_filename VARCHAR(300)',
+                'rfq_file_path': 'ALTER TABLE procurements ADD COLUMN rfq_file_path VARCHAR(500)',
+                'rfq_filename': 'ALTER TABLE procurements ADD COLUMN rfq_filename VARCHAR(300)',
             }
 
             for col_name, sql in columns_to_add.items():

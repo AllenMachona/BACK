@@ -1,0 +1,115 @@
+@requests_bp.route('/form-e/<int:request_id>/convert', methods=['POST'])
+@login_required
+def convert_form_e(request_id):
+    request_obj = FormERequest.query.get_or_404(request_id)
+    _require_procurement_staff()
+    if request_obj.status in ('converted', 'rejected'):
+        flash(f'This request is already {request_obj.status}.', 'warning')
+        return redirect(url_for('requests.detail_form_e', request_id=request_obj.id))
+
+    tender_number = _generate_tender_number()
+    procurement = Procurement(
+        tender_number=tender_number,
+        title=request_obj.specification_title,
+        description=request_obj.technical_specification,
+        category=request_obj.category,
+        method='open_domestic',
+        estimated_value=request_obj.budget_allocated,
+        procurement_entity=request_obj.procurement_entity,
+        user_department=request_obj.procurement_entity,
+        form_e_file_path=request_obj.submitted_form_path,
+        form_e_filename=request_obj.submitted_form_filename,
+        created_by_id=current_user.id,
+        status='draft',
+    )
+    db.session.add(procurement)
+    db.session.commit()
+
+    request_obj.procurement_id = procurement.id
+    request_obj.status = 'converted'
+    request_obj.converted_by_id = current_user.id
+    request_obj.converted_at = datetime.utcnow()
+    db.session.commit()
+
+    log_action('REQUEST_E_CONVERTED', entity_type='FormERequest', entity_id=request_obj.id,
+               new_value={'tender_number': tender_number, 'procurement_id': procurement.id,
+                          'status': 'converted'})
+    _notify_requester(
+        request_obj, 'request_converted',
+        f'Your Form E request was converted ({tender_number})',
+        f'Your Specification & Budget Clearance "{request_obj.specification_title}" has been converted '
+        f'into procurement record {tender_number}. Track it under Procurements.',
+    )
+    flash(f'Procurement {tender_number} created from the Form E request (status: Draft).', 'success')
+    return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+
+def _reject_request(request_obj):
+    _require_procurement_staff()
+    if request_obj.status in ('converted', 'rejected'):
+        flash(f'This request is already {request_obj.status}.', 'warning')
+        return None
+    reason = (request.form.get('reason') or '').strip()
+    if not reason:
+        flash('A rejection reason is required.', 'danger')
+        return None
+    request_obj.status = 'rejected'
+    request_obj.rejection_reason = reason
+    request_obj.rejected_by_id = current_user.id
+    request_obj.rejected_at = datetime.utcnow()
+    db.session.commit()
+    log_action(f'REQUEST_{request_obj.form_type.upper()}_REJECTED',
+               entity_type=type(request_obj).__name__, entity_id=request_obj.id,
+               reason=reason, new_value={'status': 'rejected'})
+    _notify_requester(
+        request_obj, 'request_rejected',
+        f'Your {request_obj.form_type_label} request was rejected',
+        f'{request_obj.title} was rejected. Reason: {reason}',
+    )
+    flash('Request rejected and the requester notified.', 'warning')
+    return redirect(url_for('requests.queue'))
+
+
+@requests_bp.route('/form-d/<int:request_id>/reject', methods=['POST'])
+@login_required
+def reject_form_d(request_id):
+    request_obj = FormDRequest.query.get_or_404(request_id)
+    response = _reject_request(request_obj)
+    if response is None:
+        return redirect(url_for('requests.detail_form_d', request_id=request_obj.id))
+    return response
+
+
+@requests_bp.route('/form-e/<int:request_id>/reject', methods=['POST'])
+@login_required
+def reject_form_e(request_id):
+    request_obj = FormERequest.query.get_or_404(request_id)
+    response = _reject_request(request_obj)
+    if response is None:
+        return redirect(url_for('requests.detail_form_e', request_id=request_obj.id))
+    return response
+
+
+def _download_signed_document(request_obj):
+    _require_request_access(request_obj)
+    if not request_obj.has_signed_document() or not os.path.isfile(request_obj.submitted_form_path):
+        abort(404)
+    log_action(f'REQUEST_{request_obj.form_type.upper()}_DOCUMENT_VIEWED',
+               entity_type=type(request_obj).__name__, entity_id=request_obj.id,
+               new_value={'filename': request_obj.submitted_form_filename})
+    directory = os.path.dirname(request_obj.submitted_form_path)
+    basename = os.path.basename(request_obj.submitted_form_path)
+    return send_from_directory(directory, basename, as_attachment=True,
+                               download_name=request_obj.submitted_form_filename)
+
+
+@requests_bp.route('/form-d/<int:request_id>/document')
+@login_required
+def download_form_d_document(request_id):
+    return _download_signed_document(FormDRequest.query.get_or_404(request_id))
+
+
+@requests_bp.route('/form-e/<int:request_id>/document')
+@login_required
+def download_form_e_document(request_id):
+    return _download_signed_document(FormERequest.query.get_or_404(request_id))

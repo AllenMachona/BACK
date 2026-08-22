@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Form D - Procurement Requisition - EBMS Botswana{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('requests.hub') }}">New Request</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Form D</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-file-earmark-lock me-2"></i>Form D — Procurement Requisition</h1>
+        <p class="ebms-page-subtitle">Submit a requisition and authorization request to the Procurement Unit</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('requests.hub') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>Back
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <form method="POST" action="{{ url_for('requests.submit_form_d') }}" enctype="multipart/form-data" id="form-d-form">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">1</span>
+                    <h5 class="mb-0">Requisition Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Requisition Title <span class="text-danger">*</span></label>
+                            <input type="text" name="requisition_title" class="form-control" required
+                                   value="{{ form.get('requisition_title', '') if form else '' }}"
+                                   placeholder="e.g. Supply of laboratory reagents for the Central Medical Stores">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                            <select name="category" class="form-select" required>
+                                <option value="">Select category...</option>
+                                {% for c in categories %}
+                                <option value="{{ c }}" {{ 'selected' if form and form.get('category') == c else '' }}>{{ c|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Procurement Method <span class="text-danger">*</span></label>
+                            <select name="procurement_method" class="form-select" required>
+                                <option value="">Select method...</option>
+                                {% for m in methods %}
+                                <option value="{{ m }}" {{ 'selected' if form and form.get('procurement_method') == m else '' }}>{{ m.replace('_', ' ')|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Estimated Value (BWP) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text fw-bold">BWP</span>
+                                <input type="number" step="0.01" min="0" name="estimated_value" class="form-control"
+                                       required value="{{ form.get('estimated_value', '') if form else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Requesting Department / Entity <span class="text-danger">*</span></label>
+                            <input type="text" name="procurement_entity" class="form-control" required
+                                   value="{{ (form.get('procurement_entity', '') if form else current_user.department) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Delivery Period</label>
+                            <input type="text" name="delivery_period" class="form-control"
+                                   value="{{ form.get('delivery_period', '') if form else '' }}"
+                                   placeholder="e.g. 90 days from award">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Justification</label>
+                            <textarea name="justification" class="form-control" rows="4"
+                                      placeholder="Why is this procurement needed, and how was this requisition authorized?">{{ form.get('justification', '') if form else '' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Authorized By</label>
+                            <input type="text" name="authorized_by" class="form-control"
+                                   value="{{ form.get('authorized_by', '') if form else '' }}"
+                                   placeholder="Name of the officer authorizing the requisition">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Authorization Date</label>
+                            <input type="date" name="authorization_date" class="form-control"
+                                   value="{{ form.get('authorization_date', '') if form else '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+<div class="card mb-4">
+                <div class="card-header bg-white d-flex align-items-center gap-2">
+                    <span class="step-badge">2</span>
+                    <h5 class="mb-0">Signed Form D Document</h5>
+                </div>
+                <div class="card-body">
+                    <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload signed / certified FORM D <span class="text-danger">*</span></label>
+                    <input type="file" name="signed_form_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls" required>
+                    <div class="form-text">Scanned, signed copy of the requisition &amp; authorization form. Stored internally — never exposed to bidders.</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('requests.hub') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-send me-1"></i>Submit to Procurement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

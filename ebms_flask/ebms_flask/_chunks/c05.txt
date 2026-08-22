@@ -1,0 +1,66 @@
+@requests_bp.route('/')
+@login_required
+def queue():
+    """Combined Incoming Requests queue for procurement staff, filterable by
+    status, form type, requester and free-text search."""
+    _require_procurement_staff()
+
+    status_filter = (request.args.get('status') or 'all').strip().lower()
+    if status_filter not in REQUEST_STATUSES:
+        status_filter = 'all'
+    form_type_filter = (request.args.get('form_type') or 'all').strip().lower()
+    if form_type_filter not in ('form_d', 'form_e'):
+        form_type_filter = 'all'
+    requester_id = request.args.get('requester_id', type=int)
+    query_text = (request.args.get('q') or '').strip()
+
+    def build_d():
+        q = FormDRequest.query
+        if status_filter != 'all':
+            q = q.filter(FormDRequest.status == status_filter)
+        if requester_id:
+            q = q.filter(FormDRequest.requester_id == requester_id)
+        if query_text:
+            q = q.filter(FormDRequest.requisition_title.ilike(f'%{query_text}%'))
+        return q.order_by(FormDRequest.created_at.desc()).all()
+
+    def build_e():
+        q = FormERequest.query
+        if status_filter != 'all':
+            q = q.filter(FormERequest.status == status_filter)
+        if requester_id:
+            q = q.filter(FormERequest.requester_id == requester_id)
+        if query_text:
+            q = q.filter(FormERequest.specification_title.ilike(f'%{query_text}%'))
+        return q.order_by(FormERequest.created_at.desc()).all()
+
+    items = []
+    if form_type_filter in ('all', 'form_d'):
+        items += [dict(form_type='form_d', request=x) for x in build_d()]
+    if form_type_filter in ('all', 'form_e'):
+        items += [dict(form_type='form_e', request=x) for x in build_e()]
+    items.sort(key=lambda item: item['request'].created_at or datetime.min, reverse=True)
+
+    # Counts used for the metric badges (always summarise the whole queue).
+    d_counts = dict(db.session.query(FormDRequest.status, db.func.count()).group_by(FormDRequest.status).all())
+    e_counts = dict(db.session.query(FormERequest.status, db.func.count()).group_by(FormERequest.status).all())
+    counts = {status: int(d_counts.get(status, 0)) + int(e_counts.get(status, 0)) for status in REQUEST_STATUSES}
+    counts['all'] = sum(counts.values())
+
+    requesters = (
+        User.query.join(Role, User.role_id == Role.id)
+        .filter(Role.code == 'requester')
+        .order_by(User.first_name, User.last_name)
+        .all()
+    )
+    return render_template(
+        'requests/queue.html',
+        items=items,
+        counts=counts,
+        status_filter=status_filter,
+        form_type_filter=form_type_filter,
+        requester_id=requester_id,
+        query_text=query_text,
+        requesters=requesters,
+        status_labels=HUMANIZED_STATUS,
+    )

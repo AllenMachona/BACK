@@ -19,6 +19,7 @@
     {% set endpoint = request.endpoint or '' %}
     {% set is_admin = current_user.role.can_admin_system %}
     {% set is_bidder = current_user.has_role('bidder') %}
+    {% set is_requester = current_user.has_role('requester') %}
     {% set can_reports = current_user.role.can_view_all_records %}
     {% set can_payverify = current_user.role.can_publish or current_user.role.can_approve_procurement or is_admin %}
 
@@ -160,6 +161,23 @@
                href="{{ url_for('procurements.list_procurements') }}" data-title="Procurements">
                 <i class="bi bi-folder2-open" aria-hidden="true"></i><span>Procurements</span>
             </a>
+            {% if can_reports or is_admin %}
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('requests.') else '' }}"
+               href="{{ url_for('requests.queue') }}" data-title="Incoming Requests">
+                <i class="bi bi-inbox" aria-hidden="true"></i><span>Incoming Requests</span>
+            </a>
+            {% endif %}
+            {% if is_requester %}
+            <div class="ebms-nav-section">Requests</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'requests.hub' or endpoint in ('requests.new_form', 'requests.submit_form_de') else '' }}"
+               href="{{ url_for('requests.hub') }}" data-title="New Request">
+                <i class="bi bi-file-earmark-plus" aria-hidden="true"></i><span>New Request</span>
+            </a>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'requests.my_requests' or endpoint.startswith('requests.detail_form_') or endpoint == 'requests.detail_de' else '' }}"
+               href="{{ url_for('requests.my_requests') }}" data-title="My Requests">
+                <i class="bi bi-list-check" aria-hidden="true"></i><span>My Requests</span>
+            </a>
+            {% endif %}
             {% if can_payverify %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.payment_verifications') }}" data-title="Payment Verifications">

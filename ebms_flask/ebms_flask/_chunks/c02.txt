@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------
+# Requester hub, submission pages, my requests and detail views
+# ---------------------------------------------------------------------------
+@requests_bp.route('/hub')
+@login_required
+@role_required('requester')
+def hub():
+    return render_template('requests/hub.html')
+
+
+@requests_bp.route('/form-d/new', methods=['GET'])
+@login_required
+@role_required('requester')
+def new_form_d():
+    return render_template('requests/form_d_new.html',
+                           categories=CATEGORY_OPTIONS, methods=METHOD_OPTIONS)
+
+
+@requests_bp.route('/form-e/new', methods=['GET'])
+@login_required
+@role_required('requester')
+def new_form_e():
+    return render_template('requests/form_e_new.html', categories=CATEGORY_OPTIONS)
+
+
+@requests_bp.route('/my')
+@login_required
+@role_required('requester')
+def my_requests():
+    d_items = FormDRequest.query.filter_by(requester_id=current_user.id).order_by(
+        FormDRequest.created_at.desc()).all()
+    e_items = FormERequest.query.filter_by(requester_id=current_user.id).order_by(
+        FormERequest.created_at.desc()).all()
+    items = [dict(form_type='form_d', request=x) for x in d_items]
+    items += [dict(form_type='form_e', request=x) for x in e_items]
+    items.sort(key=lambda item: item['request'].created_at or datetime.min, reverse=True)
+    return render_template('requests/my_requests.html',
+                           items=items, status_labels=HUMANIZED_STATUS)
+
+
+@requests_bp.route('/form-d/<int:request_id>')
+@login_required
+def detail_form_d(request_id):
+    request_obj = FormDRequest.query.get_or_404(request_id)
+    _require_request_access(request_obj)
+    return render_template('requests/detail_form_d.html',
+                           req=request_obj,
+                           can_manage=_is_procurement_staff(current_user),
+                           status_labels=HUMANIZED_STATUS)
+
+
+@requests_bp.route('/form-e/<int:request_id>')
+@login_required
+def detail_form_e(request_id):
+    request_obj = FormERequest.query.get_or_404(request_id)
+    _require_request_access(request_obj)
+    return render_template('requests/detail_form_e.html',
+                           req=request_obj,
+                           can_manage=_is_procurement_staff(current_user),
+                           status_labels=HUMANIZED_STATUS)

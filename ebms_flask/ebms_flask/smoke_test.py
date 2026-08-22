@@ -49,14 +49,14 @@ def main():
             log("No users - seeding...")
             import seed
             seed.seed_data()
-        routes = get_route(app)
+        routes = get_route_map()
 
     client = app.test_client()
 
     # 1) unauthenticated pages
     log("\n--- Unauthenticated checks ---")
     unauth_paths = [
-        ('/auth/login', 'login'),
+        ('/login', 'login'),
         ('/', 'root'),
     ]
     for path, name in unauth_paths:
@@ -75,12 +75,12 @@ def main():
         log(f"Users present: {sorted(present)}")
 
     # Collect GET-only endpoints
-    get_endpoints = sorted({e: r for e, r in routes.items() if 'GET' in str(r.methods)}.items())
+    get_endpoints = sorted(routes.items())
 
-    for username in defs:
+    for username in users:
         log(f"\n=== LOGIN AS: {username} ===")
         client = app.test_client()
-        r = client.post('/auth/login', data={'username': username, 'password': 'ChangeMe123!'}, follow_redirects=True)
+        r = client.post('/login', data={'username': username, 'password': 'ChangeMe123!'}, follow_redirects=True)
         log(f"LOGIN {username} -> {r.status_code}")
         if r.status_code >= 400:
             log(f"LOGIN BODY (first 300): {r.data[:300]}")
@@ -101,6 +101,9 @@ def main():
                 else:
                     if status == 200:
                         log(f"  GET {path} -> 200")
+            except Exception as e:
+                log(f"  GET {path} -> EXCEPTION: {e}")
+                traceback.print_exc()
         if username in ('admin',):
             # test a few URL-param routes
             with app.app_context():

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Incoming Requests - EBMS Botswana{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-inbox me-2"></i>Incoming Procurement Requests</h1>
+        <p class="ebms-page-subtitle">Combined queue of all submitted Form D requisitions and Form E specification &amp; budget clearances</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('procurements.list_procurements') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-folder2-open me-1"></i>Procurements
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<!-- Metric badges -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a href="{{ url_for('requests.queue', status='all') }}" class="text-decoration-none">
+            <div class="card p-3 border {{ 'border-primary shadow-sm' if status_filter == 'all' else '' }}">
+                <span class="text-muted small">Total Requests</span>
+                <h3 class="mb-0 text-dark mt-1">{{ counts['all'] }}</h3>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('requests.queue', status='submitted') }}" class="text-decoration-none">
+            <div class="card p-3 border {{ 'border-info shadow-sm' if status_filter == 'submitted' else '' }}">
+                <span class="text-muted small">Submitted</span>
+                <h3 class="mb-0 text-info mt-1">{{ counts.get('submitted', 0) }}</h3>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('requests.queue', status='under_review') }}" class="text-decoration-none">
+            <div class="card p-3 border {{ 'border-warning shadow-sm' if status_filter == 'under_review' else '' }}">
+                <span class="text-muted small">Under Review</span>
+                <h3 class="mb-0 text-warning mt-1">{{ counts.get('under_review', 0) }}</h3>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('requests.queue', status='converted') }}" class="text-decoration-none">
+            <div class="card p-3 border {{ 'border-success shadow-sm' if status_filter == 'converted' else '' }}">
+                <span class="text-muted small">Converted</span>
+                <h3 class="mb-0 text-success mt-1">{{ counts.get('converted', 0) }}</h3>
+            </div>
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h5 class="mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Request Queue</h5>
+            <span class="badge badge-secondary">{{ items|length }} shown</span>
+        </div>
+        <form method="GET" action="{{ url_for('requests.queue') }}" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label class="form-label small mb-1 fw-bold">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All statuses</option>
+                    {% for status in ['submitted', 'under_review', 'converted', 'rejected'] %}
+                    <option value="{{ status }}" {{ 'selected' if status_filter == status else '' }}>{{ status|replace('_', ' ')|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1 fw-bold">Form Type</label>
+                <select name="form_type" class="form-select form-select-sm">
+                    <option value="all" {{ 'selected' if form_type_filter == 'all' else '' }}>All requests</option>
+                    <option value="form_d" {{ 'selected' if form_type_filter == 'form_d' else '' }}>Form D</option>
+                    <option value="form_e" {{ 'selected' if form_type_filter == 'form_e' else '' }}>Form E</option>
+                    <option value="de" {{ 'selected' if form_type_filter == 'de' else '' }}>Form D &amp; E</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1 fw-bold">Requester</label>
+                <select name="requester_id" class="form-select form-select-sm">
+                    <option value="">All requesters</option>
+                    {% for user in requesters %}
+                    <option value="{{ user.id }}" {{ 'selected' if requester_id == user.id else '' }}>{{ user.full_name() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1 fw-bold">Search</label>
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Title contains..." value="{{ query_text }}">
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+                <a href="{{ url_for('requests.queue') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Form</th>
+                        <th>Title</th>
+                        <th>Requester</th>
+                        <th>Value (BWP)</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    {% set r = item.request %}
+                    <tr>
+                        <td>
+                            {% if item.form_type == 'form_d' %}
+                            <span class="badge badge-secondary">Form D</span>
+                            {% elif item.form_type == 'de' %}
+                            <span class="badge badge-primary">Form D &amp; E</span>
+                            {% else %}
+                            <span class="badge badge-info">Form E</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ r.title }}</div>
+                            <small class="text-muted text-truncate d-block" style="max-width: 260px;">
+                                {% if item.form_type == 'de' %}
+                                {{ r.justification or '—' }}
+                                {% elif item.form_type == 'form_d' %}
+                                {{ r.justification or '—' }}
+                                {% else %}
+                                {{ r.technical_specification or '—' }}
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ r.requester.full_name() }}</div>
+                            <small class="text-muted">{{ r.requester.department or '' }}</small>
+                        </td>
+                        <td class="fw-bold text-dark">
+                            {% if item.form_type == 'de' %}
+                            <span class="text-muted">—</span>
+                            {% elif item.form_type == 'form_d' %}
+                            {{ '{:,.2f}'.format(r.estimated_value or 0) }}
+                            {% else %}
+                            {{ '{:,.2f}'.format(r.budget_allocated or 0) }}
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ r.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                        <td>
+                            {% if r.status == 'submitted' %}
+                            <span class="badge badge-info"><i class="bi bi-hourglass-split me-1"></i>Submitted</span>
+                            {% elif r.status == 'under_review' %}
+                            <span class="badge badge-warning"><i class="bi bi-search me-1"></i>Under Review</span>
+                            {% elif r.status == 'converted' %}
+                            <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Converted</span>
+                            {% elif r.status == 'rejected' %}
+                            <span class="badge badge-danger"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ status_labels.get(r.status, r.status) }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.form_type == 'form_d' %}
+                            <a href="{{ url_for('requests.detail_form_d', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>Review
+                            </a>
+                            {% elif item.form_type == 'de' %}
+                            <a href="{{ url_for('requests.detail_de', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>Review
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('requests.detail_form_e', request_id=r.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>Review
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+            <p class="mb-0">No requests match the selected filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

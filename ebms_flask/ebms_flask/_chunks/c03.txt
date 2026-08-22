@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# Submission handlers
+# ---------------------------------------------------------------------------
+@requests_bp.route('/form-d', methods=['POST'])
+@login_required
+@role_required('requester')
+def submit_form_d():
+    title = (request.form.get('requisition_title') or '').strip()
+    category = (request.form.get('category') or '').strip()
+    method = (request.form.get('procurement_method') or '').strip()
+    entity = (request.form.get('procurement_entity') or '').strip()
+    justification = (request.form.get('justification') or '').strip()
+    delivery_period = (request.form.get('delivery_period') or '').strip()
+    authorized_by = (request.form.get('authorized_by') or '').strip()
+    estimated_value = _parse_value(request.form.get('estimated_value'))
+    authorization_date = _parse_date_field(request.form.get('authorization_date'))
+
+    errors = []
+    if not title:
+        errors.append('A requisition title is required.')
+    if category not in CATEGORY_OPTIONS:
+        errors.append('Select a valid procurement category.')
+    if method not in METHOD_OPTIONS:
+        errors.append('Select a valid procurement method.')
+    if estimated_value is None or estimated_value < 0:
+        errors.append('A valid estimated value is required.')
+    if not entity:
+        errors.append('The requesting department / procurement entity is required.')
+    if not request.files.get('signed_form_document') or not request.files['signed_form_document'].filename:
+        errors.append('Please attach the signed/certified copy of Form D.')
+
+    if errors:
+        for error in errors:
+            flash(error, 'danger')
+        return render_template('requests/form_d_new.html',
+                               categories=CATEGORY_OPTIONS, methods=METHOD_OPTIONS,
+                               form=request.form)
+
+    signed_path, signed_name = _save_signed_form(request.files['signed_form_document'], 'form_d')
+    request_obj = FormDRequest(
+        requester_id=current_user.id,
+        submitted_by_id=current_user.id,
+        status='submitted',
+        requisition_title=title,
+        category=category,
+        procurement_method=method,
+        estimated_value=estimated_value,
+        procurement_entity=entity,
+        justification=justification,
+        delivery_period=delivery_period,
+        authorized_by=authorized_by,
+        authorization_date=authorization_date,
+        submitted_form_path=signed_path,
+        submitted_form_filename=signed_name,
+    )
+    db.session.add(request_obj)
+    db.session.commit()
+
+    log_action('REQUEST_D_SUBMITTED', entity_type='FormDRequest', entity_id=request_obj.id,
+               new_value={'title': title, 'estimated_value': estimated_value, 'status': 'submitted'})
+    _notify_procurement_staff(
+        f'New Form D request: {title}',
+        f'{current_user.full_name()} submitted a Procurement Requisition (Form D) for '
+        f'"{title}" worth BWP {estimated_value:,.2f}. Review it in the Incoming Requests queue.',
+    )
+    flash(f'Form D request "{title}" submitted to Procurement for review.', 'success')
+    return redirect(url_for('requests.my_requests'))

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Form E Request #{{ req.id }} - EBMS Botswana{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    {% if can_manage %}
+    <a href="{{ url_for('requests.queue') }}">Incoming Requests</a>
+    {% else %}
+    <a href="{{ url_for('requests.my_requests') }}">My Requests</a>
+    {% endif %}
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Form E #{{ req.id }}</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-file-earmark-ruled me-2"></i>Form E — {{ req.specification_title }}</h1>
+        <p class="ebms-page-subtitle">Submitted by {{ req.requester.full_name() }} · {{ req.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+    </div>
+    <div class="ebms-page-actions">
+        {% if can_manage %}
+        <a href="{{ url_for('requests.queue') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i>Queue</a>
+        {% else %}
+        <a href="{{ url_for('requests.my_requests') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i>My Requests</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Specification &amp; Budget Details</h5>
+                {% if req.status == 'submitted' %}<span class="badge badge-info">Submitted</span>
+                {% elif req.status == 'under_review' %}<span class="badge badge-warning">Under Review</span>
+                {% elif req.status == 'converted' %}<span class="badge badge-success">Converted</span>
+                {% elif req.status == 'rejected' %}<span class="badge badge-danger">Rejected</span>
+                {% else %}<span class="badge badge-secondary">{{ status_labels.get(req.status, req.status) }}</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4"><span class="text-muted small d-block">Category</span><strong>{{ req.category|capitalize }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Budget Line</span><strong>{{ req.budget_line or '—' }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Budget Allocated</span><strong>BWP {{ '{:,.2f}'.format(req.budget_allocated or 0) }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Budget Status</span><strong>{{ req.budget_status|capitalize }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Procurement Entity</span><strong>{{ req.procurement_entity or '—' }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Cleared By</span><strong>{{ req.clearance_authority or '—' }}</strong></div>
+                    <div class="col-md-4"><span class="text-muted small d-block">Clearance Date</span><strong>{{ req.clearance_date.strftime('%d %b %Y') if req.clearance_date else '—' }}</strong></div>
+                    <div class="col-12">
+                        <span class="text-muted small d-block">Technical Specification</span>
+                        <p class="mb-0">{{ req.technical_specification }}</p>
+                    </div>
+                </div>
+<div class="card mb-4">
+            <div class="card-header bg-white"><h5 class="mb-0">Signed Form E Document</h5></div>
+            <div class="card-body">
+                {% if req.has_signed_document() %}
+                <a href="{{ url_for('requests.download_form_e_document', request_id=req.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-ruled me-1"></i>Download {{ req.submitted_form_filename }}
+                </a>
+                {% else %}
+                <span class="text-muted">No signed document was attached.</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if req.status == 'rejected' %}
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger bg-opacity-10 text-danger fw-bold"><i class="bi bi-x-circle me-1"></i>Rejection Reason</div>
+            <div class="card-body">{{ req.rejection_reason }}</div>
+        </div>
+        {% endif %}
+
+        {% if req.status == 'converted' and req.procurement %}
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-check2-circle me-1"></i>Converted to Procurement</div>
+            <div class="card-body">
+                This request produced procurement record
+                <a href="{{ url_for('procurements.detail', procurement_id=req.procurement.id) }}" class="fw-bold text-decoration-none">{{ req.procurement.tender_number }}</a>.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+            </div>
+        </div>
+<div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white"><h5 class="mb-0">Request Status &amp; History</h5></div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2"><i class="bi bi-send me-1 text-primary"></i>Submitted: {{ req.created_at.strftime('%d %b %Y, %H:%M') }}</li>
+                    {% if req.under_review_at %}<li class="mb-2"><i class="bi bi-search me-1 text-warning"></i>Under review by {{ req.under_review_by.full_name() if req.under_review_by else 'Procurement' }}: {{ req.under_review_at.strftime('%d %b %Y, %H:%M') }}</li>{% endif %}
+                    {% if req.converted_at %}<li class="mb-2"><i class="bi bi-check-circle-fill me-1 text-success"></i>Converted by {{ req.converted_by.full_name() if req.converted_by else 'Procurement' }}: {{ req.converted_at.strftime('%d %b %Y, %H:%M') }}</li>{% endif %}
+                    {% if req.rejected_at %}<li class="mb-2"><i class="bi bi-x-circle-fill me-1 text-danger"></i>Rejected by {{ req.rejected_by.full_name() if req.rejected_by else 'Procurement' }}: {{ req.rejected_at.strftime('%d %b %Y, %H:%M') }}</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+
+        {% if can_manage and req.status in ('submitted', 'under_review') %}
+        <div class="card mt-4">
+            <div class="card-header bg-white"><h5 class="mb-0">Procurement Actions</h5></div>
+            <div class="card-body d-grid gap-2">
+                <form method="POST" action="{{ url_for('requests.review_form_e', request_id=req.id) }}">
+                    <button type="submit" class="btn btn-outline-warning w-100"><i class="bi bi-search me-1"></i>Mark Under Review</button>
+                </form>
+                <form method="POST" action="{{ url_for('requests.convert_form_e', request_id=req.id) }}" onsubmit="return confirm('Create a draft Procurement record from this request?')">
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-arrow-right-circle me-1"></i>Create Procurement</button>
+                </form>
+                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle me-1"></i>Reject Request</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if can_manage and req.status in ('submitted', 'under_review') %}
+<div class="modal fade text-start" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('requests.reject_form_e', request_id=req.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="bi bi-x-circle me-2"></i>Reject Form E Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Rejecting <strong>{{ req.specification_title }}</strong> notifies the requester. A reason is required.</p>
+                    <label class="form-label small fw-bold">Rejection Reason</label>
+                    <textarea name="reason" class="form-control" rows="3" required placeholder="Explain why this specification / clearance cannot proceed..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle me-1"></i>Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

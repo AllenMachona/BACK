@@ -1,0 +1,135 @@
+"""Procurement request workflow routes (Form D / Form E).
+
+Server-rendered, POST/redirect/GET style — exactly like the rest of the app
+(no REST framework in use). Role enforcement is server-side on every route:
+
+- ``requester`` role users submit Form D / Form E requests and may view only
+  their own submissions (IDOR guard on every detail/download route).
+- Procurement staff (roles with ``can_view_all_records``,
+  ``can_approve_procurement`` or ``can_create_procurement``) operate the
+  combined Incoming Requests queue, mark requests under review, convert a
+  request into a real Procurement record, or reject it with a reason.
+"""
+import os
+import random
+import secrets
+from datetime import datetime
+
+from flask import (Blueprint, abort, current_app, flash, redirect, render_template,
+                   request, send_from_directory, url_for)
+from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
+
+from app.extensions import db
+from app.models.procurement import Procurement
+from app.models.request import FormDRequest, FormERequest, REQUEST_STATUSES
+from app.models.role import Role
+from app.models.user import User
+from app.utils.audit import log_action
+from app.utils.decorators import role_required
+from app.utils.notify import notify_user
+
+requests_bp = Blueprint('requests', __name__, url_prefix='/requests')
+
+CATEGORY_OPTIONS = ['works', 'services', 'consultancy', 'supplies', 'combination']
+METHOD_OPTIONS = ['open_domestic', 'open_international', 'restricted', 'rfq', 'direct', 'rfp']
+HUMANIZED_STATUS = {s: s.replace('_', ' ').title() for s in REQUEST_STATUSES}
+
+
+def _is_procurement_staff(user=None):
+    """Internal staff who may operate the request queue and take review actions."""
+    user = user or current_user
+    if not getattr(user, 'is_authenticated', False) or not getattr(user, 'role', None):
+        return False
+    return bool(
+        user.role.can_view_all_records
+        or user.role.can_approve_procurement
+        or user.role.can_create_procurement
+    )
+
+
+def _require_procurement_staff():
+    if not _is_procurement_staff(current_user):
+        abort(403)
+
+
+def _can_view_request(user, request_obj):
+    """Owner requester or any procurement staff member. Never other requesters."""
+    if _is_procurement_staff(user):
+        return True
+    return bool(getattr(user, 'is_authenticated', False) and request_obj.requester_id == user.id)
+
+
+def _require_request_access(request_obj):
+    if not _can_view_request(current_user, request_obj):
+        abort(403)
+
+
+def _parse_date_field(raw):
+    """Accept 'YYYY-MM-DD' (or empty); return a date or None."""
+    raw = (raw or '').strip()
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
+
+def _parse_value(raw):
+    try:
+        return float(raw or '')
+    except (TypeError, ValueError):
+        return None
+
+
+def _save_signed_form(file_storage, form_type):
+    """Persist the signed/scanned copy of a submitted Form D or Form E."""
+    if not file_storage or not file_storage.filename:
+        return None, None
+    token = secrets.token_hex(4)
+    safe_name = secure_filename(file_storage.filename) or 'signed_form.pdf'
+    filename = secure_filename(f"request_{form_type}_{token}_{safe_name}")
+    doc_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'procurement_documents')
+    os.makedirs(doc_dir, exist_ok=True)
+    filepath = os.path.join(doc_dir, filename)
+    file_storage.save(filepath)
+    return filepath, file_storage.filename
+
+
+def _generate_tender_number():
+    """Same format as procurements.py's generator (TB-YYYY-NNN)."""
+    year = datetime.utcnow().year
+    while True:
+        candidate = f"TB-{year}-{random.randint(100, 999)}"
+        if not Procurement.query.filter_by(tender_number=candidate).first():
+            return candidate
+
+
+def _notify_procurement_staff(title, body):
+    """Alert everyone who operates the queue that a new request arrived."""
+    staff = (
+        User.query.join(Role, User.role_id == Role.id)
+        .filter(
+            Role.can_view_all_records.is_(True)
+            | Role.can_approve_procurement.is_(True)
+            | Role.can_create_procurement.is_(True)
+        )
+        .filter(User.id != current_user.id)
+        .all()
+    )
+    for user in staff:
+        notify_user(user, 'request_submitted', title, body)
+
+
+def _notify_requester(request_obj, notif_type, title, body):
+    try:
+        notify_user(request_obj.requester, notif_type, title, body)
+    except Exception as exc:  # notification failures must never fail the action
+        print(f"Requester notification failed (non-fatal): {exc}")
+
+
+def _detail_link(request_obj):
+    if request_obj.form_type == 'form_d':
+        return url_for('requests.detail_form_d', request_id=request_obj.id)
+    return url_for('requests.detail_form_e', request_id=request_obj.id)

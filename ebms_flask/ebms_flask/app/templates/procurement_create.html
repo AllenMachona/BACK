@@ -26,6 +26,27 @@
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data">
+            {% if source_request %}
+            <input type="hidden" name="request_id" value="{{ source_request.id }}">
+            <div class="alert alert-primary d-flex align-items-start gap-3 mb-4">
+                <i class="bi bi-file-earmark-arrow-up fs-4 mt-1"></i>
+                <div class="flex-grow-1">
+                    <strong class="d-block mb-1">Creating procurement from request #{{ source_request.id }}</strong>
+                    <div class="small text-muted mb-2">
+                        Submitted by {{ source_request.requester.full_name() }}
+                        ({{ source_request.department or 'Department not set' }}) on
+                        {{ source_request.created_at.strftime('%d %b %Y, %H:%M') }}.
+                        The attached <strong>Form D</strong> and <strong>Form E</strong> files will be
+                        carried into this record automatically.
+                    </div>
+                    {% if source_request.justification %}
+                    <div class="p-2 bg-white rounded border small">
+                        <strong>Requester justification:</strong> {{ source_request.justification }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Section 1: Identity -->
             <div class="card mb-4">
@@ -71,11 +92,11 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Description &amp; Requirements</label>
-                            <textarea name="description" class="form-control" rows="4" placeholder="Describe the scope, requirements, and expected deliverables of this procurement..."></textarea>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Describe the scope, requirements, and expected deliverables of this procurement...">{{ source_request.justification if source_request else '' }}</textarea>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Procurement Entity</label>
-                            <input type="text" name="procurement_entity" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness" required>
+                            <input type="text" name="procurement_entity" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness" required value="{{ source_request.department if source_request else '' }}">
                             <div class="form-text">The entity requesting this procurement.</div>
                         </div>
                     </div>
@@ -144,7 +165,7 @@
                                 <span class="input-group-text fw-bold">BWP</span>
                                 <input type="number" step="0.01" min="0" name="tender_fee" class="form-control form-control-lg" placeholder="0.00" value="0.00">
                             </div>
-                            <div class="form-text">Fee bidders must pay to unlock RFCE &amp; ITT documents (leave 0 if free).</div>
+                            <div class="form-text">Fee bidders must pay to unlock the ITT bidder tender document. Leave 0.00 if the tender documents are free.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Submission Deadline</label>
@@ -175,6 +196,12 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    {% if source_request %}
+                    <div class="alert alert-light border d-flex align-items-center gap-2 py-2 mb-3">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small">Both Form D and Form E are already attached from the request and will be carried into this record. Upload below only to <strong>replace</strong> them.</span>
+                    </div>
+                    {% endif %}
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload FORM D (Procurement Requisition)</label>
@@ -190,13 +217,13 @@
                 </div>
             </div>
 
-            <!-- Section 5: Bidder Tender Documents (RFCE & ITT - Gated by Payment Approval) -->
+            <!-- Section 5: Bidder Tender Documents (ITT - Paid / RFQ - Free) -->
             <div class="card mb-4">
                 <div class="card-header bg-white d-flex align-items-center gap-2">
                     <span class="step-badge">5</span>
                     <div>
-                        <h5 class="mb-0">Bidder Tender Documents (RFCE &amp; ITT)</h5>
-                        <small class="text-muted">These documents remain locked to bidders until proof of payment is submitted and approved by Procurement.</small>
+                        <h5 class="mb-0">Bidder Tender Documents (ITT — Paid / RFQ — Free)</h5>
+                        <small class="text-muted">ITT stays locked until the bidder's tender fee payment is approved by Procurement. RFQ documents are free for bidders to view.</small>
                     </div>
                 </div>
                 <div class="card-body">
@@ -207,9 +234,14 @@
                             <div class="form-text">Official RFCE document for qualifying bidders.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-warning me-1"></i>Upload ITT (Invitation to Tender)</label>
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-warning me-1"></i>Upload ITT (Invitation to Tender) — <span class="text-danger">Paid:</span> bidders must pay the tender fee to view</label>
                             <input type="file" name="itt_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
-                            <div class="form-text">Comprehensive tender instructions and bill of quantities.</div>
+                            <div class="form-text">Comprehensive tender instructions and bill of quantities. Unlocked only after the bidder's tender fee payment is verified.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-arrow-down text-success me-1"></i>Upload RFQ Document — <span class="text-success">Free</span>: bidders can view without paying</label>
+                            <input type="file" name="rfq_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            <div class="form-text">Request for Quotation / free tender information document. Always visible to bidders, no payment required.</div>
                         </div>
                     </div>
                 </div>
