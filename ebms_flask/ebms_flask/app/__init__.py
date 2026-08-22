@@ -54,6 +54,8 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
+        from app.models.evaluator_assignment import EvaluatorAssignment
+        EvaluatorAssignment.__table__.create(db.engine, checkfirst=True)
         SiteSetting.ensure_defaults()
         from app.models.user import User
         User.ensure_auth_columns()
@@ -89,6 +91,7 @@ def create_app(config_class=Config):
     from app.routes.messages import messages_bp
     from app.routes.clarifications import clarifications_bp
     from app.routes.requests import requests_bp
+    from app.routes.evaluator_assignments import evaluator_assignments_bp
     from app.models.site_setting import SiteSetting
 
     app.register_blueprint(auth_bp)
@@ -102,6 +105,7 @@ def create_app(config_class=Config):
     app.register_blueprint(messages_bp)
     app.register_blueprint(clarifications_bp)
     app.register_blueprint(requests_bp)
+    app.register_blueprint(evaluator_assignments_bp)
 
     @app.context_processor
     def inject_globals():

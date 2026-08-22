@@ -16,10 +16,12 @@ from app.models.user import User
 from app.models.role import Role
 from app.models.bidder import Bidder
 from app.models.payment import BidderPayment, BidderDocumentAccess
+from app.models.evaluator_assignment import EvaluatorAssignment
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
 from app.utils.crypto import decrypt_bytes
 from app.utils.notify import notify_user, notify_bidders_on_procurement
+from app.utils.evaluator_assignment import EvaluatorAssignmentService
 
 procurements_bp = Blueprint('procurements', __name__, url_prefix='/procurements')
 
@@ -328,6 +330,18 @@ def detail(procurement_id):
     payments = BidderPayment.query.filter_by(procurement_id=procurement.id).order_by(BidderPayment.submitted_at.desc()).all()
     pending_payments_count = sum(1 for p in payments if p.status == 'pending')
 
+    # Evaluator assignments UI (post-closure, visible to Procurement role).
+    can_assign_evaluators = EvaluatorAssignmentService.is_manager(current_user)
+    can_create_assignment = can_assign_evaluators and EvaluatorAssignmentService.is_post_closure(procurement)
+    evaluator_assignments = (
+        EvaluatorAssignmentService.list_for_procurement(procurement.id)
+        if can_assign_evaluators else []
+    )
+    evaluator_candidates = (
+        EvaluatorAssignmentService.eligible_evaluators()
+        if can_assign_evaluators else []
+    )
+
     return render_template(
         'procurement_detail.html',
         procurement=procurement,
@@ -339,6 +353,10 @@ def detail(procurement_id):
         next_status=next_status,
         payments=payments,
         pending_payments_count=pending_payments_count,
+        can_assign_evaluators=can_assign_evaluators,
+        can_create_assignment=can_create_assignment,
+        evaluator_assignments=evaluator_assignments,
+        evaluator_candidates=evaluator_candidates,
     )
 
 
@@ -785,8 +803,27 @@ def download_submission(procurement_id, submission_id):
     procurement = Procurement.query.get_or_404(procurement_id)
     submission = Submission.query.filter_by(id=submission_id, procurement_id=procurement.id).first_or_404()
 
-    if current_user.has_role('bidder') and submission.bidder_id != current_user.bidder_id:
-        abort(403)
+    if current_user.has_role('bidder'):
+        if submission.bidder_id != current_user.bidder_id:
+            log_action('UNAUTHORIZED_SUBMISSION_DOWNLOAD_BLOCKED', entity_type='Submission',
+                       entity_id=submission.id,
+                       reason=f'Bidder {current_user.bidder_id} tried to download another bidder\'s submission')
+            abort(403)
+    elif current_user.role and current_user.role.can_evaluate and not current_user.role.can_view_all_records:
+        # Evaluator / committee roles: document-type scope is enforced server-side.
+        if not EvaluatorAssignmentService.can_view_envelope(
+            procurement.id, current_user.id, submission.envelope_type
+        ):
+            log_action(
+                'EVALUATOR_DOCUMENT_ACCESS_BLOCKED',
+                entity_type='Submission',
+                entity_id=submission.id,
+                reason=(
+                    f"Evaluator {current_user.id} attempted to download "
+                    f"{submission.envelope_type} document without the matching assigned scope"
+                ),
+            )
+            abort(403)
 
     if not submission.file_path or not submission.original_filename:
         abort(404)

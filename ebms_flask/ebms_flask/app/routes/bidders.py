@@ -177,8 +177,15 @@ def workspace(procurement_id):
                 file_hash = sha256_hex(plaintext)
                 sealed = encrypt_bytes(plaintext)
 
+                procurement_folder = secure_filename(
+                    f'{procurement.tender_number}_{procurement.title}'
+                ) or f'procurement_{procurement.id}'
+                submission_dir = os.path.join(
+                    current_app.config['UPLOAD_FOLDER'], procurement_folder
+                )
+                os.makedirs(submission_dir, exist_ok=True)
                 filename = secure_filename(f"{procurement.tender_number}_{current_user.bidder_id}_{envelope_type}_{secrets.token_hex(4)}.sealed")
-                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                filepath = os.path.join(submission_dir, filename)
                 with open(filepath, 'wb') as f:
                     f.write(sealed)
 

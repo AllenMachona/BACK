@@ -21,6 +21,7 @@ from app.models.document_version import DocumentVersion
 from app.models.clarification import ClarificationVisibility, ClarificationAccess
 from app.models.history import ProcurementHistory, SubmissionHistory
 from app.models.request import FormDRequest, FormERequest, FormDERequest
+from app.models.evaluator_assignment import EvaluatorAssignment
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
@@ -31,4 +32,5 @@ __all__ = [
     'Message', 'MessageRecipient', 'MessageAttachment', 'DocumentVersion',
     'ClarificationVisibility', 'ClarificationAccess',
     'ProcurementHistory', 'SubmissionHistory',
+    'EvaluatorAssignment',
 ]

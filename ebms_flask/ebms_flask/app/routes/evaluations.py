@@ -5,8 +5,10 @@ from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.evaluation import Evaluation
 from app.models.committee import EvaluationCriteria, CommitteeMember
+from app.models.evaluator_assignment import EvaluatorAssignment
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
+from app.utils.evaluator_assignment import EvaluatorAssignmentService
 
 evaluations_bp = Blueprint('evaluations', __name__, url_prefix='/evaluations')
 
@@ -16,6 +18,11 @@ EVALUABLE_STATUSES = [
 ]
 
 
+def _is_full_visibility(user):
+    """Procurement staff / system admin see everything (bypass scope gate)."""
+    return bool(user.role and user.role.can_view_all_records)
+
+
 @evaluations_bp.route('/')
 @login_required
 @permission_required('can_evaluate')
@@ -23,6 +30,12 @@ def index():
     procurements = Procurement.query.filter(Procurement.status.in_(EVALUABLE_STATUSES)).order_by(
         Procurement.updated_at.desc()
     ).all()
+
+    # Evaluators only see procurements they have been assigned to.
+    if not _is_full_visibility(current_user):
+        assigned_ids = EvaluatorAssignmentService.assigned_procurement_ids(current_user.id)
+        procurements = [p for p in procurements if p.id in assigned_ids]
+
     if len(procurements) == 1:
         return redirect(url_for('evaluations.detail', procurement_id=procurements[0].id))
     return render_template('evaluation_select.html', procurements=procurements)
@@ -34,10 +47,34 @@ def index():
 def detail(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
 
+    # Assignment gate: evaluators may only open procurements they are assigned to.
+    assignment = EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    if not _is_full_visibility(current_user) and not assignment:
+        log_action('EVALUATOR_PROCUREMENT_ACCESS_BLOCKED', entity_type='Procurement',
+                   entity_id=procurement.id,
+                   reason=f'User {current_user.id} attempted to open an unassigned evaluation')
+        abort(403)
+
     criteria = procurement.criteria.order_by(EvaluationCriteria.sequence).all()
 
+    # Document-type scope: which submission envelopes may this evaluator see?
+    allowed_envelopes = None
+    if assignment is not None:
+        allowed_envelopes = set(EvaluatorAssignment.SCOPE_ENVELOPES[assignment.document_scope])
+
+    evaluator_scope_label = assignment.scope_label() if assignment else None
+
     evaluations = procurement.evaluations.all()
-    bids_received = procurement.submissions.filter_by(status='submitted').count()
+    submitted_rows = procurement.submissions.filter_by(status='submitted').all()
+
+    def _visible(submission_row):
+        if allowed_envelopes is None:
+            return True
+        return submission_row.envelope_type in allowed_envelopes
+
+    visible_submissions = [submission for submission in submitted_rows if _visible(submission)]
+
+    bids_received = sum(1 for s in submitted_rows if _visible(s))
     compliant = len({e.bidder_id for e in evaluations if e.evaluation_stage == 'compliance' and e.passed})
     non_compliant = len({e.bidder_id for e in evaluations if e.evaluation_stage == 'compliance' and e.passed is False})
     committee_count = procurement.committee_members.count()
@@ -45,6 +82,15 @@ def detail(procurement_id):
     # Build a per-bidder scoring matrix from real Evaluation rows.
     matrix = defaultdict(lambda: {'compliance': None, 'technical_scores': {}, 'technical_total': None, 'status': 'Pending'})
     for e in evaluations:
+        if allowed_envelopes is not None:
+            # A bidder is only visible to this evaluator when the bidder has a
+            # submission envelope inside the evaluator's granted scope.
+            bidder_visible = any(
+                s.bidder_id == e.bidder_id and _visible(s)
+                for s in submitted_rows
+            )
+            if not bidder_visible:
+                continue
         row = matrix[e.bidder]
         if e.evaluation_stage == 'compliance':
             row['compliance'] = 'Pass' if e.passed else ('Fail' if e.passed is False else None)
@@ -64,6 +110,8 @@ def detail(procurement_id):
         non_compliant=non_compliant,
         committee_count=committee_count,
         matrix=matrix,
+        evaluator_scope_label=evaluator_scope_label,
+        visible_submissions=visible_submissions,
     )
 
 
@@ -73,11 +121,12 @@ def detail(procurement_id):
 def submit_score(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
 
+    assignment = EvaluatorAssignment.active_for(procurement.id, current_user.id)
     is_member = CommitteeMember.query.filter_by(
         procurement_id=procurement.id, user_id=current_user.id
     ).first()
-    if not is_member:
-        flash('You are not an appointed committee member for this procurement.', 'danger')
+    if not is_member and not assignment and not _is_full_visibility(current_user):
+        flash('You are not an appointed evaluator for this procurement.', 'danger')
         return redirect(url_for('evaluations.detail', procurement_id=procurement_id))
 
     bidder_id = request.form.get('bidder_id', type=int)
@@ -85,6 +134,14 @@ def submit_score(procurement_id):
     score = request.form.get('score', type=float)
     passed = request.form.get('passed')
     comments = request.form.get('comments', '')
+
+    # Document-scope gate: an evaluator may only score stages their assigned
+    # scope covers (technical -> technical envelopes, financial -> single).
+    if assignment and not EvaluatorAssignmentService.can_submit_stage(
+        procurement.id, current_user.id, stage
+    ):
+        flash('Your assigned document scope does not allow scoring this evaluation stage.', 'danger')
+        return redirect(url_for('evaluations.detail', procurement_id=procurement_id))
 
     existing = Evaluation.query.filter_by(
         procurement_id=procurement_id, bidder_id=bidder_id, evaluator_id=current_user.id, evaluation_stage=stage
