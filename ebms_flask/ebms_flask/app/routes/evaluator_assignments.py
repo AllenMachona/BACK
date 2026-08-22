@@ -10,8 +10,7 @@ Endpoints:
 Restrictions (enforced here and in the service):
 - Create/update/revoke require a Procurement role (procurement_unit,
   procurement_oversight) or system_admin.
-- Every write requires the procurement to be Closed (status 'closed' or any
-  later lifecycle stage) — see evaluator_assignment.POST_CLOSURE_STATUSES.
+- Every write requires the procurement status to be exactly 'closed'.
 - Evaluators may read only their own assignments.
 
 Both JSON and form-encoded payloads are accepted so the server-rendered

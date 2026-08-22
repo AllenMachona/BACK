@@ -252,6 +252,15 @@ class EvaluatorAssignmentTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('Closed', response.json['message'])
 
+    def test_assignment_after_closed_stage_fails(self):
+        procurement_id = self._make_procurement(status='technical_opening')
+        self._login(self.manager_name)
+
+        response = self._assign(procurement_id, self.eval_a_id, 'technical')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Closed', response.json['message'])
+
     def test_each_scope_can_be_assigned_after_closure(self):
         procurement_id = self._make_procurement()
         self._login(self.manager_name)
@@ -276,6 +285,9 @@ class EvaluatorAssignmentTests(unittest.TestCase):
         self._login(self.eval_a_name)
         self.assertEqual(self._download(procurement_id, technical_id).status_code, 200)
         self.assertEqual(self._download(procurement_id, single_id).status_code, 403)
+
+        response = self._download(procurement_id, technical_id)
+        self.assertIn('EA_Test_Co', response.headers.get('Content-Disposition', ''))
 
     def test_submission_files_are_grouped_in_procurement_folder(self):
         procurement_id = self._make_procurement()

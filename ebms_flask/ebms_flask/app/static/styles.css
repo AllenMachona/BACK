@@ -273,6 +273,28 @@ a:hover {
   color: var(--ppra-accent);
 }
 
+.procurement-workspace-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  margin-bottom: 1.5rem;
+  list-style: none;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+}
+
+.procurement-workspace-nav .nav-link {
+  margin-bottom: 0;
+  border-radius: 0.5rem;
+}
+
+.procurement-workspace-nav .nav-link.active {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
 /* Cards & Bento Grid Layout */
 .card, .panel-card, .settings-panel {
   background: var(--bg-surface);

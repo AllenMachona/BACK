@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Budget & Spend - {{ procurement.tender_number }}{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('procurements.list_procurements') }}">Procurements</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}">{{ procurement.tender_number }}</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Budget &amp; Spend</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-wallet2 me-2"></i>Budget &amp; Spend</h1>
+        <p class="ebms-page-subtitle">{{ procurement.tender_number }} · {{ procurement.title }}</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Overview</a>
+        <span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<ul class="procurement-workspace-nav">
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}"><i class="bi bi-file-earmark-text me-1"></i>Overview</a></li>
+    <li class="nav-item"><a class="nav-link active" href="{{ url_for('procurements.budget_spend', procurement_id=procurement.id) }}"><i class="bi bi-wallet2 me-1"></i>Budget &amp; Spend</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.bidder_performance', procurement_id=procurement.id) }}"><i class="bi bi-graph-up-arrow me-1"></i>Bidder Performance</a></li>
+</ul>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card p-3 h-100"><span class="text-muted small">Approved budget</span><strong class="fs-4 text-primary">BWP {{ '{:,.2f}'.format(procurement.estimated_value or 0) }}</strong></div></div>
+    <div class="col-md-4"><div class="card p-3 h-100"><span class="text-muted small">Posted spend</span><strong class="fs-4 text-dark">BWP {{ '{:,.2f}'.format(budget_spend) }}</strong></div></div>
+    <div class="col-md-4"><div class="card p-3 h-100"><span class="text-muted small">Remaining variance</span><strong class="fs-4 text-{{ 'danger' if budget_remaining < 0 else 'success' }}">BWP {{ '{:,.2f}'.format(budget_remaining) }}</strong><span class="badge badge-{{ 'danger' if budget_remaining < 0 else 'success' }} mt-2 align-self-start">{{ 'Over budget' if budget_remaining < 0 else 'Within budget' }}</span></div></div>
+</div>
+<div class="card">
+    <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-journal-plus me-2 text-primary"></i>Budget Ledger</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('procurements.add_budget_entry', procurement_id=procurement.id) }}" class="row g-2 align-items-end mb-4 p-3 border rounded bg-light">
+            <div class="col-md-3"><label class="form-label small fw-bold">Transaction type</label><select name="entry_type" class="form-select" required><option value="commitment">Commitment</option><option value="invoice">Invoice</option><option value="payment">Payment</option><option value="adjustment">Adjustment / reversal</option></select></div>
+            <div class="col-md-3"><label class="form-label small fw-bold">Description</label><input name="description" class="form-control" required placeholder="e.g. Contract milestone 1"></div>
+            <div class="col-md-2"><label class="form-label small fw-bold">Amount (BWP)</label><input name="amount" type="number" min="0.01" step="0.01" class="form-control" required></div>
+            <div class="col-md-2"><label class="form-label small fw-bold">Reference</label><input name="reference" class="form-control" placeholder="PO / invoice no."></div>
+            <div class="col-md-2"><label class="form-label small fw-bold">Date</label><input name="entry_date" type="date" class="form-control"></div>
+            <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Post Transaction</button></div>
+        </form>
+        {% if budget_entries %}
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Reference</th><th class="text-end">Amount</th><th>Recorded By</th></tr></thead><tbody>
+        {% for entry in budget_entries %}<tr><td class="text-muted">{{ entry.entry_date.strftime('%Y-%m-%d') }}</td><td><span class="badge badge-secondary">{{ entry.entry_type.title() }}</span></td><td>{{ entry.description }}</td><td><code>{{ entry.reference or '—' }}</code></td><td class="text-end fw-bold">{{ '{:,.2f}'.format(entry.signed_amount) }}</td><td class="text-muted small">{{ entry.created_by.full_name() }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<div class="text-center py-5"><i class="bi bi-wallet2 text-muted fs-1 mb-3 d-block"></i><h5>No budget transactions yet</h5><p class="text-muted mb-0">Post the first commitment, invoice, payment, or adjustment above.</p></div>{% endif %}
+    </div>
+</div>
+{% endblock %}

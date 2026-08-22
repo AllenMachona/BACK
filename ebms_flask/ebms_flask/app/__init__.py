@@ -58,6 +58,10 @@ def create_app(config_class=Config):
         EvaluatorAssignment.__table__.create(db.engine, checkfirst=True)
         from app.models.evaluator_feedback import EvaluatorFeedback
         EvaluatorFeedback.__table__.create(db.engine, checkfirst=True)
+        from app.models.budget_entry import BudgetEntry
+        BudgetEntry.__table__.create(db.engine, checkfirst=True)
+        from app.models.bidder_performance import BidderPerformance
+        BidderPerformance.__table__.create(db.engine, checkfirst=True)
         SiteSetting.ensure_defaults()
         from app.models.user import User
         User.ensure_auth_columns()
@@ -69,7 +73,7 @@ def create_app(config_class=Config):
         Message.ensure_schema_columns()
         from app.models.request import ensure_schema_columns
         ensure_schema_columns()
-        from app.models.role import Role
+        from app.models.role import Role  
         Role.ensure_default_roles()
         if Role.query.count() == 0:
             try:

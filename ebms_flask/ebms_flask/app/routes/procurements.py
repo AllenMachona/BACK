@@ -3,7 +3,8 @@ import mimetypes
 import os
 import random
 import secrets
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_file, send_from_directory, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import or_
@@ -19,6 +20,8 @@ from app.models.bidder import Bidder
 from app.models.payment import BidderPayment, BidderDocumentAccess
 from app.models.evaluator_assignment import EvaluatorAssignment
 from app.models.evaluator_feedback import EvaluatorFeedback
+from app.models.budget_entry import BudgetEntry
+from app.models.bidder_performance import BidderPerformance
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
 from app.utils.crypto import decrypt_bytes
@@ -416,6 +419,14 @@ def detail(procurement_id):
         EvaluatorAssignmentService.eligible_evaluators()
         if can_assign_evaluators else []
     )
+    budget_entries = procurement.budget_entries.order_by(BudgetEntry.entry_date.desc(), BudgetEntry.id.desc()).all()
+    budget_spend = sum((entry.signed_amount for entry in budget_entries), Decimal('0'))
+    budget_value = Decimal(str(procurement.estimated_value or 0))
+    budget_remaining = budget_value - budget_spend
+    performance_reviews = procurement.bidder_performance_reviews.order_by(
+        BidderPerformance.reviewed_at.desc()
+    ).all()
+    performance_bidders = Bidder.query.filter_by(active=True).order_by(Bidder.company_name).all()
 
     return render_template(
         'procurement_detail.html',
@@ -435,7 +446,152 @@ def detail(procurement_id):
         evaluator_feedback=procurement.evaluator_feedback.order_by(
             EvaluatorFeedback.submitted_at.desc()
         ).all(),
+        can_view_procurement_workspace=_procurement_management_access(procurement),
+        budget_entries=budget_entries,
+        budget_spend=budget_spend,
+        budget_remaining=budget_remaining,
+        performance_reviews=performance_reviews,
+        performance_bidders=performance_bidders,
     )
+
+
+def _procurement_management_access(procurement):
+    return bool(
+        current_user.role
+        and not current_user.has_role('bidder')
+        and (
+            current_user.can_access_procurement(procurement)
+            or current_user.has_permission('can_view_all_records')
+            or current_user.has_permission('can_create_procurement')
+            or current_user.has_permission('can_approve_procurement')
+            or current_user.has_permission('can_award')
+        )
+    )
+
+
+def _load_budget_workspace(procurement):
+    entries = procurement.budget_entries.order_by(
+        BudgetEntry.entry_date.desc(), BudgetEntry.id.desc()
+    ).all()
+    spend = sum((entry.signed_amount for entry in entries), Decimal('0'))
+    budget = Decimal(str(procurement.estimated_value or 0))
+    return entries, spend, budget - spend
+
+
+@procurements_bp.route('/<int:procurement_id>/budget-spend')
+@login_required
+def budget_spend(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+    budget_entries, budget_spend, budget_remaining = _load_budget_workspace(procurement)
+    return render_template(
+        'procurement_budget.html',
+        procurement=procurement,
+        budget_entries=budget_entries,
+        budget_spend=budget_spend,
+        budget_remaining=budget_remaining,
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/bidder-performance')
+@login_required
+def bidder_performance(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+    return render_template(
+        'procurement_performance.html',
+        procurement=procurement,
+        performance_reviews=procurement.bidder_performance_reviews.order_by(
+            BidderPerformance.reviewed_at.desc()
+        ).all(),
+        performance_bidders=Bidder.query.filter_by(active=True).order_by(
+            Bidder.company_name
+        ).all(),
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/budget-entry', methods=['POST'])
+@login_required
+def add_budget_entry(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+
+    try:
+        amount = Decimal((request.form.get('amount') or '').strip())
+        if amount <= 0:
+            raise InvalidOperation
+    except InvalidOperation:
+        flash('Enter a valid positive budget amount.', 'danger')
+        return redirect(url_for('procurements.budget_spend', procurement_id=procurement.id))
+
+    entry_type = (request.form.get('entry_type') or '').strip().lower()
+    description = (request.form.get('description') or '').strip()
+    if entry_type not in BudgetEntry.ENTRY_TYPES or not description:
+        flash('Select an entry type and provide a description.', 'danger')
+        return redirect(url_for('procurements.budget_spend', procurement_id=procurement.id))
+
+    entry_date = date.today()
+    if request.form.get('entry_date'):
+        try:
+            entry_date = date.fromisoformat(request.form['entry_date'])
+        except ValueError:
+            flash('Enter a valid entry date.', 'danger')
+            return redirect(url_for('procurements.budget_spend', procurement_id=procurement.id))
+
+    entry = BudgetEntry(
+        procurement_id=procurement.id,
+        entry_type=entry_type,
+        description=description,
+        amount=amount,
+        reference=(request.form.get('reference') or '').strip() or None,
+        entry_date=entry_date,
+        created_by_id=current_user.id,
+    )
+    db.session.add(entry)
+    db.session.commit()
+    log_action('PROCUREMENT_BUDGET_ENTRY_CREATED', entity_type='BudgetEntry', entity_id=entry.id,
+               new_value={'procurement_id': procurement.id, 'entry_type': entry_type, 'amount': str(amount)})
+    flash('Budget transaction recorded.', 'success')
+    return redirect(url_for('procurements.budget_spend', procurement_id=procurement.id))
+
+
+@procurements_bp.route('/<int:procurement_id>/performance-review', methods=['POST'])
+@login_required
+def add_performance_review(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+
+    bidder_id = request.form.get('bidder_id', type=int)
+    bidder = Bidder.query.get(bidder_id) if bidder_id else None
+    scores = [request.form.get(name, type=int) for name in ('delivery_score', 'quality_score', 'compliance_score')]
+    if not bidder or any(score is None or score < 1 or score > 5 for score in scores):
+        flash('Select a bidder and provide scores from 1 to 5.', 'danger')
+        return redirect(url_for('procurements.bidder_performance', procurement_id=procurement.id))
+
+    overall_score = round(sum(scores) / 3, 2)
+    review = BidderPerformance(
+        procurement_id=procurement.id,
+        bidder_id=bidder.id,
+        delivery_score=scores[0],
+        quality_score=scores[1],
+        compliance_score=scores[2],
+        overall_score=overall_score,
+        status=(request.form.get('status') or 'under_review').strip()
+            if (request.form.get('status') or 'under_review').strip() in BidderPerformance.STATUSES
+            else 'under_review',
+        notes=(request.form.get('notes') or '').strip() or None,
+        reviewed_by_id=current_user.id,
+    )
+    db.session.add(review)
+    db.session.commit()
+    log_action('BIDDER_PERFORMANCE_RECORDED', entity_type='BidderPerformance', entity_id=review.id,
+               new_value={'procurement_id': procurement.id, 'bidder_id': bidder.id, 'overall_score': overall_score})
+    flash('Bidder performance review recorded.', 'success')
+    return redirect(url_for('procurements.bidder_performance', procurement_id=procurement.id))
 
 
 @procurements_bp.route('/<int:procurement_id>/upload-documents', methods=['POST'])
@@ -912,10 +1068,18 @@ def download_submission(procurement_id, submission_id):
     with open(submission.file_path, 'rb') as encrypted_file:
         plaintext = decrypt_bytes(encrypted_file.read())
 
+    bidder_name = secure_filename(submission.bidder.company_name) if submission.bidder else ''
+    if not bidder_name:
+        bidder_name = f'bidder_{submission.bidder_id}'
+    original_stem, original_extension = os.path.splitext(submission.original_filename)
+    download_name = secure_filename(
+        f'{bidder_name}_{submission.envelope_type}_{original_stem}'
+    ) + original_extension
+
     return send_file(
         io.BytesIO(plaintext),
         as_attachment=True,
-        download_name=submission.original_filename,
+        download_name=download_name,
         mimetype='application/octet-stream',
     )
 

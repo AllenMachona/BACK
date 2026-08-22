@@ -23,6 +23,8 @@ from app.models.history import ProcurementHistory, SubmissionHistory
 from app.models.request import FormDRequest, FormERequest, FormDERequest
 from app.models.evaluator_assignment import EvaluatorAssignment
 from app.models.evaluator_feedback import EvaluatorFeedback
+from app.models.budget_entry import BudgetEntry
+from app.models.bidder_performance import BidderPerformance
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
@@ -35,4 +37,5 @@ __all__ = [
     'ProcurementHistory', 'SubmissionHistory',
     'EvaluatorAssignment',
     'EvaluatorFeedback',
+    'BudgetEntry', 'BidderPerformance',
 ]

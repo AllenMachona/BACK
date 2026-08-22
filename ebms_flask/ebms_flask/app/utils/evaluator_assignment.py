@@ -23,23 +23,9 @@ from app.models.user import User
 from app.utils.audit_enhanced import log_action
 from app.utils.notify import notify_user
 
-# Lifecycle statuses that count as "closed or later". Mirrors the reachable
-# statuses from 'closed' in app/routes/procurements.py TRANSITIONS map.
-POST_CLOSURE_STATUSES = frozenset({
-    'closed',
-    'technical_opening',
-    'compliance_evaluation',
-    'technical_evaluation',
-    'technical_outcome_approved',
-    'financial_opening',
-    'financial_evaluation',
-    'award_pending_approval',
-    'award_published',
-    'cooling_off',
-    'complaint_hold',
-    'ready_for_contract',
-    'archived',
-})
+# Evaluator assignment is only allowed during the exact Closed stage. Once
+# opening/evaluation begins, the assignment window is closed.
+ASSIGNABLE_STATUS = 'closed'
 
 # Roles allowed to create/update/revoke evaluator assignments. Matches the
 # existing `Role.code.in_(['procurement_unit', 'system_admin',
@@ -69,8 +55,8 @@ STAGE_REQUIRED_ENVELOPES = {
 class EvaluatorAssignmentService:
     @staticmethod
     def is_post_closure(procurement):
-        """A procurement is assignable once its status is 'closed' or later."""
-        return bool(procurement and procurement.status in POST_CLOSURE_STATUSES)
+        """Return True only while the procurement status is exactly Closed."""
+        return bool(procurement and procurement.status == ASSIGNABLE_STATUS)
 
     @staticmethod
     def is_manager(user):
