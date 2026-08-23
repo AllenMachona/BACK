@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # must run before `from app import create_app`, since config.py reads os.environ at import time
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # config.py reads os.environ at import time
 
 from app import create_app  # noqa: E402
 

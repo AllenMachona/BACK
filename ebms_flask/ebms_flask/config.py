@@ -3,8 +3,10 @@ import secrets
 from datetime import timedelta
 
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 
 
 def _is_production():
@@ -86,6 +88,8 @@ class Config:
     MAIL_SERVER = os.environ.get('MAIL_SERVER', '').strip()
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in {'1', 'true', 'yes', 'on'}
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() in {'1', 'true', 'yes', 'on'}
+    MAIL_TIMEOUT = int(os.environ.get('MAIL_TIMEOUT') or 20)
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '').strip()
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', '').strip()

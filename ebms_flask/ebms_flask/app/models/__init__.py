@@ -5,6 +5,7 @@ from app.models.role import Role
 from app.models.user import User
 from app.models.procurement import Procurement, Lot
 from app.models.bidder import Bidder
+from app.models.bidder_compliance import BidderComplianceDocument
 from app.models.submission import Submission
 from app.models.committee import CommitteeMember, EvaluationCriteria
 from app.models.evaluation import Evaluation, ScoreSheet
@@ -30,6 +31,7 @@ __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
     'CommitteeMember', 'EvaluationCriteria', 'Evaluation', 'ScoreSheet',
     'Award', 'Complaint', 'Communication', 'AuditLog', 'Notification', 'SiteSetting',
+    'BidderComplianceDocument',
     'BidderPayment', 'BidderDocumentAccess',
     # Enhanced models
     'Message', 'MessageRecipient', 'MessageAttachment', 'DocumentVersion',

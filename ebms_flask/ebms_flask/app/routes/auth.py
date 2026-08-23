@@ -1,3 +1,4 @@
+import os
 import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
@@ -5,11 +6,13 @@ from flask_login import login_user, logout_user, login_required, current_user
 from markupsafe import Markup, escape
 from app.extensions import db
 from app.models.bidder import Bidder
+from app.models.bidder_compliance import BidderComplianceDocument
 from app.models.role import Role
 from app.models.user import User
 from app.utils.audit import log_action
 from app.utils.notify import send_email
 from app.utils.security import sanitize_string, validate_email, validate_password_strength
+from werkzeug.utils import secure_filename
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -52,7 +55,10 @@ def login():
             return render_template('login.html')
 
         if not user.is_active:
-            flash('This account has been deactivated.', 'danger')
+            if user.has_role('bidder') and user.email_confirmed_at:
+                flash('Your email is confirmed, but your bidder account is still pending compliance review.', 'warning')
+            else:
+                flash('This account has been deactivated.', 'danger')
             return render_template('login.html')
 
         user.failed_login_attempts = 0
@@ -93,9 +99,16 @@ def register():
         # Validate all required fields
         department = sanitize_string(request.form.get('department', '').strip(), max_length=100)
         designation = sanitize_string(request.form.get('designation', '').strip(), max_length=100)
+        compliance_file = request.files.get('compliance_document')
         
         if not all([username, email, first_name, last_name, password, department, designation]):
             flash('Please complete all required fields.', 'danger')
+            return render_template('register.html')
+
+        allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+        file_extension = os.path.splitext(compliance_file.filename)[1].lower().lstrip('.') if compliance_file and compliance_file.filename else ''
+        if not compliance_file or not compliance_file.filename or file_extension not in allowed_extensions:
+            flash('Please upload a compliance document (PDF, PNG, JPG, DOC, or DOCX).', 'danger')
             return render_template('register.html')
 
         # SECURITY: Validate email format
@@ -130,11 +143,22 @@ def register():
         bidder = Bidder(
             company_name=department,
             contact_email=email,
-            active=True,
+            active=False,
             verified=False,
         )
         db.session.add(bidder)
         db.session.flush()
+
+        compliance_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'bidder_compliance')
+        os.makedirs(compliance_dir, exist_ok=True)
+        compliance_filename = secure_filename(f'{bidder.id}_{secrets.token_hex(8)}_{compliance_file.filename}')
+        compliance_path = os.path.join(compliance_dir, compliance_filename)
+        compliance_file.save(compliance_path)
+        db.session.add(BidderComplianceDocument(
+            bidder_id=bidder.id,
+            file_path=compliance_path,
+            original_filename=compliance_file.filename,
+        ))
 
         user = User(
             username=username,
@@ -157,7 +181,7 @@ def register():
             user.email,
             'Confirm your EBMS Botswana bidder account',
             f"Hello {user.full_name()},\n\n"
-            "Confirm your email address and activate your bidder account using this link:\n\n"
+            "Confirm your email address using this link. Your account will then be reviewed by a system administrator:\n\n"
             f"{confirmation_url}\n\n"
             "This link expires in 24 hours. If you did not create this account, ignore this message.",
         )
@@ -187,7 +211,7 @@ def confirm_email(token):
     user.confirm_email()
     db.session.commit()
     log_action('EMAIL_CONFIRMED', entity_type='User', entity_id=user.id)
-    flash('Your email has been confirmed and your bidder account is active. You can now sign in.', 'success')
+    flash('Your email has been confirmed. Your account is pending compliance review by a system administrator.', 'success')
     return redirect(url_for('auth.login'))
 
 

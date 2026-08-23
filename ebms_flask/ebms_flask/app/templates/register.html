@@ -309,7 +309,7 @@
                         {% endif %}
                     {% endwith %}
 
-                    <form method="POST" action="{{ url_for('auth.register') }}">
+                    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data">
                         <div class="section-block">
                             <h5 class="section-heading">Your details <span class="tag">// identity</span></h5>
                             <div class="row-2">
@@ -352,6 +352,15 @@
                             <div class="role-note">
                                 <i class="bi bi-info-circle"></i>
                                 <span>You are registering as a <strong>Bidder</strong> to submit tenders and participate in procurements.</span>
+                            </div>
+                        </div>
+
+                        <div class="section-block">
+                            <h5 class="section-heading">Compliance document <span class="tag">// required review</span></h5>
+                            <div class="field">
+                                <label>Upload compliance document</label>
+                                <input type="file" name="compliance_document" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
+                                <small class="form-text">Upload a valid compliance document for system administrator review.</small>
                             </div>
                         </div>
 

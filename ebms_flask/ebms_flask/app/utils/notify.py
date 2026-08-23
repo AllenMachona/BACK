@@ -9,7 +9,10 @@ from app.models.notification import Notification
 
 def send_email(to_address, subject, body):
     if not current_app.config.get('MAIL_CONFIGURED'):
-        print(f"[MAILER — console fallback, MAIL_SERVER not configured]\nTo: {to_address}\nSubject: {subject}\n{body}\n")
+        current_app.logger.warning(
+            'Email skipped: configure MAIL_SERVER and MAIL_DEFAULT_SENDER to send %s to %s',
+            subject, to_address,
+        )
         return False
     server = current_app.config['MAIL_SERVER']
     try:
@@ -21,15 +24,24 @@ def send_email(to_address, subject, body):
         msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
         msg['To'] = to_address
 
-        with smtplib.SMTP(server, current_app.config['MAIL_PORT']) as smtp:
-            if current_app.config.get('MAIL_USE_TLS'):
+        smtp_class = smtplib.SMTP_SSL if current_app.config.get('MAIL_USE_SSL') else smtplib.SMTP
+        with smtp_class(
+            server,
+            current_app.config['MAIL_PORT'],
+            timeout=current_app.config.get('MAIL_TIMEOUT', 20),
+        ) as smtp:
+            if current_app.config.get('MAIL_USE_TLS') and not current_app.config.get('MAIL_USE_SSL'):
                 smtp.starttls()
             if current_app.config.get('MAIL_USERNAME'):
-                smtp.login(current_app.config['MAIL_USERNAME'], current_app.config['MAIL_PASSWORD'])
+                smtp.login(
+                    current_app.config['MAIL_USERNAME'],
+                    current_app.config['MAIL_PASSWORD'].replace(' ', ''),
+                )
             smtp.send_message(msg)
         return True
-    except Exception as exc:
-        print(f"Email send failed (non-fatal): {exc}")
+    except Exception:
+        current_app.config['MAIL_LAST_ERROR'] = 'SMTP delivery failed. Check the SMTP username and App Password.'
+        current_app.logger.exception('Email delivery failed for %s', to_address)
         return False
 
 

@@ -7,6 +7,10 @@ from config import Config
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    if not app.config.get('MAIL_CONFIGURED'):
+        app.logger.warning(
+            'SMTP email is disabled: set MAIL_SERVER and MAIL_DEFAULT_SENDER in the project .env file.'
+        )
 
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(os.path.join(os.path.dirname(app.config['UPLOAD_FOLDER']), 'instance'), exist_ok=True)

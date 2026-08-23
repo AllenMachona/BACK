@@ -193,7 +193,6 @@ class User(UserMixin, db.Model):
         self.email_confirmed_at = datetime.utcnow()
         self.email_confirmation_token = None
         self.email_confirmation_expires_at = None
-        self.is_active = True
 
     def email_confirmation_valid(self):
         return bool(
