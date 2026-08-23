@@ -230,7 +230,9 @@ def create():
         if ppra_sub_code and ppra_sub_code not in ('00', 'none'):
             ppra_code = f'{ppra_base}-{ppra_sub_code}'
 
-        direct_threshold = float(request.form.get('direct_procurement_threshold', 500000) or 500000)
+        from app.models.site_setting import SiteSetting
+        direct_threshold = float(SiteSetting.get('direct_procurement_threshold', '500000'))
+        open_threshold = float(SiteSetting.get('open_procurement_threshold', '500000'))
         governance = Procurement(
             tender_number='TBD',
             title=request.form['title'],
@@ -246,7 +248,7 @@ def create():
             tender_fee=tender_fee,
             user_department=procurement_entity,
             status='draft',
-        ).check_governance_rules(direct_threshold=direct_threshold, open_threshold=direct_threshold)
+        ).check_governance_rules(direct_threshold=direct_threshold, open_threshold=open_threshold)
 
         if governance['errors']:
             flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')

@@ -204,7 +204,9 @@ class User(UserMixin, db.Model):
     def is_password_expired(self):
         if not self.password_changed_at:
             return True
-        expiry = self.password_changed_at + timedelta(days=self.password_expiry_days)
+        from app.models.site_setting import SiteSetting
+        expiry_days = int(float(SiteSetting.get('password_expiry_days', str(self.password_expiry_days))))
+        expiry = self.password_changed_at + timedelta(days=expiry_days)
         return datetime.utcnow() > expiry
 
     def has_role(self, role_code):

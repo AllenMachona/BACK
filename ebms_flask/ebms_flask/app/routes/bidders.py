@@ -148,6 +148,10 @@ def workspace(procurement_id):
             return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
 
         if action == 'submit_bid':
+            from app.models.site_setting import SiteSetting
+            if SiteSetting.get('enable_bid_submission', 'true').lower() != 'true':
+                flash('Bid submission is temporarily disabled by the system administrator.', 'warning')
+                return redirect(url_for('bidders.portal'))
             if procurement.status != 'submission_open':
                 flash('Submissions are not currently open for this procurement.', 'danger')
                 return redirect(url_for('bidders.workspace', procurement_id=procurement_id))

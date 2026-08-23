@@ -9,6 +9,7 @@ from app.models.bidder import Bidder
 from app.models.bidder_compliance import BidderComplianceDocument
 from app.models.role import Role
 from app.models.user import User
+from app.models.site_setting import SiteSetting
 from app.utils.audit import log_action
 from app.utils.notify import send_email
 from app.utils.security import sanitize_string, validate_email, validate_password_strength
@@ -79,6 +80,10 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
+
+    if SiteSetting.get('allow_registration', 'true').lower() != 'true' or SiteSetting.get('enable_supplier_registration', 'true').lower() != 'true':
+        flash('New bidder registration is temporarily disabled by the system administrator.', 'warning')
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         username = sanitize_string(request.form.get('username', '').strip(), max_length=80)

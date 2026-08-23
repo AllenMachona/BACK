@@ -1,5 +1,7 @@
 import os
-from flask import Flask
+from datetime import timedelta
+from flask import Flask, request, render_template
+from flask_login import current_user
 from app.extensions import db, login_manager, migrate
 from config import Config
 
@@ -67,6 +69,15 @@ def create_app(config_class=Config):
         from app.models.bidder_performance import BidderPerformance
         BidderPerformance.__table__.create(db.engine, checkfirst=True)
         SiteSetting.ensure_defaults()
+        app.config['MAX_CONTENT_LENGTH'] = int(float(SiteSetting.get('max_upload_size_mb', '2048'))) * 1024 * 1024
+        app.permanent_session_lifetime = timedelta(hours=int(float(SiteSetting.get('session_lifetime_hours', '8'))))
+        app.config['MAIL_SERVER'] = SiteSetting.get('smtp_host', app.config.get('MAIL_SERVER', ''))
+        app.config['MAIL_PORT'] = int(float(SiteSetting.get('smtp_port', str(app.config.get('MAIL_PORT', 587)))))
+        app.config['MAIL_DEFAULT_SENDER'] = SiteSetting.get('sender_email', '') or app.config.get('MAIL_DEFAULT_SENDER', '')
+        encryption = SiteSetting.get('email_encryption', 'tls')
+        app.config['MAIL_USE_TLS'] = encryption == 'tls'
+        app.config['MAIL_USE_SSL'] = encryption == 'ssl'
+        app.config['MAIL_CONFIGURED'] = bool(app.config['MAIL_SERVER'] and app.config.get('MAIL_DEFAULT_SENDER'))
         from app.models.user import User
         User.ensure_auth_columns()
         from app.models.procurement import Procurement
@@ -85,6 +96,19 @@ def create_app(config_class=Config):
                 seed.seed_data()
             except Exception as e:
                 app.logger.warning(f"Auto-seed notification: {e}")
+
+    @app.before_request
+    def enforce_maintenance_mode():
+        if SiteSetting.get('maintenance_mode', 'false').lower() != 'true':
+            return None
+        if current_user.is_authenticated and current_user.has_permission('can_admin_system'):
+            return None
+        if request.endpoint in {'auth.login', 'auth.logout', 'static'}:
+            return None
+        return render_template(
+            'maintenance.html',
+            message=SiteSetting.get('maintenance_message', 'The system is temporarily undergoing maintenance.'),
+        ), 503
 
     @login_manager.user_loader
     def load_user(user_id):

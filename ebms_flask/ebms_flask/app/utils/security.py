@@ -63,19 +63,21 @@ def validate_password_strength(password):
     Validate password meets minimum security requirements.
     Returns: (is_valid: bool, error_message: str or None)
     """
-    if not password or len(password) < 10:
-        return False, 'Password must be at least 10 characters long.'
+    from app.models.site_setting import SiteSetting
+    minimum_length = int(float(SiteSetting.get('minimum_password_length', '10')))
+    if not password or len(password) < minimum_length:
+        return False, f'Password must be at least {minimum_length} characters long.'
     
-    if not any(c.isupper() for c in password):
+    if SiteSetting.get('require_password_uppercase', 'true').lower() == 'true' and not any(c.isupper() for c in password):
         return False, 'Password must contain at least one uppercase letter.'
     
     if not any(c.islower() for c in password):
         return False, 'Password must contain at least one lowercase letter.'
     
-    if not any(c.isdigit() for c in password):
+    if SiteSetting.get('require_password_number', 'true').lower() == 'true' and not any(c.isdigit() for c in password):
         return False, 'Password must contain at least one number.'
     
-    if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
+    if SiteSetting.get('require_password_special', 'true').lower() == 'true' and not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
         return False, 'Password must contain at least one special character (!@#$%^&*...).'
     
     # Check for common patterns

@@ -1,30 +1,87 @@
 {% extends "base.html" %}
 {% block title %}{{ procurement.title }}{% endblock %}
+{% block styles %}
+<style>
+  .public-detail-shell { width: min(100%, 1320px); min-height: 100vh; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 3rem) 3rem; }
+  .public-detail-topbar, .public-detail-header, .public-detail-actions, .detail-item, .detail-cta { animation: fadeUp 0.55s ease-out both; }
+  .public-detail-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
+  .public-detail-brand { display: flex; align-items: center; gap: .75rem; color: var(--text-main); font-weight: 800; letter-spacing: .01em; }
+  .public-detail-brand-mark { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: .8rem; color: #fff; background: var(--ppra-accent); box-shadow: 0 8px 18px rgba(13, 148, 136, .2); }
+  .public-detail-nav { display: flex; align-items: center; gap: .65rem; }
+  .public-detail-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; padding: 2rem 0 1.75rem; border-bottom: 1px solid rgba(148, 163, 184, .25); }
+  .public-detail-header h1 { max-width: 850px; margin: .45rem 0 .7rem; color: var(--text-main); font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.08; }
+  .public-detail-header p { max-width: 760px; margin: 0; color: var(--text-muted); font-size: 1rem; }
+  .public-detail-status { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
+  .public-detail-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr); gap: 1.25rem; margin-top: 1.5rem; }
+  .public-detail-panel { padding: clamp(1.25rem, 3vw, 2rem); background: rgba(255,255,255,.82); border: 1px solid rgba(148,163,184,.22); border-radius: 1rem; box-shadow: 0 12px 30px rgba(15,23,42,.05); }
+  .public-detail-panel h2 { margin: 0 0 1.25rem; color: var(--text-main); font-size: 1.15rem; }
+  .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .detail-item { padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: .7rem; }
+  .detail-item:nth-child(2) { animation-delay: .04s; } .detail-item:nth-child(3) { animation-delay: .08s; } .detail-item:nth-child(4) { animation-delay: .12s; }
+  .detail-item.full { grid-column: 1 / -1; }
+  .detail-item label { display: block; margin-bottom: .4rem; color: var(--text-muted); font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .detail-item strong { color: var(--text-main); font-size: .98rem; }
+  .detail-item p { margin: 0; color: var(--text-body); line-height: 1.65; white-space: pre-line; }
+  .detail-cta { position: sticky; top: 1.5rem; align-self: start; color: #fff; background: linear-gradient(145deg, #123b54, #0f766e); border: 0; }
+  .detail-cta h2, .detail-cta p { color: #fff; }
+  .detail-cta p { margin-bottom: 1.5rem; color: rgba(255,255,255,.78); line-height: 1.6; }
+  .detail-cta .btn { width: 100%; margin-bottom: .65rem; }
+  .detail-cta .btn-outline-light { border-color: rgba(255,255,255,.55); }
+  .public-detail-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.25rem; }
+  @media (max-width: 800px) { .public-detail-header, .public-detail-topbar { align-items: flex-start; flex-direction: column; } .public-detail-status { justify-content: flex-start; } .public-detail-layout { grid-template-columns: 1fr; } .detail-cta { position: static; } .public-detail-nav { width: 100%; } .public-detail-nav .btn { flex: 1; } }
+  @media (max-width: 560px) { .detail-grid { grid-template-columns: 1fr; } .detail-item.full { grid-column: auto; } .public-detail-actions { flex-direction: column-reverse; } .public-detail-actions .btn { width: 100%; } }
+</style>
+{% endblock %}
 {% block guest_content %}
 <div class="public-detail-shell">
-  <div class="detail-card">
-    <div class="detail-header">
-      <div>
-        <div class="eyebrow">Tender Detail</div>
-        <h1>{{ procurement.title }}</h1>
-      </div>
-      <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Become a Tenderer</a>
-    </div>
-
-    <div class="detail-grid">
-      <div class="detail-item"><label>Tender Number</label><strong>{{ procurement.tender_number }}</strong></div>
-      <div class="detail-item"><label>Category</label><strong>{{ procurement.category.title() }}</strong></div>
-      <div class="detail-item"><label>Method</label><strong>{{ procurement.method.replace('_', ' ').title() }}</strong></div>
-      <div class="detail-item"><label>Procurement Entity</label><strong>{{ procurement.procurement_entity or 'N/A' }}</strong></div>
-      <div class="detail-item"><label>Submission Deadline</label><strong>{{ procurement.submission_deadline.strftime('%d %b %Y %H:%M') if procurement.submission_deadline else 'TBA' }}</strong></div>
-      <div class="detail-item"><label>Status</label><strong>{{ procurement.status.replace('_', ' ').title() }}</strong></div>
-      <div class="detail-item full"><label>Description</label><p>{{ procurement.description or 'No description provided.' }}</p></div>
-    </div>
-
-    <div class="detail-actions">
-      <a class="btn btn-secondary btn-sm" href="{{ url_for('dashboard.public_tenders') }}">Back to tenders</a>
-      <a class="btn btn-success btn-sm" href="{{ url_for('auth.register') }}">Register to Bid</a>
-    </div>
+  <div class="public-detail-topbar">
+    <a class="public-detail-brand" href="{{ url_for('dashboard.public_tenders') }}">
+      <span class="public-detail-brand-mark">EB</span>
+      <span>EBMS Botswana</span>
+    </a>
+    <nav class="public-detail-nav" aria-label="Public portal navigation">
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('dashboard.public_tenders') }}"><i class="bi bi-search me-1"></i>Browse tenders</a>
+      <a class="btn btn-success btn-sm" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</a>
+    </nav>
   </div>
+
+  <header class="public-detail-header">
+    <div>
+      <div class="eyebrow">Public procurement opportunity</div>
+      <h1>{{ procurement.title }}</h1>
+      <p>{{ procurement.procurement_entity or procurement.user_department or 'Procuring entity not specified' }} · {{ procurement.tender_number }}</p>
+    </div>
+    <div class="public-detail-status">
+      <span class="status-pill {{ 'green' if procurement.status == 'submission_open' else 'blue' }}">{{ procurement.status.replace('_', ' ').title() }}</span>
+      <span class="badge badge-info">{{ (procurement.category or 'goods').replace('_', ' ').title() }}</span>
+    </div>
+  </header>
+
+  <div class="public-detail-layout">
+    <section class="public-detail-panel">
+      <h2><i class="bi bi-file-earmark-text me-2 text-primary"></i>Tender overview</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Tender number</label><strong>{{ procurement.tender_number }}</strong></div>
+        <div class="detail-item"><label>Procurement method</label><strong>{{ procurement.method.replace('_', ' ').title() }}</strong></div>
+        <div class="detail-item"><label>Procuring entity</label><strong>{{ procurement.procurement_entity or procurement.user_department or 'Not specified' }}</strong></div>
+        <div class="detail-item"><label>Submission deadline</label><strong>{{ procurement.submission_deadline.strftime('%d %b %Y, %H:%M') if procurement.submission_deadline else 'To be announced' }}</strong></div>
+        <div class="detail-item"><label>Estimated value</label><strong>{{ '{:,.2f}'.format(procurement.estimated_value or 0) }} BWP</strong></div>
+        <div class="detail-item"><label>Published</label><strong>{{ procurement.created_at.strftime('%d %b %Y') if procurement.created_at else 'Not specified' }}</strong></div>
+        <div class="detail-item full"><label>Description</label><p>{{ procurement.description or 'No description provided.' }}</p></div>
+      </div>
+    </section>
+
+    <aside class="public-detail-panel detail-cta">
+      <h2><i class="bi bi-arrow-right-circle me-2"></i>Ready to participate?</h2>
+      <p>Create a supplier account to access the bidder workspace and submit your response to this opportunity.</p>
+      <a class="btn btn-light" href="{{ url_for('auth.register') }}">Register as a supplier</a>
+      <a class="btn btn-outline-light" href="{{ url_for('auth.login') }}">Sign in to EBMS</a>
+    </aside>
+  </div>
+
+  <div class="public-detail-actions">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dashboard.public_tenders') }}"><i class="bi bi-arrow-left me-1"></i>Back to tenders</a>
+    <a class="btn btn-success btn-sm" href="{{ url_for('auth.register') }}"><i class="bi bi-person-plus me-1"></i>Register to bid</a>
+    </div>
 </div>
 {% endblock %}

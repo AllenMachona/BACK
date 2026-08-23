@@ -8,6 +8,10 @@ from app.models.notification import Notification
 
 
 def send_email(to_address, subject, body):
+    from app.models.site_setting import SiteSetting
+    if SiteSetting.get('enable_email', 'true').lower() != 'true':
+        current_app.logger.info('Email disabled by administrator: %s', subject)
+        return False
     if not current_app.config.get('MAIL_CONFIGURED'):
         current_app.logger.warning(
             'Email skipped: configure MAIL_SERVER and MAIL_DEFAULT_SENDER to send %s to %s',
@@ -18,10 +22,13 @@ def send_email(to_address, subject, body):
     try:
         import smtplib
         from email.mime.text import MIMEText
+        from email.header import Header
 
         msg = MIMEText(body)
         msg['Subject'] = subject
-        msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
+        sender_name = SiteSetting.get('email_sender_name', '').strip()
+        sender = current_app.config['MAIL_DEFAULT_SENDER']
+        msg['From'] = f'{Header(sender_name, "utf-8")} <{sender}>' if sender_name else sender
         msg['To'] = to_address
 
         smtp_class = smtplib.SMTP_SSL if current_app.config.get('MAIL_USE_SSL') else smtplib.SMTP
@@ -46,13 +53,16 @@ def send_email(to_address, subject, body):
 
 
 def notify_user(user, notif_type, title, body, procurement_id=None, email=True):
+    from app.models.site_setting import SiteSetting
+    if SiteSetting.get('enable_notifications', 'true').lower() != 'true':
+        return None
     notification = Notification(
         user_id=user.id, type=notif_type, title=title, body=body, procurement_id=procurement_id,
     )
     db.session.add(notification)
     db.session.commit()
 
-    if email and user.email:
+    if email and user.email and SiteSetting.get('enable_email', 'true').lower() == 'true':
         if send_email(user.email, title, body):
             notification.emailed_at = db.func.now()
             db.session.commit()

@@ -8,7 +8,7 @@
         <span class="eyebrow">System Configuration</span>
         <h2 class="mb-0"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Application Settings</h2>
     </div>
-    <span class="status-badge status-published"><i class="bi bi-shield-check me-1"></i>Active Environment</span>
+    <span class="status-badge {{ 'status-published' if mail_status.configured else 'status-draft' }}"><i class="bi bi-{{ 'shield-check' if mail_status.configured else 'exclamation-triangle' }} me-1"></i>{{ 'Configured' if mail_status.configured else 'Action needed' }}</span>
 </div>
 
 <form method="POST" action="{{ url_for('admin.settings') }}">
@@ -21,21 +21,41 @@
             <span class="badge badge-info">System Level</span>
         </div>
         <div class="card-body">
+            {% set setting_groups = [
+                ('General', 'app_name,app_tagline,system_description,support_email,support_phone,contact_address,website_url,default_country,default_timezone,currency,date_format,time_format'.split(',')),
+                ('Procurement', 'enabled_procurement_methods,direct_procurement_threshold,open_procurement_threshold,lot_splitting_warning_threshold,required_procurement_documents,approval_levels,default_procurement_status'.split(',')),
+                ('Tender / bidding', 'tender_number_prefix,bid_submission_deadline_min_hours,allowed_document_extensions,max_upload_size_mb'.split(',')),
+                ('Suppliers', 'allow_registration,supplier_approval_required,required_supplier_documents,supplier_categories,supplier_verification_required'.split(',')),
+                ('Workflow', 'workflow_rejection_behaviour,workflow_escalation_days'.split(',')),
+                ('Email / SMTP', 'smtp_host,smtp_port,sender_email,email_sender_name,email_encryption,enable_email,email_template_account_approved,email_template_account_rejected'.split(',')),
+                ('Security', 'minimum_password_length,require_password_uppercase,require_password_number,require_password_special,session_lifetime_hours,login_max_attempts,login_lockout_minutes,password_expiry_days'.split(',')),
+                ('File & document management', 'document_retention_days,file_naming_rule'.split(',')),
+                ('Notifications', 'enable_system_notifications,notification_frequency,notification_retention_days'.split(',')),
+                ('Feature flags', 'enable_supplier_registration,enable_bid_submission,enable_notifications,enable_audit_log'.split(',')),
+                ('Maintenance', 'maintenance_mode,maintenance_message'.split(','))
+            ] %}
+            {% for group_name, group_keys in setting_groups %}
+            <h6 class="text-uppercase text-muted small fw-bold {% if not loop.first %}mt-4{% endif %}">{{ group_name }}</h6>
             <div class="row g-4">
-                {% for setting in settings_rows %}
+                {% for setting in settings_rows if setting.key in group_keys %}
                 <div class="col-md-6">
                     <div class="p-3 border rounded-3 bg-light h-100">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold mb-0 text-dark" for="{{ setting.key }}">
                                 <i class="bi bi-gear me-1 text-muted"></i>{{ setting.label }}
                             </label>
-                            <code class="small text-muted">{{ setting.key }}</code>
                         </div>
                         
-                        {% if setting.key in ['maintenance_mode', 'allow_registration'] %}
+                        {% if setting.key in ['maintenance_mode', 'allow_registration', 'supplier_approval_required', 'supplier_verification_required', 'enable_email', 'enable_system_notifications', 'enable_supplier_registration', 'enable_bid_submission', 'enable_notifications', 'enable_audit_log', 'require_password_uppercase', 'require_password_number', 'require_password_special'] %}
                         <select name="{{ setting.key }}" id="{{ setting.key }}" class="form-select">
                             <option value="true" {% if setting.value == 'true' %}selected{% endif %}>Enabled</option>
                             <option value="false" {% if setting.value == 'false' %}selected{% endif %}>Disabled</option>
+                        </select>
+                        {% elif setting.key in ['maintenance_message', 'email_template_account_approved', 'email_template_account_rejected'] %}
+                        <textarea name="{{ setting.key }}" id="{{ setting.key }}" class="form-control" rows="3">{{ setting.value }}</textarea>
+                        {% elif setting.key in ['email_encryption', 'workflow_rejection_behaviour', 'notification_frequency', 'file_naming_rule', 'default_procurement_status'] %}
+                        <select name="{{ setting.key }}" id="{{ setting.key }}" class="form-select">
+                            {% for option in ({'email_encryption': ['none', 'tls', 'ssl'], 'workflow_rejection_behaviour': ['reject', 'return_for_correction'], 'notification_frequency': ['immediate', 'digest'], 'file_naming_rule': ['safe_unique'], 'default_procurement_status': ['draft']}[setting.key]) %}<option value="{{ option }}" {% if setting.value == option %}selected{% endif %}>{{ option.replace('_', ' ').title() }}</option>{% endfor %}
                         </select>
                         {% else %}
                         <input type="text" name="{{ setting.key }}" id="{{ setting.key }}" class="form-control" value="{{ setting.value }}">
@@ -48,11 +68,65 @@
                 </div>
                 {% endfor %}
             </div>
+            {% endfor %}
         </div>
         <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="text-muted small"><i class="bi bi-lock me-1"></i>Changes take effect immediately across all sessions.</span>
+            <span class="text-muted small"><i class="bi bi-lock me-1"></i>Policy changes apply immediately; upload and session limits also apply to new requests and sessions.</span>
             <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i>Save All Settings</button>
         </div>
     </div>
 </form>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-heart-pulse me-2 text-primary"></i>System Health</h5></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Database</span><strong class="text-{{ 'success' if database_status == 'Connected' else 'danger' }}">{{ database_status }}</strong></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Upload storage</span><strong class="text-{{ 'success' if upload_status == 'Available' else 'danger' }}">{{ upload_status }}</strong></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Submission encryption</span><strong class="text-{{ 'success' if encryption_status == 'Configured' else 'danger' }}">{{ encryption_status }}</strong></div>
+                <div class="small text-muted mt-3"><i class="bi bi-folder2-open me-1"></i>{{ upload_folder }}</div>
+                <div class="alert alert-info mt-3 mb-0 small"><i class="bi bi-info-circle me-1"></i>Database and upload paths are managed by deployment configuration and should be changed with care.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-envelope-check me-2 text-primary"></i>Email Diagnostics</h5></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between border-bottom py-2"><span>SMTP status</span><strong class="text-{{ 'success' if mail_status.configured else 'danger' }}">{{ 'Configured' if mail_status.configured else 'Not configured' }}</strong></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>SMTP server</span><strong>{{ mail_status.server }}</strong></div>
+                <div class="d-flex justify-content-between border-bottom py-2"><span>Sender</span><strong>{{ mail_status.sender }}</strong></div>
+                <form method="POST" action="{{ url_for('admin.test_email') }}" class="row g-2 mt-3">
+                    <div class="col-sm-8"><label class="form-label small fw-bold" for="test-recipient">Send test email to</label><input id="test-recipient" type="email" name="recipient" class="form-control" value="{{ current_user.email }}" required></div>
+                    <div class="col-sm-4 d-flex align-items-end"><button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-send me-1"></i>Test email</button></div>
+                </form>
+                <div class="small text-muted mt-3"><i class="bi bi-lock me-1"></i>SMTP credentials remain outside the database and are never displayed here.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-wrench-adjustable-circle me-2 text-primary"></i>Recovery &amp; housekeeping</h5></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6><i class="bi bi-unlock me-2 text-warning"></i>Unlock user accounts</h6>
+                    <p class="small text-muted">Reset temporary login locks and failed-attempt counters for all users.</p>
+                    <form method="POST" action="{{ url_for('admin.unlock_users') }}"><button class="btn btn-outline-warning btn-sm" type="submit">Unlock all locked users</button></form>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6><i class="bi bi-trash3 me-2 text-danger"></i>Remove old read notifications</h6>
+                    <p class="small text-muted">Deletes only read notifications older than the configured retention period.</p>
+                    <form method="POST" action="{{ url_for('admin.clear_old_notifications') }}"><button class="btn btn-outline-danger btn-sm" type="submit">Run cleanup</button></form>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-warning mt-3 mb-0 small"><i class="bi bi-exclamation-triangle me-1"></i>Backups, database migrations, encryption keys, and server processes must still be managed by your deployment administrator. This console does not perform destructive database operations.</div>
+    </div>
+</div>
 {% endblock %}
