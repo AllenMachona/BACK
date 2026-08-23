@@ -108,6 +108,19 @@ def unread_count():
     return jsonify({'count': count})
 
 
+@notifications_bp.route('/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_read():
+    count = Notification.query.filter_by(
+        user_id=current_user.id,
+        is_read=False,
+    ).update({'is_read': True}, synchronize_session=False)
+    db.session.commit()
+    log_action('NOTIFICATIONS_MARKED_ALL_READ', entity_type='Notification', new_value={'count': count})
+    flash(f'{count} notification(s) marked as read.', 'success')
+    return redirect(url_for('notifications.index'))
+
+
 @notifications_bp.route('/preview')
 @login_required
 def preview():

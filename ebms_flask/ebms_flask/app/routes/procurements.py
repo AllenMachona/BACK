@@ -45,13 +45,14 @@ def _save_procurement_document(file_storage, tender_number, doc_type):
 # Legal status transitions (SOAR Appendix C). Kept as one explicit map so
 # every route enforces the same lifecycle instead of re-implementing checks.
 TRANSITIONS = {
-    'draft': ['internal_review', 'cancelled'],
+    'draft': ['published', 'cancelled'],
     'internal_review': ['approved_for_publication', 'draft', 'cancelled'],
     'approved_for_publication': ['published', 'cancelled'],
-    'published': ['clarification_period', 'submission_open', 'cancelled'],
+    'published': ['submission_open', 'cancelled'],
     'clarification_period': ['submission_open', 'cancelled'],
     'submission_open': ['closed', 'cancelled'],
-    'closed': ['technical_opening', 'cancelled'],
+    'closed': ['under_evaluation', 'submission_open', 'cancelled'],
+    'under_evaluation': ['submission_open', 'cancelled'],
     'technical_opening': ['compliance_evaluation'],
     'compliance_evaluation': ['technical_evaluation', 'cancelled'],
     'technical_evaluation': ['technical_outcome_approved', 'cancelled'],
@@ -75,6 +76,14 @@ NOTIFIABLE = {
     'submission_open': lambda p: (
         f'Submissions open: {p.tender_number}',
         f'Bid submission is now open for {p.title}. Deadline: {p.submission_deadline}.',
+    ),
+    'closed': lambda p: (
+        f'Submissions closed: {p.tender_number}',
+        f'Bid submissions for {p.title} are now closed and the procurement is moving to evaluation preparation.',
+    ),
+    'under_evaluation': lambda p: (
+        f'Procurement under evaluation: {p.tender_number}',
+        f'Bid submissions for {p.title} are now under evaluation.',
     ),
     'award_published': lambda p: (
         f'Award decision published: {p.tender_number}',
@@ -402,9 +411,15 @@ def detail(procurement_id):
     committee = procurement.committee_members.all()
     communications = procurement.communications.order_by(Communication.created_at.desc()).limit(10).all()
     complaints = procurement.complaints.order_by(Complaint.created_at.desc()).all()
-    submissions = procurement.submissions.order_by(Submission.submitted_at.desc()).all()
+    submissions = procurement.submissions.filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
     submission_count = procurement.submissions.filter_by(status='submitted').count()
     next_status = TRANSITIONS.get(procurement.status, [None])[0] if TRANSITIONS.get(procurement.status) else None
+    if procurement.status not in ('draft', 'published') and not (
+        procurement.status == 'submission_open'
+        and procurement.submission_deadline
+        and datetime.utcnow() >= procurement.submission_deadline
+    ) and not procurement.status == 'closed':
+        next_status = None
 
     # Payments for Procurement verification
     payments = BidderPayment.query.filter_by(procurement_id=procurement.id).order_by(BidderPayment.submitted_at.desc()).all()
@@ -822,6 +837,19 @@ def verify_payment(payment_id):
     action = request.form.get('action')  # approve, reject, request_resubmission, revoke
     reason = (request.form.get('reason') or '').strip()
 
+    terminal_actions = {
+        'approve': 'approved',
+        'reject': 'rejected',
+        'request_resubmission': 'resubmission_required',
+    }
+    if action in terminal_actions and payment.status == terminal_actions[action]:
+        flash(
+            f'This payment is already {payment.status.replace("_", " ")}. '
+            'No duplicate notification was sent.',
+            'info',
+        )
+        return redirect(request.referrer or url_for('procurements.detail', procurement_id=procurement.id))
+
     bidder_users = User.query.filter_by(bidder_id=payment.bidder_id).all()
 
     if action == 'approve':
@@ -1146,9 +1174,9 @@ def view_evaluator_feedback(procurement_id, feedback_id):
 @login_required
 def transition(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
+    submission_count = procurement.submissions.filter_by(status='submitted').count()
 
-    if not (current_user.role and (current_user.role.can_approve_procurement or current_user.role.can_publish
-                                    or current_user.role.can_admin_system)):
+    if not (current_user.role and (current_user.role.can_publish or current_user.role.can_admin_system)):
         abort(403)
 
     to_status = request.form.get('to_status')
@@ -1174,13 +1202,26 @@ def transition(procurement_id):
             flash('Set a submission deadline before opening submissions.', 'danger')
             return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
-    if to_status == 'clarification_period':
-        deadline_raw = request.form.get('clarification_deadline')
-        if deadline_raw:
-            procurement.clarification_deadline = datetime.fromisoformat(deadline_raw)
-        elif not procurement.clarification_deadline:
-            flash('Set a clarification deadline before moving to clarification period.', 'danger')
+    if to_status == 'closed' and (
+        not procurement.submission_deadline or datetime.utcnow() < procurement.submission_deadline
+    ):
+        flash('Submissions can be closed only after the tender deadline has passed.', 'warning')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    if to_status == 'under_evaluation' and submission_count == 0:
+        flash('At least one bidder submission is required before evaluation can begin.', 'danger')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    if to_status == 'submission_open' and procurement.status in ('under_evaluation', 'closed'):
+        deadline_raw = request.form.get('submission_deadline', '').strip()
+        try:
+            reopened_deadline = datetime.fromisoformat(deadline_raw)
+        except ValueError:
+            reopened_deadline = None
+        if not reopened_deadline or reopened_deadline <= datetime.utcnow():
+            flash('Choose a future deadline before reopening bidding.', 'danger')
             return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+        procurement.submission_deadline = reopened_deadline
 
     previous_status = procurement.status
     procurement.status = to_status
@@ -1190,7 +1231,15 @@ def transition(procurement_id):
                previous_value={'status': previous_status}, new_value={'status': to_status})
 
     if to_status in NOTIFIABLE:
-        title, body = NOTIFIABLE[to_status](procurement)
+        if to_status == 'submission_open' and previous_status in ('closed', 'under_evaluation'):
+            title = f'Tender reopened: {procurement.tender_number}'
+            body = (
+                f'{procurement.title} has been reopened for bidding. '
+                f'You may submit or resubmit your bid before the new deadline: '
+                f'{procurement.submission_deadline}.'
+            )
+        else:
+            title, body = NOTIFIABLE[to_status](procurement)
         try:
             notify_bidders_on_procurement(procurement, 'status_change', title, body)
         except Exception as exc:

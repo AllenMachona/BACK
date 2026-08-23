@@ -17,7 +17,7 @@ from app.utils.evaluator_assignment import EvaluatorAssignmentService
 evaluations_bp = Blueprint('evaluations', __name__, url_prefix='/evaluations')
 
 EVALUABLE_STATUSES = [
-    'closed', 'technical_opening', 'compliance_evaluation',
+    'under_evaluation', 'closed', 'technical_opening', 'compliance_evaluation',
     'technical_evaluation', 'financial_opening', 'financial_evaluation',
 ]
 

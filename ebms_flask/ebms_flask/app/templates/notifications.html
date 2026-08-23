@@ -17,6 +17,11 @@
     <div class="ebms-page-actions">
         {% if unread %}
         <span class="badge badge-danger">{{ unread|length }} Unread</span>
+        <form method="POST" action="{{ url_for('notifications.mark_all_read') }}" class="d-inline-block">
+            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark all notifications as read">
+                <i class="bi bi-check2-all me-1"></i>Mark all as read
+            </button>
+        </form>
         {% else %}
         <span class="badge badge-success"><i class="bi bi-check-all me-1"></i>All Caught Up</span>
         {% endif %}

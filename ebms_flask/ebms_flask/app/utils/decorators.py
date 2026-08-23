@@ -30,3 +30,15 @@ def permission_required(flag_name):
             return view_func(*args, **kwargs)
         return wrapped
     return decorator
+
+
+def system_admin_required(view_func):
+    """Restrict platform administration to the dedicated system admin role."""
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            abort(401)
+        if not current_user.role or current_user.role.code != 'system_admin':
+            abort(403)
+        return view_func(*args, **kwargs)
+    return wrapped

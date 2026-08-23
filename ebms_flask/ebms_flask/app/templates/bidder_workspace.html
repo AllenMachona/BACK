@@ -8,7 +8,7 @@
         <span class="eyebrow">Secure Bid Submission</span>
         <h2 class="mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Bidder Workspace</h2>
     </div>
-    <span class="status-badge status-{{ procurement.status }} fs-6">{{ procurement.tender_number }}</span>
+    <span class="status-badge status-{{ procurement.status }} fs-6">{{ procurement.tender_number }} · {{ procurement_progress }}</span>
 </div>
 
 <div class="alert alert-info mb-4">
@@ -378,15 +378,25 @@
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-cloud-upload me-2 text-primary"></i>Submit Your Encrypted Bid</h5>
-                {% if procurement.status == 'submission_open' %}
+                {% if can_submit_bid %}
                 <span class="status-badge status-published"><i class="bi bi-circle-fill me-1"></i>Open</span>
+                {% elif procurement.status == 'submission_open' and not has_approved_payment %}
+                <div class="text-center py-4">
+                    <i class="bi bi-credit-card-2-front text-warning fs-1 mb-2 d-block"></i>
+                    <p class="text-muted mb-0">Bid submission will open after Procurement approves your payment.</p>
+                </div>
+                {% elif procurement.status == 'submission_open' and has_approved_payment %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history text-warning fs-1 mb-2 d-block"></i>
+                    <p class="text-muted mb-0">The submission deadline has passed. Resubmission is no longer available.</p>
+                </div>
                 {% else %}
                 <span class="status-badge status-closed">Closed</span>
                 {% endif %}
             </div>
             <div class="card-body">
-                {% if procurement.status == 'submission_open' %}
-                <p class="text-muted mb-3">Upload your bid documents. Files are encrypted at the moment of upload using PPRA-approved Fernet keys — no plaintext is ever stored.</p>
+                {% if procurement.status == 'submission_open' and has_approved_payment %}
+                <p class="text-muted mb-3">{% if has_submitted_bid %}Resubmit before the deadline to replace your current bid document.{% else %}Upload your bid documents.{% endif %} Files are encrypted at the moment of upload using PPRA-approved Fernet keys — no plaintext is ever stored.</p>
 
                 {% if procurement.envelope_type == 'dual' %}
                 <div class="alert alert-warning mb-3">
@@ -425,9 +435,14 @@
                     </div>
 
                     <button type="submit" class="btn btn-success px-4">
-                        <i class="bi bi-upload me-1"></i>Encrypt &amp; Submit Bid
+                        <i class="bi bi-{{ 'arrow-repeat' if has_submitted_bid else 'upload' }} me-1"></i>{{ 'Resubmit and replace bid' if has_submitted_bid else 'Encrypt &amp; Submit Bid' }}
                     </button>
                 </form>
+                {% elif procurement.status == 'submission_open' and not has_approved_payment %}
+                <div class="text-center py-4">
+                    <i class="bi bi-credit-card-2-front text-warning fs-1 mb-2 d-block"></i>
+                    <p class="text-muted mb-0">Bid submission will open after Procurement approves your payment.</p>
+                </div>
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-lock text-muted fs-1 mb-2 d-block"></i>
@@ -503,7 +518,7 @@
                                     {% if procurement.status == 'submission_open' %}
                                     <span class="badge badge-success">Open</span>
                                     {% else %}
-                                    <span class="badge badge-secondary">{{ procurement.status_label() }}</span>
+                                    <span class="badge badge-{{ 'success' if procurement_progress == 'Awarded' else ('warning' if procurement_progress == 'Under Evaluation' else 'secondary') }}">{{ procurement_progress }}</span>
                                     {% endif %}
                                 </td>
                             </tr>

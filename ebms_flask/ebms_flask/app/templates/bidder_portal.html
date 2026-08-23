@@ -58,6 +58,34 @@
         </div>
     </div>
 
+    {% if monitored %}
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>My Procurement Progress</h5>
+            <span class="badge badge-info">{{ monitored|length }} Participating</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Tender</th><th>Stage</th><th>My Bids</th><th>Updated</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                    {% for p in monitored %}
+                    {% set progress = 'Awarded' if p.status in ['award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived'] else ('Under Evaluation' if p.status in ['under_evaluation', 'closed', 'technical_opening', 'compliance_evaluation', 'technical_evaluation', 'technical_outcome_approved', 'financial_opening', 'financial_evaluation', 'award_pending_approval'] else ('Open for Bidding' if p.status in ['published', 'submission_open', 'clarification_period'] else p.status_label())) %}
+                    <tr>
+                        <td><strong>{{ p.tender_number }}</strong><small class="d-block text-muted">{{ p.title }}</small></td>
+                        <td><span class="badge badge-{{ 'success' if progress == 'Awarded' else ('warning' if progress == 'Under Evaluation' else 'info') }}">{{ progress }}</span></td>
+                        <td>{{ my_submissions|selectattr('procurement_id', 'equalto', p.id)|list|length }}</td>
+                        <td class="text-muted small">{{ p.updated_at.strftime('%Y-%m-%d %H:%M') if p.updated_at else '—' }}</td>
+                        <td class="text-end"><a href="{{ url_for('bidders.workspace', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Monitor</a></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Open Tenders Available for Bidding</h5>

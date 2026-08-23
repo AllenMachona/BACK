@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.role import Role
 from app.models.bidder_compliance import BidderComplianceDocument
 from app.utils.notify import send_email
-from app.utils.decorators import permission_required
+from app.utils.decorators import permission_required, system_admin_required
 from app.utils.audit import log_action
 from app.models.site_setting import SiteSetting
 from app.models.notification import Notification
@@ -19,7 +19,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
-@permission_required('can_admin_system')
+@system_admin_required
 def settings():
     SiteSetting.ensure_defaults()
     settings_rows = SiteSetting.query.order_by(SiteSetting.label).all()
@@ -123,7 +123,7 @@ def settings():
 
 @admin_bp.route('/settings/test-email', methods=['POST'])
 @login_required
-@permission_required('can_admin_system')
+@system_admin_required
 def test_email():
     recipient = request.form.get('recipient', '').strip().lower() or current_user.email
     if not validate_email(recipient):
@@ -145,7 +145,7 @@ def test_email():
 
 @admin_bp.route('/maintenance/unlock-users', methods=['POST'])
 @login_required
-@permission_required('can_admin_system')
+@system_admin_required
 def unlock_users():
     count = User.query.filter(User.locked_until.isnot(None)).update({
         'locked_until': None, 'failed_login_attempts': 0,
@@ -158,7 +158,7 @@ def unlock_users():
 
 @admin_bp.route('/maintenance/clear-notifications', methods=['POST'])
 @login_required
-@permission_required('can_admin_system')
+@system_admin_required
 def clear_old_notifications():
     from datetime import timedelta
     retention_days = int(float(SiteSetting.get('notification_retention_days', '365')))

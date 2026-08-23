@@ -101,7 +101,7 @@ def create_app(config_class=Config):
     def enforce_maintenance_mode():
         if SiteSetting.get('maintenance_mode', 'false').lower() != 'true':
             return None
-        if current_user.is_authenticated and current_user.has_permission('can_admin_system'):
+        if current_user.is_authenticated and current_user.has_role('system_admin'):
             return None
         if request.endpoint in {'auth.login', 'auth.logout', 'static'}:
             return None

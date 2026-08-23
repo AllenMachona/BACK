@@ -618,8 +618,17 @@
                     <input type="datetime-local" name="clarification_deadline" class="form-control mb-2" required>
                     {% endif %}
                     <button type="submit" class="btn btn-success w-100 py-2">
-                        <i class="bi bi-arrow-right-circle me-1"></i>Advance → {{ next_status.replace('_', ' ').title() }}
+                        <i class="bi bi-{{ 'megaphone' if next_status == 'published' else ('unlock' if next_status == 'submission_open' else ('lock' if next_status == 'closed' else 'clipboard-check')) }} me-1"></i>{{ 'Publish procurement' if next_status == 'published' else ('Open for bidding' if next_status == 'submission_open' else ('Close submissions' if next_status == 'closed' else 'Under evaluation')) }}
                     </button>
+                </form>
+                {% endif %}
+
+                {% if procurement.status in ('under_evaluation', 'closed') %}
+                <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mb-3 p-3 border rounded bg-light">
+                    <input type="hidden" name="to_status" value="submission_open">
+                    <label class="form-label small fw-bold">New deadline to reopen bidding</label>
+                    <input type="datetime-local" name="submission_deadline" class="form-control mb-2" required>
+                    <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Reopen for bidding</button>
                 </form>
                 {% endif %}
 

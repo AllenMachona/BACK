@@ -25,23 +25,43 @@ def _require_bidder():
         abort(403)
 
 
+def _procurement_progress(procurement):
+    if procurement.status in ('award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived'):
+        return 'Awarded'
+    if procurement.status in ('closed', 'technical_opening', 'compliance_evaluation',
+                              'under_evaluation',
+                              'technical_evaluation', 'technical_outcome_approved',
+                              'financial_opening', 'financial_evaluation', 'award_pending_approval'):
+        return 'Under Evaluation'
+    if procurement.status in ('published', 'submission_open', 'clarification_period'):
+        return 'Open for Bidding'
+    return procurement.status_label()
+
+
 @bidders_bp.route('/portal')
 @login_required
 @role_required('bidder')
 def portal():
     _require_bidder()
     available = Procurement.query.filter(
-        Procurement.status.in_(['published', 'submission_open', 'clarification_period'])
+        Procurement.status.in_(['published', 'submission_open'])
     ).order_by(Procurement.submission_deadline).all()
 
-    my_submissions = Submission.query.filter_by(bidder_id=current_user.bidder_id).order_by(
+    my_submissions = Submission.query.filter_by(bidder_id=current_user.bidder_id, status='submitted').order_by(
         Submission.submitted_at.desc()
     ).all()
+    my_payments = BidderPayment.query.filter_by(bidder_id=current_user.bidder_id).all()
+    monitored_ids = {submission.procurement_id for submission in my_submissions}
+    monitored_ids.update(payment.procurement_id for payment in my_payments)
+    monitored = Procurement.query.filter(Procurement.id.in_(monitored_ids)).order_by(
+        Procurement.updated_at.desc()
+    ).all() if monitored_ids else []
 
     # Track payments per available tender
     payments = {p.id: current_user.bidder.get_payment_for_procurement(p.id) for p in available}
 
-    return render_template('bidder_portal.html', available=available, my_submissions=my_submissions, payments=payments)
+    return render_template('bidder_portal.html', available=available, monitored=monitored,
+                           my_submissions=my_submissions, payments=payments)
 
 
 @bidders_bp.route('/workspace/<int:procurement_id>', methods=['GET', 'POST'])
@@ -50,8 +70,18 @@ def portal():
 def workspace(procurement_id):
     _require_bidder()
     procurement = Procurement.query.get_or_404(procurement_id)
-    if procurement.status not in ('published', 'submission_open', 'clarification_period'):
+    has_participated = bool(
+        Submission.query.filter_by(procurement_id=procurement.id, bidder_id=current_user.bidder_id).first()
+        or BidderPayment.query.filter_by(procurement_id=procurement.id, bidder_id=current_user.bidder_id).first()
+    )
+    if procurement.status not in ('published', 'submission_open', 'clarification_period') and not has_participated:
         abort(404)
+    has_approved_payment = current_user.bidder.has_approved_payment_for_procurement(procurement.id)
+    can_submit_bid = bool(
+        has_approved_payment
+        and procurement.status == 'submission_open'
+        and (not procurement.submission_deadline or datetime.utcnow() <= procurement.submission_deadline)
+    )
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -149,6 +179,9 @@ def workspace(procurement_id):
 
         if action == 'submit_bid':
             from app.models.site_setting import SiteSetting
+            if not has_approved_payment:
+                flash('Bid submission is available only after your payment has been approved.', 'warning')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
             if SiteSetting.get('enable_bid_submission', 'true').lower() != 'true':
                 flash('Bid submission is temporarily disabled by the system administrator.', 'warning')
                 return redirect(url_for('bidders.portal'))
@@ -231,12 +264,12 @@ def workspace(procurement_id):
         Communication.created_at.desc()
     ).first()
     my_submissions = Submission.query.filter_by(
-        procurement_id=procurement.id, bidder_id=current_user.bidder_id
-    ).all()
+        procurement_id=procurement.id, bidder_id=current_user.bidder_id, status='submitted'
+    ).order_by(Submission.submitted_at.desc()).all()
+    has_submitted_bid = bool(my_submissions)
 
     # Query payment and document access for current bidder
     my_payment = current_user.bidder.get_payment_for_procurement(procurement.id)
-    has_approved_payment = current_user.bidder.has_approved_payment_for_procurement(procurement.id)
     has_rfce_access = current_user.bidder.has_document_access(procurement.id, 'rfce')
     has_itt_access = current_user.bidder.has_document_access(procurement.id, 'itt')
 
@@ -256,4 +289,7 @@ def workspace(procurement_id):
         has_rfce_access=has_rfce_access,
         has_itt_access=has_itt_access,
         has_approved_payment=has_approved_payment,
+        can_submit_bid=can_submit_bid,
+        has_submitted_bid=has_submitted_bid,
+        procurement_progress=_procurement_progress(procurement),
     )
