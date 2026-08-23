@@ -1364,7 +1364,9 @@ textarea::placeholder {
 .ebms-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(13, 21, 32, 0.5);
+  background: rgba(13, 21, 32, 0.42);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 1400;
   display: none;
 }

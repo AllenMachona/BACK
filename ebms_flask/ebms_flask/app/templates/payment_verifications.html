@@ -286,3 +286,19 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    'use strict';
+
+    // Keep table-row dialogs at document level so their backdrop and positioning
+    // are not constrained by the responsive table container.
+    document.addEventListener('DOMContentLoaded', function () {
+        Array.prototype.forEach.call(document.querySelectorAll('.modal'), function (modal) {
+            document.body.appendChild(modal);
+        });
+    });
+}());
+</script>
+{% endblock %}

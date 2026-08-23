@@ -656,9 +656,9 @@
             </div>
             <div class="card-body">
                 {% if can_create_assignment %}
-                <button type="button" class="btn btn-primary btn-sm w-100 mb-3" data-bs-toggle="modal" data-bs-target="#assignEvaluatorModal">
+                <a href="#evaluatorAssignForm" class="btn btn-primary btn-sm w-100 mb-3">
                     <i class="bi bi-person-plus me-1"></i>Assign Evaluator
-                </button>
+                </a>
                 {% elif not can_create_assignment %}
                 <p class="text-muted small mb-3"><i class="bi bi-lock me-1"></i>Evaluator assignment unlocks once this tender is <strong>Closed</strong>.</p>
                 {% endif %}
@@ -790,16 +790,12 @@
     </div>
 </div>
 {% if can_create_assignment %}
-<!-- Assign Evaluator Modal (post-closure, Procurement role only) -->
-<div class="modal fade" id="assignEvaluatorModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="evaluatorAssignForm" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>Assign Evaluator</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
+<div id="evaluatorAssignFormSection" class="card mb-3">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-person-plus me-2 text-primary"></i>Assign Evaluator</h5>
+    </div>
+    <form id="evaluatorAssignForm" novalidate>
+        <div class="card-body">
                     <input type="hidden" name="procurement_id" value="{{ procurement.id }}">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Evaluator</label>
@@ -821,14 +817,11 @@
                     </div>
                     <div id="evaluatorAssignError" class="alert alert-danger py-2 small d-none"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <div class="card-footer bg-white text-end">
                     <button type="submit" class="btn btn-primary btn-sm" id="evaluatorAssignSubmit"><i class="bi bi-person-check me-1"></i>Assign Evaluator</button>
-                </div>
-            </form>
         </div>
-    </div>
-</div>
+    </form>
+        </div>
 
 {% for a in evaluator_assignments %}
 <!-- Revoke evaluator modal -->
@@ -859,6 +852,15 @@
 <script>
 (function () {
     'use strict';
+
+    // Keep table-row dialogs at document level so their backdrop and positioning
+    // are not constrained by the responsive table container.
+    document.addEventListener('DOMContentLoaded', function () {
+        Array.prototype.forEach.call(document.querySelectorAll('.modal'), function (modal) {
+            document.body.appendChild(modal);
+        });
+    });
+
     var assignForm = document.getElementById('evaluatorAssignForm');
     var errorBox = document.getElementById('evaluatorAssignError');
     var toast = window.EBMS && (window.EBMS.showToast || window.EBMS.toast);

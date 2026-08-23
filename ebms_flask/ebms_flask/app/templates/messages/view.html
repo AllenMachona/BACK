@@ -40,9 +40,19 @@
                 <div class="message-item-meta">
                     <span class="message-item-date">{{ m.created_at.strftime('%d %b %Y') }}</span>
                     <span class="message-item-time">{{ m.created_at.strftime('%I:%M %p') }}</span>
+                    {% if m.sender_id == current_user.id and not m.unsent_at %}
+                    <form method="POST" action="{{ url_for('messages.unsend_message', message_id=m.id) }}" class="d-inline ms-2" onsubmit="return confirm('Unsend this message for everyone?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Unsend message">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Unsend
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
             <div class="message-item-body">
+                {% if m.unsent_at %}
+                <div class="message-item-content text-muted fst-italic"><i class="bi bi-arrow-counterclockwise me-1"></i>This message was unsent.</div>
+                {% else %}
                 <div class="message-item-content">{{ m.body | safe }}</div>
 
                 {% if m.attachments %}
@@ -96,6 +106,7 @@
                         </ul>
                     </div>
                 </div>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -203,6 +214,7 @@ function removeFileFromInput(fileInput, fileToRemove) {
 
 function renderMessage(m) {
     const isMine = m.is_mine;
+    const isUnsent = m.unsent;
     const div = document.createElement('div');
     div.className = 'message-item ' + (isMine ? 'message-mine' : '');
     div.setAttribute('data-message-id', m.id);
@@ -217,13 +229,16 @@ function renderMessage(m) {
                     '<p class="message-item-sender-role">' + (m.role || 'User') + '</p>' +
                 '</div>' +
             '</div>' +
-            '<div class="message-item-meta"><span class="message-item-date">' + m.created_at + '</span></div>' +
+            '<div class="message-item-meta"><span class="message-item-date">' + m.created_at + '</span>' +
+                (isMine && !isUnsent ? '<form method="POST" action="/messages/' + m.id + '/unsend" class="d-inline ms-2" onsubmit="return confirm(\'Unsend this message for everyone?\');"><button type="submit" class="btn btn-sm btn-outline-danger" title="Unsend message"><i class="bi bi-arrow-counterclockwise me-1"></i>Unsend</button></form>' : '') +
+            '</div>' +
         '</div>' +
         '<div class="message-item-body"><div class="message-item-content"></div></div>';
     const body = div.querySelector('.message-item-body');
     const content = div.querySelector('.message-item-content');
-    content.textContent = m.body || '';
-    if (m.attachments && m.attachments.length) {
+    content.textContent = isUnsent ? 'This message was unsent.' : (m.body || '');
+    if (isUnsent) content.classList.add('text-muted', 'fst-italic');
+    if (!isUnsent && m.attachments && m.attachments.length) {
         const wrap = document.createElement('div');
         wrap.className = 'message-attachments';
         m.attachments.forEach(function (att) {
@@ -351,7 +366,10 @@ function pollMessages() {
             if (!container) return;
             // Render any message not already present
             data.messages.forEach(function (m) {
-                if (!container.querySelector('[data-message-id="' + m.id + '"]')) {
+                const existing = container.querySelector('[data-message-id="' + m.id + '"]');
+                if (existing && m.unsent && !existing.querySelector('.fst-italic')) {
+                    existing.replaceWith(renderMessage(m));
+                } else if (!existing) {
                     container.appendChild(renderMessage(m));
                 }
             });

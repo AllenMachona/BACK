@@ -164,6 +164,19 @@ body {
   background-color: var(--surface);
 }
 
+:root[data-theme='dark'] .modal .modal-title,
+:root[data-theme='dark'] .modal .form-label,
+:root[data-theme='dark'] .modal label.form-label {
+  color: var(--text-primary);
+}
+
+:root[data-theme='dark'] .modal .modal-body,
+:root[data-theme='dark'] .modal .form-text,
+:root[data-theme='dark'] .modal .text-muted,
+:root[data-theme='dark'] .modal .form-control::placeholder {
+  color: var(--text-secondary);
+}
+
 /* =============================================================
    Base typography & resets for a professional, calm feel.
    ============================================================= */

@@ -222,7 +222,7 @@ def inbox():
             'label': label,
             'is_broadcast': root.message_type == 'broadcast',
             'is_targeted': root.message_type == 'targeted',
-            'last_body': last.body,
+            'last_body': 'This message was unsent.' if last.unsent_at else last.body,
             'last_at': last.created_at,
             'unread': unread,
             'message_count': len(msgs),
@@ -419,10 +419,11 @@ def thread_messages_api(thread_id):
             'sender_id': m.sender_id,
             'sender': m.sender.full_name() if m.sender else 'Unknown',
             'role': m.sender.role.name if m.sender and m.sender.role else 'User',
-            'body': m.body,
+            'body': 'This message was unsent.' if m.unsent_at else m.body,
+            'unsent': m.unsent_at is not None,
             'is_mine': m.sender_id == current_user.id,
             'created_at': m.created_at.strftime('%d %b %Y, %I:%M %p'),
-            'attachments': [
+            'attachments': [] if m.unsent_at else [
                 {
                     'id': a.id,
                     'filename': a.filename,
@@ -443,6 +444,8 @@ def download_attachment(attachment_id):
     """Download a message attachment (participants only)."""
     attachment = MessageAttachment.query.get_or_404(attachment_id)
     message = attachment.message
+    if message.unsent_at:
+        abort(404)
     if not _is_thread_participant(message.thread_root_id(), current_user.id):
         abort(403)
 
@@ -493,7 +496,7 @@ def preview():
             'sender': m.sender.full_name() if m.sender else 'Unknown',
             'sender_role': m.sender.role.name if m.sender and m.sender.role else 'User',
             'subject': m.subject,
-            'body': m.body,
+            'body': 'This message was unsent.' if m.unsent_at else m.body,
             'ts': ts,
             'created_fmt': m.created_at.strftime('%d %b, %I:%M %p'),
             'unread': r.read_at is None,
@@ -552,6 +555,7 @@ def reply_thread(thread_id):
             return jsonify({'status': 'error', 'message': message}), 400
         flash(message, 'danger')
         return redirect(url_for('messages.thread_view', thread_id=thread_id))
+
 
     if not body:
         return _fail('Reply message cannot be empty.')
@@ -626,6 +630,30 @@ def reply_thread(thread_id):
         _delete_saved_files(saved_attachments)
         db.session.rollback()
         return _fail(f'Error sending reply: {str(e)}')
+
+
+@messages_bp.route('/<int:message_id>/unsend', methods=['POST'])
+@login_required
+def unsend_message(message_id):
+    """Retract a message sent by the current user while retaining its history."""
+    message = Message.query.get_or_404(message_id)
+    if message.sender_id != current_user.id:
+        abort(403)
+    if not message.unsent_at:
+        for attachment in message.attachments:
+            try:
+                os.remove(attachment.storage_path)
+            except OSError:
+                pass
+            db.session.delete(attachment)
+        message.unsent_at = datetime.utcnow()
+        db.session.commit()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'status': 'success', 'message': 'Message unsent.'})
+
+    flash('Message unsent.', 'success')
+    return redirect(url_for('messages.thread_view', thread_id=message.thread_root_id()))
 
 
 @messages_bp.route('/<int:message_id>')

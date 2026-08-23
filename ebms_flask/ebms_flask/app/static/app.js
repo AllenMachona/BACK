@@ -265,12 +265,59 @@
     // If Bootstrap is already present, defer to it.
     if (window.bootstrap && window.bootstrap.Modal) return;
 
+    var activeModal = null;
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.addEventListener('click', function () {
+      if (activeModal) closeModal(activeModal);
+    });
+
+    function openModal(modal) {
+      if (activeModal && activeModal !== modal) closeModal(activeModal);
+      document.body.appendChild(modal);
+      document.body.appendChild(backdrop);
+      modal.style.position = 'fixed';
+      modal.style.inset = '0';
+      modal.style.zIndex = '1401';
+      modal.style.maxWidth = 'none';
+      modal.style.maxHeight = 'none';
+      modal.style.padding = '1.5rem';
+      modal.style.background = 'transparent';
+      modal.style.display = 'flex';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      var dialog = modal.querySelector('.modal-dialog');
+      if (dialog) {
+        dialog.style.width = '100%';
+        dialog.style.maxWidth = '520px';
+        dialog.style.maxHeight = 'calc(100vh - 3rem)';
+        dialog.style.margin = '0';
+      }
+      var content = modal.querySelector('.modal-content');
+      if (content) {
+        content.style.maxHeight = 'calc(100vh - 3rem)';
+        content.style.overflowY = 'auto';
+      }
+      modal.classList.add('show');
+      backdrop.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      activeModal = modal;
+    }
+
+    function closeModal(modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      backdrop.classList.remove('show');
+      document.body.style.overflow = '';
+      if (activeModal === modal) activeModal = null;
+    }
+
     Array.prototype.forEach.call(
       document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target]'),
       function (trigger) {
         trigger.addEventListener('click', function () {
           var target = document.querySelector(trigger.getAttribute('data-bs-target'));
-          if (target) target.classList.add('show');
+          if (target) openModal(target);
         });
       }
     );
@@ -280,10 +327,14 @@
       function (el) {
         el.addEventListener('click', function () {
           var modal = el.closest('.modal') || el.closest('.ebms-modal');
-          if (modal) modal.classList.remove('show');
+          if (modal) closeModal(modal);
         });
       }
     );
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && activeModal) closeModal(activeModal);
+    });
   }
 
   /* ---------- Unread counts (notifications + messages) ---------- */
