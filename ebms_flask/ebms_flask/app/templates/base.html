@@ -193,9 +193,13 @@
             {% endif %}
 {% if can_reports %}
             <div class="ebms-nav-section">Reports</div>
-            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.operational' else '' }}"
-               href="{{ url_for('reports.operational') }}" data-title="Operational Reports">
-                <i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Operational Reports</span>
+                <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.index' else '' }}"
+                    href="{{ url_for('reports.index') }}" data-title="Reports Centre">
+                     <i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Reports Centre</span>
+                </a>
+                <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.operational' else '' }}"
+                    href="{{ url_for('reports.operational') }}" data-title="Operational Reports">
+                     <i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Operational Reports</span>
             </a>
             <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.audit_trail' else '' }}"
                href="{{ url_for('reports.audit_trail') }}" data-title="Audit Trail">

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ report.title }} - Reports - EBMS Botswana{% endblock %}
+
+{% block content %}
+{% set active_nav = 'reports' %}
+<div class="table-report">
+    <div class="report-page-head">
+        <div>
+            <a class="back-to-reports" href="{{ url_for('reports.index') }}"><i class="bi bi-arrow-left me-1"></i>Reports Centre</a>
+            <h1><i class="bi {{ report.icon }} me-2"></i>{{ report.title }}</h1>
+            <p>{{ report.subtitle }}</p>
+        </div>
+        <a class="btn btn-success" href="{{ url_for('reports.export_' + report.key) }}{% if request.query_string %}?{{ request.query_string.decode() }}{% endif %}">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </a>
+    </div>
+
+    <div class="report-stats-grid">
+        {% for stat in stats %}
+        <div class="report-stat"><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong></div>
+        {% endfor %}
+    </div>
+
+    <div class="report-filter-panel">
+        <form method="GET" action="{{ url_for('reports.' + report.key) }}" class="report-filter-form">
+            {% for field in filter_defs %}
+            <label>
+                <span>{{ field.label }}</span>
+                {% if field.type == 'select' %}
+                <select name="{{ field.name }}">
+                    <option value="">{{ field.placeholder }}</option>
+                    {% for option in field.options %}
+                    <option value="{{ option[0] }}" {% if current[field.name] == option[0]|string %}selected{% endif %}>{{ option[1] }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <input type="date" name="{{ field.name }}" value="{{ current[field.name] }}">
+                {% endif %}
+            </label>
+            {% endfor %}
+            <div class="report-filter-actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Apply</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('reports.' + report.key) }}">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="report-table-panel">
+        <div class="report-table-heading">
+            <h2>Report Results</h2>
+            <span>{{ rows|length }} record{{ 's' if rows|length != 1 else '' }}</span>
+        </div>
+        {% if rows %}
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr>{% for column in columns %}<th>{{ column[1] }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for column in columns %}
+                    {% set value = row.get(column[0], '-') %}
+                    <td>
+                        {% if column[2] %}
+                        <span class="badge {{ badge_for(value) }}">{{ value|replace('_', ' ')|title }}</span>
+                        {% else %}
+                        {{ value if value is not none and value != '' else '-' }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="report-empty"><i class="bi bi-inbox"></i><h3>No matching records</h3><p>Adjust the filters or return to the Reports Centre.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.table-report { max-width: 1440px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+.report-page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
+.back-to-reports { display: inline-block; margin-bottom: 0.35rem; color: var(--ppra-accent); font-size: 0.78rem; font-weight: 700; }
+.report-page-head h1 { margin: 0 0 0.3rem; color: var(--text-main); font-size: 1.6rem; }
+.report-page-head p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+.report-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+.report-stat { padding: 0.9rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; }
+.report-stat span { display: block; color: var(--text-muted); font-size: 0.73rem; }
+.report-stat strong { display: block; margin-top: 0.25rem; color: var(--text-main); font-size: 1.25rem; }
+.report-filter-panel, .report-table-panel { margin-bottom: 1.25rem; padding: 1rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; }
+.report-filter-form { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem; }
+.report-filter-form label { min-width: 165px; flex: 1 1 165px; }
+.report-filter-form label span { display: block; margin-bottom: 0.3rem; color: var(--text-secondary); font-size: 0.73rem; font-weight: 700; }
+.report-filter-form select, .report-filter-form input { width: 100%; min-height: 38px; padding: 0.45rem 0.6rem; color: var(--text-primary); background: var(--surface); border: 1px solid var(--border-color); border-radius: 6px; }
+.report-filter-actions { display: flex; gap: 0.5rem; }
+.report-table-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.report-table-heading h2 { margin: 0; color: var(--text-main); font-size: 1rem; }
+.report-table-heading span { color: var(--text-muted); font-size: 0.78rem; }
+.report-table-panel th { white-space: nowrap; color: var(--text-muted); background: var(--bg-subtle); font-size: 0.72rem; text-transform: uppercase; }
+.report-table-panel td { color: var(--text-body); font-size: 0.8rem; }
+.report-empty { padding: 3rem 1rem; color: var(--text-muted); text-align: center; }
+.report-empty i { display: block; margin-bottom: 0.5rem; font-size: 2rem; }
+.report-empty h3 { margin: 0 0 0.3rem; color: var(--text-main); font-size: 1rem; }
+.report-empty p { margin: 0; font-size: 0.82rem; }
+@media (max-width: 700px) { .report-page-head { align-items: flex-start; flex-direction: column; } .report-filter-actions { width: 100%; } }
+</style>
+{% endblock %}

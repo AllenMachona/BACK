@@ -115,7 +115,7 @@ def _all_recipient_snapshot(message):
     details = []
     for r in (message.recipients.all() if hasattr(message.recipients, 'all') else message.recipients):
         user = r.user
-        if user is None:
+        if user is None or r.user_id == message.sender_id:
             continue
         details.append({
             'name': user.full_name(),
@@ -126,6 +126,18 @@ def _all_recipient_snapshot(message):
             'delivered_at': r.delivered_at.strftime('%d %b %Y, %I:%M %p') if r.delivered_at else None,
         })
     return details
+
+
+def _message_read_state(message):
+    """Return whether every recipient has read a sent message."""
+    recipients = [
+        r for r in (message.recipients.all() if hasattr(message.recipients, 'all') else message.recipients)
+        if r.user_id != message.sender_id
+    ]
+    return {
+        'has_recipients': bool(recipients),
+        'all_read': bool(recipients) and all(r.read_at is not None for r in recipients),
+    }
 
 
 def _is_thread_participant(thread_id, user_id):
@@ -141,6 +153,13 @@ def _is_thread_participant(thread_id, user_id):
         MessageRecipient.user_id == user_id,
         MessageRecipient.archived_at.is_(None),
     ).first() is not None
+
+
+def _can_view_thread(thread_id):
+    """Allow message managers to open threads found by global search."""
+    return _is_thread_participant(thread_id, current_user.id) or bool(
+        current_user.role and current_user.role.can_view_all_records
+    )
 
 
 def _thread_messages(thread_id):
@@ -378,7 +397,7 @@ def send_message():
 @login_required
 def thread_view(thread_id):
     """Display a full conversation thread."""
-    if not _is_thread_participant(thread_id, current_user.id):
+    if not _can_view_thread(thread_id):
         abort(404)
 
     thread_msgs = _thread_messages(thread_id)
@@ -409,7 +428,7 @@ def thread_view(thread_id):
 @login_required
 def thread_messages_api(thread_id):
     """JSON list of messages in a thread, used by the polling poll."""
-    if not _is_thread_participant(thread_id, current_user.id):
+    if not _can_view_thread(thread_id):
         return jsonify({'error': 'Not found'}), 404
 
     thread_msgs = _thread_messages(thread_id)
@@ -422,6 +441,7 @@ def thread_messages_api(thread_id):
             'body': 'This message was unsent.' if m.unsent_at else m.body,
             'unsent': m.unsent_at is not None,
             'is_mine': m.sender_id == current_user.id,
+            'read_state': _message_read_state(m) if m.sender_id == current_user.id else None,
             'created_at': m.created_at.strftime('%d %b %Y, %I:%M %p'),
             'attachments': [] if m.unsent_at else [
                 {
@@ -446,7 +466,7 @@ def download_attachment(attachment_id):
     message = attachment.message
     if message.unsent_at:
         abort(404)
-    if not _is_thread_participant(message.thread_root_id(), current_user.id):
+    if not _can_view_thread(message.thread_root_id()):
         abort(403)
 
     try:
@@ -725,25 +745,42 @@ def search():
         flash('Search query must be at least 2 characters.', 'warning')
         return redirect(url_for('messages.inbox'))
 
-    # Search in messages where user is recipient or sender
-    sent = db.session.query(Message).filter(
-        Message.sender_id == current_user.id,
-        (Message.subject.ilike(f'%{query_str}%')) |
-        (Message.body.ilike(f'%{query_str}%'))
+    term = f'%{query_str}%'
+    matching_users = User.query.filter(
+        User.is_active == True,
+        (User.first_name.ilike(term)) |
+        (User.last_name.ilike(term)) |
+        (User.username.ilike(term)) |
+        (User.email.ilike(term))
+    ).order_by(User.first_name, User.last_name).all()
+    matching_user_ids = [user.id for user in matching_users]
+    message_text = Message.subject.ilike(term) | Message.body.ilike(term)
+    user_match = Message.sender_id.in_(matching_user_ids) if matching_user_ids else False
+    if matching_user_ids:
+        user_match = user_match | Message.recipients.any(
+            MessageRecipient.user_id.in_(matching_user_ids)
+        )
+
+    # Management users can search every message; other users remain limited
+    # to messages they sent or received.
+    search_filter = message_text | user_match
+    if not (current_user.role and current_user.role.can_view_all_records):
+        search_filter = search_filter & (
+            (Message.sender_id == current_user.id) |
+            Message.recipients.any(MessageRecipient.user_id == current_user.id)
+        )
+
+    messages = db.session.query(Message).filter(search_filter).distinct().order_by(
+        Message.created_at.desc()
     ).all()
+    results = [('global', message) for message in messages]
 
-    received = db.session.query(MessageRecipient, Message).join(
-        Message, Message.id == MessageRecipient.message_id
-    ).filter(
-        MessageRecipient.user_id == current_user.id,
-        (Message.subject.ilike(f'%{query_str}%')) |
-        (Message.body.ilike(f'%{query_str}%'))
-    ).order_by(Message.created_at.desc()).all()
-
-    results = [('sent', m) for m in sent] + [('received', r.message) for _, r in received]
-    results.sort(key=lambda x: x[1].created_at, reverse=True)
-
-    return render_template('messages/search_results.html', results=results, query=query_str)
+    return render_template(
+        'messages/search_results.html',
+        results=results,
+        matching_users=matching_users,
+        query=query_str,
+    )
 
 
 @messages_bp.route('/<int:message_id>/reply', methods=['POST'])

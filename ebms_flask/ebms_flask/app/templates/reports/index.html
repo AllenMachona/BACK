@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Centre - EBMS Botswana{% endblock %}
+
+{% block content %}
+{% set active_nav = 'reports' %}
+<div class="reports-centre">
+    <div class="reports-hero">
+        <div>
+            <span class="eyebrow">Procurement intelligence</span>
+            <h1><i class="bi bi-grid-1x2 me-2"></i>Reports Centre</h1>
+            <p>All operational, procurement, finance, participation and oversight reports in one place.</p>
+        </div>
+        <a class="btn btn-outline-primary" href="{{ url_for('reports.operational') }}">
+            <i class="bi bi-graph-up-arrow me-1"></i>Operational Snapshot
+        </a>
+    </div>
+
+    <div class="reports-summary">
+        <div><span>Total reports</span><strong>{{ catalog|map(attribute='reports')|map('length')|sum }}</strong></div>
+        <div><span>Procurements</span><strong>{{ counts.procurements }}</strong></div>
+        <div><span>Submissions</span><strong>{{ counts.submissions }}</strong></div>
+        <div><span>Pending payments</span><strong>{{ counts.pending_payments }}</strong></div>
+        <div><span>Audit events</span><strong>{{ counts.audit_logs }}</strong></div>
+    </div>
+
+    {% for group in catalog %}
+    <section class="report-group" aria-labelledby="report-group-{{ loop.index }}">
+        <div class="report-group-heading">
+            <h2 id="report-group-{{ loop.index }}"><i class="bi {{ group.icon }} me-2"></i>{{ group.name }}</h2>
+            <span>{{ group.reports|length }} reports</span>
+        </div>
+        <div class="report-card-grid">
+            {% for report in group.reports %}
+            <a class="report-card" href="{{ url_for('reports.' + report.key) }}">
+                <div class="report-card-icon"><i class="bi {{ report.icon }}"></i></div>
+                <div class="report-card-content">
+                    <h3>{{ report.title }}</h3>
+                    <p>{{ report.desc }}</p>
+                    <span class="report-card-meta">{{ counts[report.count_key] }} record{{ 's' if counts[report.count_key] != 1 else '' }} <i class="bi bi-arrow-right"></i></span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+
+<style>
+.reports-centre { max-width: 1380px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+.reports-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
+.reports-hero h1 { margin: 0.2rem 0 0.4rem; font-size: 1.8rem; color: var(--text-main); }
+.reports-hero p { margin: 0; color: var(--text-muted); }
+.reports-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; padding: 1rem; margin-bottom: 2rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; }
+.reports-summary div { padding: 0.35rem 0.75rem; border-right: 1px solid var(--border-color); }
+.reports-summary div:last-child { border-right: 0; }
+.reports-summary span { display: block; color: var(--text-muted); font-size: 0.75rem; }
+.reports-summary strong { display: block; color: var(--text-main); font-size: 1.35rem; margin-top: 0.2rem; }
+.report-group { margin-bottom: 2rem; }
+.report-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+.report-group-heading h2 { margin: 0; color: var(--text-main); font-size: 1.05rem; }
+.report-group-heading span { color: var(--text-muted); font-size: 0.78rem; }
+.report-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 0.8rem; }
+.report-card { display: flex; gap: 0.8rem; min-height: 138px; padding: 1rem; color: inherit; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none; transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; }
+.report-card:hover { color: inherit; border-color: var(--ppra-accent); box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+.report-card-icon { display: grid; flex: 0 0 38px; place-items: center; width: 38px; height: 38px; color: var(--ppra-accent); background: var(--bg-subtle); border-radius: 8px; font-size: 1.1rem; }
+.report-card-content { min-width: 0; }
+.report-card h3 { margin: 0 0 0.3rem; color: var(--text-main); font-size: 0.92rem; }
+.report-card p { margin: 0 0 0.65rem; color: var(--text-muted); font-size: 0.78rem; line-height: 1.45; }
+.report-card-meta { color: var(--ppra-accent); font-size: 0.75rem; font-weight: 700; }
+.report-card-meta i { margin-left: 0.25rem; }
+@media (max-width: 800px) { .reports-summary { grid-template-columns: repeat(2, 1fr); } .reports-summary div:nth-child(2n) { border-right: 0; } .reports-hero { align-items: flex-start; flex-direction: column; } }
+</style>
+{% endblock %}

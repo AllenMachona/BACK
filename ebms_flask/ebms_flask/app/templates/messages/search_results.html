@@ -22,10 +22,30 @@
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
+    {% if matching_users %}
+    <section class="search-section" aria-labelledby="matchingUsersHeading">
+        <h3 id="matchingUsersHeading" class="search-section-title"><i class="bi bi-people me-2"></i>Matching Users</h3>
+        <div class="matching-users">
+            {% for user in matching_users %}
+            <div class="matching-user">
+                <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
+                    {{ user.full_name()[0].upper() }}
+                </div>
+                <div>
+                    <div class="message-sender-name">{{ user.full_name() }}</div>
+                    <div class="message-sender-role">{{ user.role.name if user.role else 'User' }} · {{ user.username }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     {% if results %}
+    <h3 class="search-section-title"><i class="bi bi-chat-text me-2"></i>Matching Messages</h3>
     <div class="messages-list">
         {% for recipient, message in results %}
-        <div class="message-card" onclick="window.location='{{ url_for('messages.view_message', message_id=message.id) }}'" style="cursor: pointer;">
+        <a class="message-card d-block text-decoration-none" href="{{ url_for('messages.view_message', message_id=message.id) }}">
             <div class="message-card-header">
                 <div class="message-sender-info">
                     <div class="avatar-circle" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
@@ -44,7 +64,7 @@
                 <h4 class="message-subject">{{ message.subject }}</h4>
                 <p class="message-preview">{{ message.body[:150] }}{% if message.body|length > 150 %}...{% endif %}</p>
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
     {% else %}
@@ -68,6 +88,10 @@
 .toolbar-search { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; }
 .toolbar-search input { flex: 1; border: none; background: transparent; color: var(--text-body); font-size: 0.9rem; }
 .messages-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.search-section { margin-bottom: 1.5rem; }
+.search-section-title { color: var(--text-main); font-size: 1rem; margin: 0 0 0.75rem 0; }
+.matching-users { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.matching-user { display: flex; align-items: center; gap: 0.65rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.65rem 0.8rem; min-width: 220px; }
 .message-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; transition: all 0.15s ease; }
 .message-card:hover { border-color: var(--ppra-accent); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); }
 .message-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }

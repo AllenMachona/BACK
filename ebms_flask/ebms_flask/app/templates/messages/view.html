@@ -40,6 +40,13 @@
                 <div class="message-item-meta">
                     <span class="message-item-date">{{ m.created_at.strftime('%d %b %Y') }}</span>
                     <span class="message-item-time">{{ m.created_at.strftime('%I:%M %p') }}</span>
+                    {% if m.sender_id == current_user.id and not m.unsent_at and recipient_map.get(m.id) %}
+                    {% set sent_recipients = recipient_map.get(m.id) %}
+                    {% set all_recipients_read = (sent_recipients | selectattr('read', 'equalto', true) | list | length) == (sent_recipients | length) %}
+                    <span class="message-read-status {{ 'is-read' if all_recipients_read else 'is-unread' }}" title="{{ 'Read' if all_recipients_read else 'Unread' }}" aria-label="{{ 'Read' if all_recipients_read else 'Unread' }}">
+                        <i class="bi bi-check2-all"></i>
+                    </span>
+                    {% endif %}
                     {% if m.sender_id == current_user.id and not m.unsent_at %}
                     <form method="POST" action="{{ url_for('messages.unsend_message', message_id=m.id) }}" class="d-inline ms-2" onsubmit="return confirm('Unsend this message for everyone?');">
                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Unsend message">
@@ -215,6 +222,10 @@ function removeFileFromInput(fileInput, fileToRemove) {
 function renderMessage(m) {
     const isMine = m.is_mine;
     const isUnsent = m.unsent;
+    const readState = m.read_state || {};
+    const readTicks = isMine && !isUnsent && readState.has_recipients
+        ? '<span class="message-read-status ' + (readState.all_read ? 'is-read' : 'is-unread') + '" title="' + (readState.all_read ? 'Read' : 'Unread') + '" aria-label="' + (readState.all_read ? 'Read' : 'Unread') + '"><i class="bi bi-check2-all"></i></span>'
+        : '';
     const div = document.createElement('div');
     div.className = 'message-item ' + (isMine ? 'message-mine' : '');
     div.setAttribute('data-message-id', m.id);
@@ -229,7 +240,7 @@ function renderMessage(m) {
                     '<p class="message-item-sender-role">' + (m.role || 'User') + '</p>' +
                 '</div>' +
             '</div>' +
-            '<div class="message-item-meta"><span class="message-item-date">' + m.created_at + '</span>' +
+            '<div class="message-item-meta"><span class="message-item-date">' + m.created_at + '</span>' + readTicks +
                 (isMine && !isUnsent ? '<form method="POST" action="/messages/' + m.id + '/unsend" class="d-inline ms-2" onsubmit="return confirm(\'Unsend this message for everyone?\');"><button type="submit" class="btn btn-sm btn-outline-danger" title="Unsend message"><i class="bi bi-arrow-counterclockwise me-1"></i>Unsend</button></form>' : '') +
             '</div>' +
         '</div>' +
@@ -331,7 +342,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: replyForm.querySelector('textarea').value || '',
                     is_mine: true,
                     created_at: result.data.created_at,
-                    attachments: result.data.attachments || []
+                    attachments: result.data.attachments || [],
+                    read_state: { has_recipients: true, all_read: false }
                 });
                 // Use polling to pull the authoritative list within a moment
                 setTimeout(pollMessages, 800);
@@ -369,6 +381,14 @@ function pollMessages() {
                 const existing = container.querySelector('[data-message-id="' + m.id + '"]');
                 if (existing && m.unsent && !existing.querySelector('.fst-italic')) {
                     existing.replaceWith(renderMessage(m));
+                } else if (existing && m.is_mine && m.read_state) {
+                    const ticks = existing.querySelector('.message-read-status');
+                    if (ticks && m.read_state.has_recipients) {
+                        ticks.classList.toggle('is-read', m.read_state.all_read);
+                        ticks.classList.toggle('is-unread', !m.read_state.all_read);
+                        ticks.title = m.read_state.all_read ? 'Read' : 'Unread';
+                        ticks.setAttribute('aria-label', ticks.title);
+                    }
                 } else if (!existing) {
                     container.appendChild(renderMessage(m));
                 }
@@ -396,6 +416,9 @@ function pollMessages() {
 .message-item-sender-name { margin: 0; font-size: 1rem; color: var(--text-main, #0f172a); }
 .message-item-sender-role { margin: 0; font-size: 0.8rem; color: var(--text-muted, #64748b); }
 .message-item-meta { font-size: 0.8rem; color: var(--text-muted, #64748b); display: flex; gap: 0.6rem; align-items: center; }
+.message-read-status { font-size: 1rem; line-height: 1; }
+.message-read-status.is-unread { color: #94a3b8; }
+.message-read-status.is-read { color: #2f9bf4; }
 .message-item-content { color: var(--text-body, #334155); font-size: 0.93rem; line-height: 1.6; }
 
 /* ---- Thread attachments ---- */
