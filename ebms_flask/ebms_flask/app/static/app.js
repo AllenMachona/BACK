@@ -72,6 +72,81 @@
     }, 260);
   }
 
+  /* ---------- Cancellable document uploads ---------- */
+  function initCancellableUploads() {
+    var forms = document.querySelectorAll('form[data-cancellable-upload]');
+    Array.prototype.forEach.call(forms, function (form) {
+      var submitButton = form.querySelector('button[type="submit"]');
+      var fileInputs = form.querySelectorAll('input[type="file"]');
+      if (!submitButton) return;
+
+      var progress = document.createElement('progress');
+      progress.className = 'w-100 mt-2';
+      progress.max = 100;
+      progress.value = 0;
+      progress.hidden = true;
+      progress.setAttribute('aria-label', 'Upload progress');
+
+      submitButton.parentNode.appendChild(progress);
+
+      Array.prototype.forEach.call(fileInputs, function (fileInput) {
+        var removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-sm btn-outline-secondary mt-1';
+        removeButton.innerHTML = '<i class="bi bi-x-circle me-1"></i>Remove selected file';
+        removeButton.hidden = true;
+        fileInput.parentNode.appendChild(removeButton);
+
+        fileInput.addEventListener('change', function () {
+          removeButton.hidden = !fileInput.files.length;
+        });
+        removeButton.addEventListener('click', function () {
+          fileInput.value = '';
+          removeButton.hidden = true;
+        });
+      });
+
+      var request = null;
+      var originalLabel = submitButton.innerHTML;
+
+      function resetUploadState() {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalLabel;
+        progress.hidden = true;
+        progress.value = 0;
+        request = null;
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (request) return;
+
+        request = new XMLHttpRequest();
+        request.open('POST', form.action, true);
+        request.upload.addEventListener('progress', function (progressEvent) {
+          if (!progressEvent.lengthComputable) return;
+          progress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        });
+        request.addEventListener('load', function () {
+          if (request.status >= 200 && request.status < 400) {
+            window.location.assign(request.responseURL || form.action);
+            return;
+          }
+          resetUploadState();
+          showToast('The upload could not be completed. Please try again.', 'error');
+        });
+        request.addEventListener('error', function () {
+          resetUploadState();
+          showToast('A network error interrupted the upload.', 'error');
+        });
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>Uploading...';
+        progress.hidden = false;
+        request.send(new FormData(form));
+      });
+    });
+  }
+
   /* Render any flashed messages (data-ebms-flash elements) as toasts */
   function renderFlashedMessages() {
     var srcs = document.querySelectorAll('[data-ebms-flash]');
@@ -382,6 +457,7 @@
     initModals();
     renderFlashedMessages();
     initUnreadCounts();
+    initCancellableUploads();
 
     // Expose helpers for inline onclick handlers used by templates
     window.EBMS = {

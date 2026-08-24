@@ -70,18 +70,15 @@ def notify_user(user, notif_type, title, body, procurement_id=None, email=True):
 
 
 def notify_bidders_on_procurement(procurement, notif_type, title, body):
-    """Notify every portal user linked to a bidder who has submitted on this
-    procurement (for post-submission events), or fall back to notifying
-    every verified bidder for pre-submission events like deadline reminders."""
-    from app.models.submission import Submission
+    """Notify every eligible bidder portal user about a procurement event."""
     from app.models.bidder import Bidder
     from app.models.user import User
 
-    bidder_ids = {s.bidder_id for s in procurement.submissions}
-    if bidder_ids:
-        users = User.query.filter(User.bidder_id.in_(bidder_ids)).all()
-    else:
-        users = User.query.join(Bidder, User.bidder_id == Bidder.id).filter(Bidder.verified == True).all()
+    users = User.query.join(Bidder, User.bidder_id == Bidder.id).filter(
+        Bidder.active == True,
+        Bidder.suspended == False,
+        Bidder.verified == True,
+    ).all()
 
     for u in users:
-        notify_user(u, notif_type, title, body, procurement_id=procurement.id)
+        notify_user(u, notif_type, title, body, procurement_id=procurement.id, email=False)

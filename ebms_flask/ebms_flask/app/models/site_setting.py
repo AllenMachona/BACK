@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from flask import g
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from app.extensions import db
 
@@ -94,13 +95,21 @@ class SiteSetting(db.Model):
 
     @classmethod
     def as_dict(cls):
+        cached = getattr(g, '_site_settings', None)
+        if cached is not None:
+            return cached
         try:
-            return {setting.key: setting.value for setting in cls.query.all()}
+            cached = {setting.key: setting.value for setting in cls.query.all()}
+            g._site_settings = cached
+            return cached
         except (OperationalError, ProgrammingError):
             return {}
 
     @classmethod
     def get(cls, key, default=''):
+        cached = getattr(g, '_site_settings', None)
+        if cached is not None:
+            return cached.get(key, default)
         try:
             item = cls.query.filter_by(key=key).first()
             return item.value if item else default

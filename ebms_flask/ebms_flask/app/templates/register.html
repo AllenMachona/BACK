@@ -309,7 +309,7 @@
                         {% endif %}
                     {% endwith %}
 
-                    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data" data-cancellable-upload>
                         <div class="section-block">
                             <h5 class="section-heading">Your details <span class="tag">// identity</span></h5>
                             <div class="row-2">

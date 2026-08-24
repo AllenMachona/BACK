@@ -100,9 +100,9 @@
                 <form method="POST" action="{{ url_for('requests.review_de', request_id=req.id) }}">
                     <button type="submit" class="btn btn-outline-warning w-100"><i class="bi bi-search me-1"></i>Mark Under Review</button>
                 </form>
-                <a href="{{ url_for('procurements.create', request_id=req.id) }}" class="btn btn-success w-100">
+                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#createProcurementModal">
                     <i class="bi bi-arrow-right-circle me-1"></i>Create Procurement
-                </a>
+                </button>
                 <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle me-1"></i>Reject Request</button>
             </div>
         </div>
@@ -110,6 +110,23 @@
     </div>
 
 {% if can_manage and req.status in ('submitted', 'under_review') %}
+<div class="modal fade text-start" id="createProcurementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-success"><i class="bi bi-plus-circle me-2"></i>Create Procurement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">The full procurement form will open next. You can review and edit all procurement fields, including the envelope type, before creating the record.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ url_for('procurements.create', request_id=req.id, request_type='de') }}" class="btn btn-success btn-sm"><i class="bi bi-arrow-right-circle me-1"></i>Continue to Form</a>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal fade text-start" id="rejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

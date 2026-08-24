@@ -25,23 +25,29 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-9">
-        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data" data-cancellable-upload>
             {% if source_request %}
             <input type="hidden" name="request_id" value="{{ source_request.id }}">
+            <input type="hidden" name="request_type" value="{{ request_type }}">
             <div class="alert alert-primary d-flex align-items-start gap-3 mb-4">
                 <i class="bi bi-file-earmark-arrow-up fs-4 mt-1"></i>
                 <div class="flex-grow-1">
                     <strong class="d-block mb-1">Creating procurement from request #{{ source_request.id }}</strong>
                     <div class="small text-muted mb-2">
                         Submitted by {{ source_request.requester.full_name() }}
-                        ({{ source_request.department or 'Department not set' }}) on
+                        ({{ (source_request.department if request_type == 'de' else source_request.procurement_entity) or 'Department not set' }}) on
                         {{ source_request.created_at.strftime('%d %b %Y, %H:%M') }}.
-                        The attached <strong>Form D</strong> and <strong>Form E</strong> files will be
-                        carried into this record automatically.
+                        {% if request_type == 'de' %}
+                        The attached <strong>Form D</strong> and <strong>Form E</strong> files will be carried into this record automatically.
+                        {% elif request_type == 'form_d' %}
+                        The attached <strong>Form D</strong> file will be carried into this record automatically.
+                        {% else %}
+                        The attached <strong>Form E</strong> file will be carried into this record automatically.
+                        {% endif %}
                     </div>
-                    {% if source_request.justification %}
+                    {% if source_request.justification or source_request.technical_specification %}
                     <div class="p-2 bg-white rounded border small">
-                        <strong>Requester justification:</strong> {{ source_request.justification }}
+                        <strong>Request details:</strong> {{ source_request.justification or source_request.technical_specification }}
                     </div>
                     {% endif %}
                 </div>
@@ -60,11 +66,11 @@
                             <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
                             <select name="category" class="form-select" required>
                                 <option value="">Select category...</option>
-                                <option value="works">Works</option>
-                                <option value="services">Services</option>
-                                <option value="consultancy">Consultancy Services</option>
-                                <option value="supplies">Supplies</option>
-                                <option value="combination">Combination</option>
+                                <option value="works" {{ 'selected' if (form and form.get('category') == 'works') or (not form and source_request and source_request.category == 'works') else '' }}>Works</option>
+                                <option value="services" {{ 'selected' if (form and form.get('category') == 'services') or (not form and source_request and source_request.category == 'services') else '' }}>Services</option>
+                                <option value="consultancy" {{ 'selected' if (form and form.get('category') == 'consultancy') or (not form and source_request and source_request.category == 'consultancy') else '' }}>Consultancy Services</option>
+                                <option value="supplies" {{ 'selected' if (form and form.get('category') == 'supplies') or (not form and source_request and source_request.category == 'supplies') else '' }}>Supplies</option>
+                                <option value="combination" {{ 'selected' if (form and form.get('category') == 'combination') or (not form and source_request and source_request.category == 'combination') else '' }}>Combination</option>
                             </select>
                             <div class="form-text">PPRA Act procurement category classification.</div>
                         </div>
@@ -88,15 +94,15 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Procurement Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control form-control-lg" placeholder="Enter a clear, descriptive procurement title" required>
+                            <input type="text" name="title" class="form-control form-control-lg" placeholder="Enter a clear, descriptive procurement title" required value="{{ form.get('title') if form else ((source_request.requisition_title if request_type == 'form_d' else source_request.specification_title if request_type == 'form_e' else '') if source_request else '') }}">
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Description &amp; Requirements</label>
-                            <textarea name="description" class="form-control" rows="4" placeholder="Describe the scope, requirements, and expected deliverables of this procurement...">{{ source_request.justification if source_request else '' }}</textarea>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Describe the scope, requirements, and expected deliverables of this procurement...">{{ form.get('description') if form else ((source_request.justification if request_type in ('form_d', 'de') else source_request.technical_specification if request_type == 'form_e' else '') if source_request else '') }}</textarea>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Procurement Entity</label>
-                            <input type="text" name="procurement_entity" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness" required value="{{ source_request.department if source_request else '' }}">
+                            <input type="text" name="procurement_entity" class="form-control" placeholder="e.g. Ministry of Health &amp; Wellness" required value="{{ form.get('procurement_entity') if form else ((source_request.department if request_type == 'de' else source_request.procurement_entity) if source_request else '') }}">
                             <div class="form-text">The entity requesting this procurement.</div>
                         </div>
                     </div>
@@ -114,30 +120,32 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Procurement Method <span class="text-danger">*</span></label>
                             <select name="method" class="form-select" required>
-                                <option value="open_domestic">Open Domestic Bidding</option>
-                                <option value="open_international">Open International Bidding</option>
-                                <option value="restricted">Restricted Bidding</option>
-                                <option value="rfq">Request for Quotations (RFQ)</option>
-                                <option value="direct">Direct Procurement</option>
-                                <option value="rfp">Request for Proposals (RFP)</option>
+                                <option value="open_domestic" {{ 'selected' if (form and form.get('method') == 'open_domestic') or (not form and source_request and request_type == 'form_d' and source_request.procurement_method == 'open_domestic') else '' }}>Open Domestic Bidding</option>
+                                <option value="open_international" {{ 'selected' if form and form.get('method') == 'open_international' else '' }}>Open International Bidding</option>
+                                <option value="restricted" {{ 'selected' if (form and form.get('method') == 'restricted') or (not form and source_request and request_type == 'form_d' and source_request.procurement_method == 'restricted') else '' }}>Restricted Bidding</option>
+                                <option value="rfq" {{ 'selected' if form and form.get('method') == 'rfq' else '' }}>Request for Quotations (RFQ)</option>
+                                <option value="direct" {{ 'selected' if form and form.get('method') == 'direct' else '' }}>Direct Procurement</option>
+                                <option value="rfp" {{ 'selected' if form and form.get('method') == 'rfp' else '' }}>Request for Proposals (RFP)</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Evaluation Method <span class="text-danger">*</span></label>
                             <select name="evaluation_method" class="form-select" required>
-                                <option value="pass_fail">Pass / Fail</option>
-                                <option value="scored">Scored</option>
-                                <option value="weighted">Weighted</option>
-                                <option value="least_cost">Least Cost</option>
-                                <option value="quality_cost">Quality &amp; Cost</option>
+                                <option value="pass_fail" {{ 'selected' if not form or form.get('evaluation_method') == 'pass_fail' else '' }}>Pass / Fail</option>
+                                <option value="scored" {{ 'selected' if form and form.get('evaluation_method') == 'scored' else '' }}>Scored</option>
+                                <option value="weighted" {{ 'selected' if form and form.get('evaluation_method') == 'weighted' else '' }}>Weighted</option>
+                                <option value="least_cost" {{ 'selected' if form and form.get('evaluation_method') == 'least_cost' else '' }}>Least Cost</option>
+                                <option value="quality_cost" {{ 'selected' if form and form.get('evaluation_method') == 'quality_cost' else '' }}>Quality &amp; Cost</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Envelope Type <span class="text-danger">*</span></label>
                             <select name="envelope_type" class="form-select" required>
-                                <option value="single">Single Envelope</option>
-                                <option value="dual">Dual Envelope (Technical + Financial)</option>
+                                <option value="">Select envelope type...</option>
+                                <option value="single" {{ 'selected' if form and form.get('envelope_type') == 'single' else '' }}>Single Envelope</option>
+                                <option value="dual" {{ 'selected' if form and form.get('envelope_type') == 'dual' else '' }}>Dual Envelope (Technical + Financial)</option>
                             </select>
+                            <div class="form-text">Procurement must choose the bid submission structure before creating this record.</div>
                         </div>
                     </div>
                 </div>
@@ -155,7 +163,7 @@
                             <label class="form-label fw-bold">Estimated Contract Value (BWP) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text fw-bold">BWP</span>
-                                <input type="number" step="0.01" min="0" name="estimated_value" class="form-control form-control-lg" placeholder="0.00" required>
+                                <input type="number" step="0.01" min="0" name="estimated_value" class="form-control form-control-lg" placeholder="0.00" required value="{{ form.get('estimated_value') if form else (source_request.estimated_value if source_request and request_type == 'form_d' else source_request.budget_allocated if source_request and request_type == 'form_e' else '') }}">
                             </div>
                             <div class="form-text">Estimated contract budget in Botswana Pula.</div>
                         </div>
@@ -163,18 +171,18 @@
                             <label class="form-label fw-bold">Tender Document Purchase Fee (BWP)</label>
                             <div class="input-group">
                                 <span class="input-group-text fw-bold">BWP</span>
-                                <input type="number" step="0.01" min="0" name="tender_fee" class="form-control form-control-lg" placeholder="0.00" value="0.00">
+                                <input type="number" step="0.01" min="0" name="tender_fee" class="form-control form-control-lg" placeholder="0.00" value="{{ form.get('tender_fee', '0.00') if form else '0.00' }}">
                             </div>
                             <div class="form-text">Fee bidders must pay to unlock the ITT bidder tender document. Leave 0.00 if the tender documents are free.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Submission Deadline</label>
-                            <input type="datetime-local" name="submission_deadline" class="form-control form-control-lg">
+                            <input type="datetime-local" name="submission_deadline" class="form-control form-control-lg" value="{{ form.get('submission_deadline', '') if form else '' }}">
                             <div class="form-text">Can be set later when moving to Submission Open status.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Clarification Deadline</label>
-                            <input type="datetime-local" name="clarification_deadline" class="form-control form-control-lg">
+                            <input type="datetime-local" name="clarification_deadline" class="form-control form-control-lg" value="{{ form.get('clarification_deadline', '') if form else '' }}">
                             <div class="form-text">Deadline for bidder clarification submissions.</div>
                         </div>
                         <div class="col-12">

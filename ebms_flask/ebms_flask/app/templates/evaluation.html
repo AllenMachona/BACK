@@ -116,7 +116,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted small mb-3">Attach your evaluation results or recommendation for the Procurement team.</p>
-        <form method="POST" action="{{ url_for('evaluations.submit_feedback', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('evaluations.submit_feedback', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
             <div class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label fw-bold" for="feedback_file">Feedback document</label>

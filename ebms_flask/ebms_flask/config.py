@@ -68,6 +68,12 @@ class Config:
     )
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or SQLSERVER_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': int(os.environ.get('DB_POOL_RECYCLE_SECONDS') or 1800),
+        'pool_size': int(os.environ.get('DB_POOL_SIZE') or 10),
+        'max_overflow': int(os.environ.get('DB_MAX_OVERFLOW') or 20),
+    }
 
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(basedir, 'uploads')
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024 * 1024  # 2GB, matches SOAR NFR-003 default

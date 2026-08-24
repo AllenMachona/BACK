@@ -88,26 +88,42 @@ class ReportsService:
         
         # Get results
         results = query.order_by(Procurement.tender_number, Bidder.company_name).all()
+
+        pairs = {(proc_id, bidder_id) for proc_id, _, _, bidder_id, *_ in results}
+        procurement_ids = {proc_id for proc_id, _ in pairs}
+        bidder_ids = {bidder_id for _, bidder_id in pairs}
+        evaluations = Evaluation.query.filter(
+            Evaluation.procurement_id.in_(procurement_ids),
+            Evaluation.bidder_id.in_(bidder_ids),
+            Evaluation.score.isnot(None),
+        ).order_by(Evaluation.id.desc()).all() if pairs else []
+        evaluation_by_pair = {}
+        for evaluation in evaluations:
+            evaluation_by_pair.setdefault(
+                (evaluation.procurement_id, evaluation.bidder_id), evaluation
+            )
+
+        from app.models.award import Award
+        awarded_pairs = {
+            (award.procurement_id, award.winning_bidder_id)
+            for award in Award.query.filter(
+                Award.procurement_id.in_(procurement_ids),
+                Award.winning_bidder_id.in_(bidder_ids),
+            ).all()
+        } if pairs else set()
         
         # Format as dicts (keys match the bidder participation report template)
         rows = []
         for proc_id, tender_num, title, bidder_id, company, submit_date, status in results:
             # Representative evaluation score for this bidder on this procurement
-            evaluation = Evaluation.query.filter(
-                Evaluation.procurement_id == proc_id,
-                Evaluation.bidder_id == bidder_id,
-                Evaluation.score.isnot(None),
-            ).order_by(Evaluation.id.desc()).first()
+            evaluation = evaluation_by_pair.get((proc_id, bidder_id))
 
             evaluation_score = None
             if evaluation is not None:
                 evaluation_score = float(evaluation.consensus_score or evaluation.score)
 
             # Has an award been published with this bidder as the winner?
-            from app.models.award import Award
-            award_status = 'awarded' if Award.query.filter_by(
-                procurement_id=proc_id, winning_bidder_id=bidder_id
-            ).first() else None
+            award_status = 'awarded' if (proc_id, bidder_id) in awarded_pairs else None
 
             rows.append({
                 'procurement_title': title,
@@ -141,18 +157,25 @@ class ReportsService:
         if filters.get('category'):
             query = query.filter(Procurement.category == filters['category'])
         
-        procurements = query.all()
+        procurements = query.order_by(Procurement.created_at.desc()).all()
+
+        procurement_ids = [proc.id for proc in procurements]
+        submission_counts = dict(db.session.query(
+            Submission.procurement_id, func.count(Submission.id)
+        ).filter(
+            Submission.procurement_id.in_(procurement_ids),
+            Submission.status == 'submitted',
+        ).group_by(Submission.procurement_id).all()) if procurement_ids else {}
+        evaluation_counts = dict(db.session.query(
+            Evaluation.procurement_id, func.count(func.distinct(Evaluation.bidder_id))
+        ).filter(
+            Evaluation.procurement_id.in_(procurement_ids)
+        ).group_by(Evaluation.procurement_id).all()) if procurement_ids else {}
         
         rows = []
         for proc in procurements:
-            submission_count = Submission.query.filter_by(
-                procurement_id=proc.id,
-                status='submitted'
-            ).count()
-            
-            evaluation_count = Evaluation.query.filter_by(
-                procurement_id=proc.id
-            ).distinct(Evaluation.bidder_id).count()
+            submission_count = submission_counts.get(proc.id, 0)
+            evaluation_count = evaluation_counts.get(proc.id, 0)
             
             rows.append({
                 'Tender Number': proc.tender_number,

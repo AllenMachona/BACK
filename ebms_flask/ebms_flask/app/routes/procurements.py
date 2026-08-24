@@ -8,6 +8,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_file, send_from_directory, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import or_
+from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.procurement import Procurement
@@ -28,9 +29,28 @@ from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
 from app.utils.crypto import decrypt_bytes
 from app.utils.notify import notify_user, notify_bidders_on_procurement
+from app.utils.clarification_access import ClarificationAccessService
 from app.utils.evaluator_assignment import EvaluatorAssignmentService
 
 procurements_bp = Blueprint('procurements', __name__, url_prefix='/procurements')
+
+
+def _bidder_can_access_procurement(procurement):
+    """Allow bidders into their workspace only for open or participated tenders."""
+    if not current_user.bidder_id:
+        return False
+    if procurement.status in ('published', 'submission_open', 'clarification_period'):
+        return True
+    return bool(
+        Submission.query.filter_by(
+            procurement_id=procurement.id,
+            bidder_id=current_user.bidder_id,
+        ).first()
+        or BidderPayment.query.filter_by(
+            procurement_id=procurement.id,
+            bidder_id=current_user.bidder_id,
+        ).first()
+    )
 
 
 def _save_procurement_document(file_storage, tender_number, doc_type):
@@ -169,7 +189,11 @@ def list_procurements():
         except ValueError:
             deadline_to = ''
 
-    procurements = query.order_by(Procurement.created_at.desc()).all()
+    page = max(request.args.get('page', 1, type=int), 1)
+    procurement_page = query.order_by(Procurement.created_at.desc()).paginate(
+        page=page, per_page=25, error_out=False
+    )
+    procurements = procurement_page.items
     return render_template(
         'procurement_list.html',
         procurements=procurements,
@@ -185,6 +209,9 @@ def list_procurements():
         max_value=request.args.get('max_value', ''),
         deadline_from=deadline_from,
         deadline_to=deadline_to,
+        page=procurement_page.page,
+        total_pages=procurement_page.pages,
+        total_results=procurement_page.total,
     )
 
 
@@ -192,7 +219,7 @@ def list_procurements():
 @login_required
 @permission_required('can_create_procurement')
 def create():
-    from app.models.request import FormDERequest
+    from app.models.request import FormDRequest, FormERequest, FormDERequest
 
     ppra_codes = Procurement.ppra_code_options()
     ppra_sub_codes = Procurement.ppra_sub_code_options()
@@ -201,20 +228,47 @@ def create():
     # request's documents and justification carry over into the record, and the
     # request is linked + marked converted once the procurement is created.
     request_id = request.args.get('request_id', type=int) or request.form.get('request_id', type=int)
+    request_type = request.args.get('request_type') or request.form.get('request_type') or 'de'
+    request_models = {'form_d': FormDRequest, 'form_e': FormERequest, 'de': FormDERequest}
+    if request_type not in request_models:
+        request_type = 'de'
     source_request = None
     if request_id:
-        source_request = FormDERequest.query.get_or_404(request_id)
+        source_request = request_models[request_type].query.get_or_404(request_id)
         if source_request.status == 'converted' and source_request.procurement_id:
             flash('This request has already been converted — see its linked procurement record.', 'warning')
             return redirect(url_for('procurements.detail', procurement_id=source_request.procurement_id))
 
+    source_form_d_path = None
+    source_form_d_name = None
+    source_form_e_path = None
+    source_form_e_name = None
+    if source_request:
+        if request_type == 'de':
+            source_form_d_path = source_request.form_d_file_path
+            source_form_d_name = source_request.form_d_filename
+            source_form_e_path = source_request.form_e_file_path
+            source_form_e_name = source_request.form_e_filename
+        elif request_type == 'form_d':
+            source_form_d_path = source_request.submitted_form_path
+            source_form_d_name = source_request.submitted_form_filename
+        elif request_type == 'form_e':
+            source_form_e_path = source_request.submitted_form_path
+            source_form_e_name = source_request.submitted_form_filename
+
     if request.method == 'POST':
+        envelope_type = (request.form.get('envelope_type') or '').strip().lower()
+        if envelope_type not in ('single', 'dual'):
+            flash('Please select whether this procurement uses a single or dual envelope.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request, request_type=request_type, form=request.form)
+
         try:
             estimated_value = float(request.form['estimated_value'])
         except (KeyError, ValueError):
             flash('A valid estimated value is required.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request)
+                                   source_request=source_request, request_type=request_type, form=request.form)
 
         tender_fee = 0.0
         if request.form.get('tender_fee'):
@@ -227,13 +281,13 @@ def create():
         if not procurement_entity:
             flash('A procurement entity is required.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request)
+                                   source_request=source_request, request_type=request_type, form=request.form)
 
         advertisement = request.files.get('advertisement_document')
         if not advertisement or not advertisement.filename:
             flash('An advertisement document is required before creating the procurement.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request)
+                                   source_request=source_request, request_type=request_type, form=request.form)
 
         ppra_base = request.form.get('ppra_code', '').strip()
         ppra_sub_code = request.form.get('ppra_sub_code', '').strip()
@@ -254,7 +308,7 @@ def create():
             ppra_sub_code=ppra_sub_code if ppra_sub_code and ppra_sub_code not in ('00', 'none') else None,
             method=request.form['method'],
             evaluation_method=request.form.get('evaluation_method'),
-            envelope_type=request.form.get('envelope_type', 'single'),
+            envelope_type=envelope_type,
             estimated_value=estimated_value,
             tender_fee=tender_fee,
             user_department=procurement_entity,
@@ -264,7 +318,7 @@ def create():
         if governance['errors']:
             flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request)
+                                   source_request=source_request, request_type=request_type, form=request.form)
 
         if governance['warnings']:
             flash('Governance check noted a review risk: lot splitting or high-value procedure review required.', 'warning')
@@ -280,11 +334,11 @@ def create():
         # request, the request's attached forms are carried over automatically
         # (they may still be replaced on this screen).
         form_d_path, form_d_name = _save_procurement_document(request.files.get('form_d_document'), tender_number, 'form_d')
-        if source_request and source_request.has_form_d() and not form_d_path:
-            form_d_path, form_d_name = source_request.form_d_file_path, source_request.form_d_filename
+        if source_form_d_path and not form_d_path:
+            form_d_path, form_d_name = source_form_d_path, source_form_d_name
         form_e_path, form_e_name = _save_procurement_document(request.files.get('form_e_document'), tender_number, 'form_e')
-        if source_request and source_request.has_form_e() and not form_e_path:
-            form_e_path, form_e_name = source_request.form_e_file_path, source_request.form_e_filename
+        if source_form_e_path and not form_e_path:
+            form_e_path, form_e_name = source_form_e_path, source_form_e_name
         rfce_path, rfce_name = _save_procurement_document(request.files.get('rfce_document'), tender_number, 'rfce')
         itt_path, itt_name = _save_procurement_document(request.files.get('itt_document'), tender_number, 'itt')
         rfq_path, rfq_name = _save_procurement_document(request.files.get('rfq_document'), tender_number, 'rfq')
@@ -299,7 +353,7 @@ def create():
             ppra_sub_code=ppra_sub_code if ppra_sub_code and ppra_sub_code not in ('00', 'none') else None,
             method=request.form['method'],
             evaluation_method=request.form.get('evaluation_method'),
-            envelope_type=request.form.get('envelope_type', 'single'),
+            envelope_type=envelope_type,
             estimated_value=estimated_value,
             tender_fee=tender_fee,
             user_department=procurement_entity,
@@ -350,14 +404,14 @@ def create():
             source_request.converted_at = datetime.utcnow()
             db.session.commit()
 
-            log_action('REQUEST_DE_CONVERTED', entity_type='FormDERequest', entity_id=source_request.id,
+            log_action(f'REQUEST_{request_type.upper()}_CONVERTED', entity_type=type(source_request).__name__, entity_id=source_request.id,
                        new_value={'tender_number': procurement.tender_number, 'procurement_id': procurement.id,
                                   'status': 'converted'})
             try:
                 notify_user(
                     source_request.requester, 'request_converted',
                     f'Your Form D & E request was converted ({procurement.tender_number})',
-                    f'Your procurement request from {source_request.department or "your department"} has been '
+                    f'Your procurement request from {getattr(source_request, "department", None) or getattr(source_request, "procurement_entity", None) or "your department"} has been '
                     f'converted into procurement record {procurement.tender_number}. Track it under Procurements.',
                 )
             except Exception as exc:
@@ -367,7 +421,7 @@ def create():
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
     return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                           source_request=source_request)
+                           source_request=source_request, request_type=request_type)
 
 
 @procurements_bp.route('/search')
@@ -378,7 +432,7 @@ def search():
     users = []
     if query:
         pattern = f'%{query}%'
-        procurements = Procurement.query.filter(
+        procurement_query = Procurement.query.filter(
             or_(
                 Procurement.title.ilike(pattern),
                 Procurement.tender_number.ilike(pattern),
@@ -387,15 +441,29 @@ def search():
                 Procurement.user_department.ilike(pattern),
                 Procurement.ppra_code.ilike(pattern),
             )
-        ).order_by(Procurement.created_at.desc()).all()
-        users = User.query.filter(
-            or_(
-                User.first_name.ilike(pattern),
-                User.last_name.ilike(pattern),
-                User.email.ilike(pattern),
-                User.department.ilike(pattern),
+        )
+        if current_user.has_role('bidder') or current_user.bidder_id:
+            procurement_query = procurement_query.filter(
+                or_(
+                    Procurement.status.in_(['published', 'submission_open', 'clarification_period']),
+                    Procurement.id.in_(db.session.query(Submission.procurement_id).filter_by(
+                        bidder_id=current_user.bidder_id
+                    )),
+                    Procurement.id.in_(db.session.query(BidderPayment.procurement_id).filter_by(
+                        bidder_id=current_user.bidder_id
+                    )),
+                )
             )
-        ).order_by(User.first_name.asc()).limit(20).all()
+        procurements = procurement_query.order_by(Procurement.created_at.desc()).all()
+        if not (current_user.has_role('bidder') or current_user.bidder_id):
+            users = User.query.filter(
+                or_(
+                    User.first_name.ilike(pattern),
+                    User.last_name.ilike(pattern),
+                    User.email.ilike(pattern),
+                    User.department.ilike(pattern),
+                )
+            ).order_by(User.first_name.asc()).limit(20).all()
     return render_template('global_search.html', query=query, procurements=procurements, users=users)
 
 
@@ -404,15 +472,18 @@ def search():
 def detail(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
 
-    if current_user.has_role('bidder'):
-        if procurement.status in ('draft', 'internal_review', 'approved_for_publication'):
+    if current_user.has_role('bidder') or current_user.bidder_id:
+        if not _bidder_can_access_procurement(procurement):
             abort(404)
+        return redirect(url_for('bidders.workspace', procurement_id=procurement.id))
     elif not current_user.can_access_procurement(procurement):
         abort(403)
 
     committee = procurement.committee_members.all()
-    communications_query = procurement.communications
-    if current_user.has_role('bidder'):
+    communications_query = procurement.communications.filter(
+        Communication.type.in_(['clarification', 'question'])
+    )
+    if current_user.has_role('bidder') or current_user.bidder_id:
         communications_query = communications_query.filter(
             or_(
                 Communication.visibility_type == 'public',
@@ -426,8 +497,10 @@ def detail(procurement_id):
         )
     communications = communications_query.order_by(Communication.created_at.desc()).limit(10).all()
     complaints = procurement.complaints.order_by(Complaint.created_at.desc()).all()
-    submissions = procurement.submissions.filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
-    submission_count = procurement.submissions.filter_by(status='submitted').count()
+    submissions = procurement.submissions.options(
+        selectinload(Submission.bidder)
+    ).filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
+    submission_count = len(submissions)
     next_status = TRANSITIONS.get(procurement.status, [None])[0] if TRANSITIONS.get(procurement.status) else None
     if procurement.status not in ('draft', 'published') and not (
         procurement.status == 'submission_open'
@@ -437,7 +510,9 @@ def detail(procurement_id):
         next_status = None
 
     # Payments for Procurement verification
-    payments = BidderPayment.query.filter_by(procurement_id=procurement.id).order_by(BidderPayment.submitted_at.desc()).all()
+    payments = BidderPayment.query.options(
+        selectinload(BidderPayment.bidder)
+    ).filter_by(procurement_id=procurement.id).order_by(BidderPayment.submitted_at.desc()).all()
     pending_payments_count = sum(1 for p in payments if p.status == 'pending')
 
     # Evaluator assignments UI (post-closure, visible to Procurement role).
@@ -449,7 +524,7 @@ def detail(procurement_id):
     )
     evaluator_candidates = (
         EvaluatorAssignmentService.eligible_evaluators()
-        if can_assign_evaluators else []
+        if can_create_assignment else []
     )
     budget_entries = procurement.budget_entries.order_by(BudgetEntry.entry_date.desc(), BudgetEntry.id.desc()).all()
     budget_spend = sum((entry.signed_amount for entry in budget_entries), Decimal('0'))
@@ -458,7 +533,6 @@ def detail(procurement_id):
     performance_reviews = procurement.bidder_performance_reviews.order_by(
         BidderPerformance.reviewed_at.desc()
     ).all()
-    performance_bidders = Bidder.query.filter_by(active=True).order_by(Bidder.company_name).all()
 
     return render_template(
         'procurement_detail.html',
@@ -483,7 +557,6 @@ def detail(procurement_id):
         budget_spend=budget_spend,
         budget_remaining=budget_remaining,
         performance_reviews=performance_reviews,
-        performance_bidders=performance_bidders,
     )
 
 
@@ -1062,7 +1135,14 @@ def download_document(procurement_id, communication_id):
     procurement = Procurement.query.get_or_404(procurement_id)
     document = Communication.query.filter_by(id=communication_id, procurement_id=procurement.id).first_or_404()
 
-    if current_user.has_role('bidder'):
+    if current_user.has_role('bidder') or current_user.bidder_id:
+        if not _bidder_can_access_procurement(procurement):
+            abort(404)
+        if document.type == 'clarification':
+            if not ClarificationAccessService.can_bidder_view_clarification(document.id, current_user.bidder_id):
+                abort(403)
+        elif document.type not in ('advertisement', 'addendum'):
+            abort(403)
         if not current_user.bidder or not current_user.bidder.has_approved_payment_for_procurement(procurement.id):
             log_action('UNAUTHORIZED_COMMUNICATION_DOWNLOAD_BLOCKED', entity_type='Communication', entity_id=document.id,
                        reason=f"Bidder {current_user.bidder_id} attempted access before payment approval")

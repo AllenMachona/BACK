@@ -535,95 +535,26 @@ def review_form_e(request_id):
 @requests_bp.route('/form-d/<int:request_id>/convert', methods=['POST'])
 @login_required
 def convert_form_d(request_id):
-    """Create a draft Procurement record from a Form D request, then link the
-    request to it and flip its status to 'converted'."""
+    """Open the full editable procurement form for a Form D request."""
     request_obj = FormDRequest.query.get_or_404(request_id)
     _require_procurement_staff()
     if request_obj.status in ('converted', 'rejected'):
         flash(f'This request is already {request_obj.status}.', 'warning')
         return redirect(url_for('requests.detail_form_d', request_id=request_obj.id))
-
-    tender_number = _generate_tender_number()
-    procurement = Procurement(
-        tender_number=tender_number,
-        title=request_obj.requisition_title,
-        description=request_obj.justification,
-        category=request_obj.category,
-        method=request_obj.procurement_method,
-        estimated_value=request_obj.estimated_value,
-        procurement_entity=request_obj.procurement_entity,
-        user_department=request_obj.procurement_entity,
-        form_d_file_path=request_obj.submitted_form_path,
-        form_d_filename=request_obj.submitted_form_filename,
-        created_by_id=current_user.id,
-        status='draft',
-    )
-    db.session.add(procurement)
-    db.session.commit()
-
-    request_obj.procurement_id = procurement.id
-    request_obj.status = 'converted'
-    request_obj.converted_by_id = current_user.id
-    request_obj.converted_at = datetime.utcnow()
-    db.session.commit()
-
-    log_action('REQUEST_D_CONVERTED', entity_type='FormDRequest', entity_id=request_obj.id,
-               new_value={'tender_number': tender_number, 'procurement_id': procurement.id,
-                          'status': 'converted'})
-    _notify_requester(
-        request_obj, 'request_converted',
-        f'Your Form D request was converted ({tender_number})',
-        f'Your Procurement Requisition "{request_obj.requisition_title}" has been converted into '
-        f'procurement record {tender_number}. Track it under Procurements.',
-    )
-    flash(f'Procurement {tender_number} created from the Form D request (status: Draft).', 'success')
-    return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+    return redirect(url_for('procurements.create', request_id=request_obj.id, request_type='form_d'))
 
 
 @requests_bp.route('/form-e/<int:request_id>/convert', methods=['POST'])
 @login_required
 def convert_form_e(request_id):
+    """Open the full editable procurement form for a Form E request."""
     request_obj = FormERequest.query.get_or_404(request_id)
     _require_procurement_staff()
     if request_obj.status in ('converted', 'rejected'):
         flash(f'This request is already {request_obj.status}.', 'warning')
         return redirect(url_for('requests.detail_form_e', request_id=request_obj.id))
 
-    tender_number = _generate_tender_number()
-    procurement = Procurement(
-        tender_number=tender_number,
-        title=request_obj.specification_title,
-        description=request_obj.technical_specification,
-        category=request_obj.category,
-        method='open_domestic',
-        estimated_value=request_obj.budget_allocated,
-        procurement_entity=request_obj.procurement_entity,
-        user_department=request_obj.procurement_entity,
-        form_e_file_path=request_obj.submitted_form_path,
-        form_e_filename=request_obj.submitted_form_filename,
-        created_by_id=current_user.id,
-        status='draft',
-    )
-    db.session.add(procurement)
-    db.session.commit()
-
-    request_obj.procurement_id = procurement.id
-    request_obj.status = 'converted'
-    request_obj.converted_by_id = current_user.id
-    request_obj.converted_at = datetime.utcnow()
-    db.session.commit()
-
-    log_action('REQUEST_E_CONVERTED', entity_type='FormERequest', entity_id=request_obj.id,
-               new_value={'tender_number': tender_number, 'procurement_id': procurement.id,
-                          'status': 'converted'})
-    _notify_requester(
-        request_obj, 'request_converted',
-        f'Your Form E request was converted ({tender_number})',
-        f'Your Specification & Budget Clearance "{request_obj.specification_title}" has been converted '
-        f'into procurement record {tender_number}. Track it under Procurements.',
-    )
-    flash(f'Procurement {tender_number} created from the Form E request (status: Draft).', 'success')
-    return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+    return redirect(url_for('procurements.create', request_id=request_obj.id, request_type='form_e'))
 
 
 def _reject_request(request_obj):

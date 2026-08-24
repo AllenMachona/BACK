@@ -16,6 +16,11 @@
         <p class="ebms-page-subtitle">{{ procurement.title }}</p>
     </div>
     <div class="ebms-page-actions">
+        {% if current_user.has_permission('can_create_procurement') %}
+        <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-chat-dots me-1"></i>Clarifications
+        </a>
+        {% endif %}
         <span class="status-badge status-{{ procurement.status }} fs-6">{{ procurement.status_label() }}</span>
         {% if procurement.category %}
         <span class="badge badge-info">{{ procurement.category.title() }}</span>
@@ -130,7 +135,7 @@
                 <!-- Collapsible Upload Form -->
                 <div class="collapse mb-4 p-3 border rounded bg-light" id="uploadDocsCollapse">
                     <h6 class="fw-bold text-dark mb-3"><i class="bi bi-upload me-1 text-primary"></i>Upload or Replace Tender Documents</h6>
-                    <form method="POST" action="{{ url_for('procurements.upload_documents', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('procurements.upload_documents', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">FORM D (Requisition)</label>
@@ -538,7 +543,14 @@
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-chat-dots me-2 text-primary"></i>Clarifications & Questions</h5>
-                <span class="badge badge-info">{{ communications|length }} Clarification(s)</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-info">{{ communications|length }} Clarification(s)</span>
+                    {% if current_user.has_permission('can_create_procurement') %}
+                    <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Post / Manage
+                    </a>
+                    {% endif %}
+                </div>
             </div>
             <div class="card-body">
                 {% if communications %}
@@ -569,9 +581,21 @@
                     <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-right me-1"></i>View All Clarifications
                     </a>
+                    {% if current_user.has_permission('can_create_procurement') %}
+                    <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}#postClarificationForm" class="btn btn-primary btn-sm ms-2">
+                        <i class="bi bi-plus-circle me-1"></i>Post New Clarification
+                    </a>
+                    {% endif %}
                 </div>
                 {% else %}
-                <p class="text-muted mb-0 py-3 text-center"><i class="bi bi-inbox me-2"></i>No clarifications or questions have been posted for this tender yet.</p>
+                <p class="text-muted mb-3 py-3 text-center"><i class="bi bi-inbox me-2"></i>No clarifications or questions have been posted for this tender yet.</p>
+                {% if current_user.has_permission('can_create_procurement') %}
+                <div class="text-center">
+                    <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}#postClarificationForm" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>Post New Clarification
+                    </a>
+                </div>
+                {% endif %}
                 {% endif %}
             </div>
         </div>

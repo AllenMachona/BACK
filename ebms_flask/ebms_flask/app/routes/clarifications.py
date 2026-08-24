@@ -20,6 +20,14 @@ from werkzeug.utils import secure_filename
 clarifications_bp = Blueprint('clarifications', __name__, url_prefix='/procurements')
 
 
+def _bidder_can_access_clarifications(procurement):
+    if not current_user.bidder_id or not current_user.bidder:
+        return False
+    if procurement.status not in ('published', 'submission_open', 'clarification_period', 'closed'):
+        return False
+    return current_user.bidder.has_approved_payment_for_procurement(procurement.id)
+
+
 @clarifications_bp.route('/<int:procurement_id>/clarifications/create', methods=['POST'])
 @login_required
 @permission_required('can_create_procurement')
@@ -109,7 +117,7 @@ def list_clarifications(procurement_id):
     
     # Check access to procurement
     if current_user.has_role('bidder'):
-        if procurement.status not in ['published', 'submission_open', 'clarification_period', 'closed']:
+        if not _bidder_can_access_clarifications(procurement):
             abort(403)
     elif not (current_user.has_role('system_admin') or current_user.has_permission('can_create_procurement')):
         abort(403)
@@ -136,7 +144,10 @@ def list_clarifications(procurement_id):
     clarifications = query.order_by(Communication.created_at.desc()).all()
     
     # Counts for stats display
-    all_comms = Communication.query.filter_by(procurement_id=procurement_id)
+    all_comms = Communication.query.filter_by(
+        procurement_id=procurement_id,
+        type='clarification',
+    )
     public_count = all_comms.filter_by(visibility_type='public').count()
     targeted_count = all_comms.filter_by(visibility_type='targeted').count()
     all_bidders = Bidder.query.filter_by(active=True, suspended=False).order_by(Bidder.company_name).all()
@@ -162,6 +173,8 @@ def view_clarification(procurement_id, communication_id):
         abort(404)
     
     if current_user.has_role('bidder'):
+        if not _bidder_can_access_clarifications(procurement):
+            abort(403)
         bidder_id = current_user.bidder_id
         if not ClarificationAccessService.can_bidder_view_clarification(communication_id, bidder_id):
             flash('You do not have access to this clarification.', 'danger')
@@ -299,6 +312,8 @@ def download_clarification_file(procurement_id, communication_id):
                               communication_id=communication_id))
     
     if current_user.has_role('bidder'):
+        if not _bidder_can_access_clarifications(procurement):
+            abort(403)
         bidder_id = current_user.bidder_id
         if not ClarificationAccessService.can_bidder_view_clarification(communication_id, bidder_id):
             flash('You do not have access to this file.', 'danger')

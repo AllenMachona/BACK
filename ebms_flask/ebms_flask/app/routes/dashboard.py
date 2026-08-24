@@ -43,7 +43,7 @@ def _deadline_order(descending=False):
 @dashboard_bp.route('/')
 def index():
     if current_user.is_authenticated:
-        if current_user.has_role('bidder'):
+        if current_user.has_role('bidder') or current_user.bidder_id:
             return redirect(url_for('bidders.portal'))
         return redirect(url_for('dashboard.dashboard'))
 
@@ -205,12 +205,17 @@ def public_tender_detail(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
     if procurement.status not in ('published', 'submission_open', 'clarification_period', 'award_published'):
         abort(404)
+    if current_user.is_authenticated and (current_user.has_role('bidder') or current_user.bidder_id):
+        return redirect(url_for('bidders.workspace', procurement_id=procurement.id))
     return render_template('public_tender_detail.html', procurement=procurement)
 
 
 @dashboard_bp.route('/dashboard')
 @login_required
 def dashboard():
+    if current_user.has_role('bidder') or current_user.bidder_id:
+        return redirect(url_for('bidders.portal'))
+
     active_tenders = Procurement.query.filter(
         Procurement.status.in_(['published', 'submission_open'])
     ).count()

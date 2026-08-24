@@ -25,7 +25,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-9">
-        <form method="POST" action="{{ url_for('requests.submit_form_e') }}" enctype="multipart/form-data" id="form-e-form">
+        <form method="POST" action="{{ url_for('requests.submit_form_e') }}" enctype="multipart/form-data" id="form-e-form" data-cancellable-upload>
             <div class="card mb-4">
                 <div class="card-header bg-white d-flex align-items-center gap-2">
                     <span class="step-badge">1</span>

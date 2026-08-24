@@ -34,40 +34,46 @@ def connection_string(database):
 def ensure_database():
     with pyodbc.connect(connection_string("master"), autocommit=True) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            f"IF DB_ID(N'{DATABASE}') IS NULL CREATE DATABASE [{DATABASE}]"
-        )
+        try:
+            cursor.execute(
+                f"IF DB_ID(N'{DATABASE}') IS NULL CREATE DATABASE [{DATABASE}]"
+            )
+        finally:
+            cursor.close()
 
 
 def repair_sqlserver_constraints():
     """Replace SQLite's nullable UNIQUE semantics with a filtered index."""
     with pyodbc.connect(connection_string(DATABASE), autocommit=True) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT i.name, kc.name FROM sys.indexes i "
-            "JOIN sys.tables t ON t.object_id = i.object_id "
-            "JOIN sys.index_columns ic ON ic.object_id = i.object_id "
-            "AND ic.index_id = i.index_id "
-            "JOIN sys.columns c ON c.object_id = ic.object_id "
-            "AND c.column_id = ic.column_id "
-            "LEFT JOIN sys.key_constraints kc ON kc.parent_object_id = i.object_id "
-            "AND kc.unique_index_id = i.index_id "
-            "WHERE t.name = 'bidders' AND c.name = 'ppra_registration_number' "
-            "AND i.is_unique = 1 "
-            "AND i.name <> 'uq_bidders_ppra_registration_number'"
-        )
-        for index_name, constraint_name in cursor.fetchall():
-            if constraint_name:
-                cursor.execute(f"ALTER TABLE [bidders] DROP CONSTRAINT [{constraint_name}]")
-            else:
-                cursor.execute(f"DROP INDEX [{index_name}] ON [bidders]")
-        cursor.execute(
-            "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = "
-            "'uq_bidders_ppra_registration_number') "
-            "CREATE UNIQUE INDEX [uq_bidders_ppra_registration_number] "
-            "ON [bidders] ([ppra_registration_number]) "
-            "WHERE [ppra_registration_number] IS NOT NULL"
-        )
+        try:
+            cursor.execute(
+                "SELECT i.name, kc.name FROM sys.indexes i "
+                "JOIN sys.tables t ON t.object_id = i.object_id "
+                "JOIN sys.index_columns ic ON ic.object_id = i.object_id "
+                "AND ic.index_id = i.index_id "
+                "JOIN sys.columns c ON c.object_id = ic.object_id "
+                "AND c.column_id = ic.column_id "
+                "LEFT JOIN sys.key_constraints kc ON kc.parent_object_id = i.object_id "
+                "AND kc.unique_index_id = i.index_id "
+                "WHERE t.name = 'bidders' AND c.name = 'ppra_registration_number' "
+                "AND i.is_unique = 1 "
+                "AND i.name <> 'uq_bidders_ppra_registration_number'"
+            )
+            for index_name, constraint_name in cursor.fetchall():
+                if constraint_name:
+                    cursor.execute(f"ALTER TABLE [bidders] DROP CONSTRAINT [{constraint_name}]")
+                else:
+                    cursor.execute(f"DROP INDEX [{index_name}] ON [bidders]")
+            cursor.execute(
+                "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = "
+                "'uq_bidders_ppra_registration_number') "
+                "CREATE UNIQUE INDEX [uq_bidders_ppra_registration_number] "
+                "ON [bidders] ([ppra_registration_number]) "
+                "WHERE [ppra_registration_number] IS NOT NULL"
+            )
+        finally:
+            cursor.close()
 
 
 def source_tables(source):
@@ -143,8 +149,10 @@ def migrate(source, metadata):
         engine = create_engine(
             f"mssql+pyodbc:///?odbc_connect={quote_plus(connection_string(DATABASE))}"
         )
-        metadata.create_all(engine)
-        engine.dispose()
+        try:
+            metadata.create_all(engine)
+        finally:
+            engine.dispose()
         repair_sqlserver_constraints()
 
         ordered = foreign_key_order(metadata, tables)
@@ -194,13 +202,16 @@ def migrate(source, metadata):
                 if not values:
                     continue
                 cursor = target.cursor()
-                cursor.execute(f"SET IDENTITY_INSERT [{table_name}] ON")
-                cursor.fast_executemany = True
-                cursor.executemany(
-                    f"INSERT INTO [{table_name}] ({quoted}) VALUES ({placeholders})",
-                    values,
-                )
-                cursor.execute(f"SET IDENTITY_INSERT [{table_name}] OFF")
+                try:
+                    cursor.execute(f"SET IDENTITY_INSERT [{table_name}] ON")
+                    cursor.fast_executemany = True
+                    cursor.executemany(
+                        f"INSERT INTO [{table_name}] ({quoted}) VALUES ({placeholders})",
+                        values,
+                    )
+                    cursor.execute(f"SET IDENTITY_INSERT [{table_name}] OFF")
+                finally:
+                    cursor.close()
                 primary_key = next(iter(table.primary_key.columns), None)
                 if primary_key is not None:
                     key_index = names.index(primary_key.name)
@@ -226,9 +237,13 @@ def validate(source, metadata, skipped_counts=None):
                 source_count = source_conn.execute(
                     f"SELECT COUNT(*) FROM [{table_name}]"
                 ).fetchone()[0]
-                target_count = target.cursor().execute(
-                    f"SELECT COUNT(*) FROM [{table_name}]"
-                ).fetchone()[0]
+                cursor = target.cursor()
+                try:
+                    target_count = cursor.execute(
+                        f"SELECT COUNT(*) FROM [{table_name}]"
+                    ).fetchone()[0]
+                finally:
+                    cursor.close()
                 expected_count = source_count - skipped_counts.get(table_name, 0)
                 result = "OK" if expected_count == target_count else "MISMATCH"
                 print(

@@ -23,7 +23,7 @@
     <div class="collapse mb-4" id="postClarificationForm">
         <div class="stat-card text-start">
             <h2 class="h5 mb-3">Post clarification</h2>
-            <form method="POST" action="{{ url_for('clarifications.create_clarification', procurement_id=procurement.id) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('clarifications.create_clarification', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
                 <div class="mb-3">
                     <label class="form-label" for="clarificationContent">Message</label>
                     <textarea id="clarificationContent" name="content" class="form-control" rows="4" required></textarea>
@@ -185,6 +185,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     visibilityType.addEventListener('change', updatePickerState);
     updatePickerState();
+
+    if (window.location.hash === '#postClarificationForm') {
+        const postForm = document.getElementById('postClarificationForm');
+        if (postForm) {
+            postForm.classList.add('show');
+            postForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
 });
 </script>
 
