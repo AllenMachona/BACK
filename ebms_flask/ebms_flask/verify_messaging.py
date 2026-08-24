@@ -26,7 +26,7 @@ ids = set(re.findall(r'/messages/thread/(\d+)', inbox))
 print('thread ids found in inbox:', sorted(ids, key=int)[:5] if ids else 'none')
 
 # 3) Send a broadcast message WITH a PDF attachment
-att_path = None
+att_path = None  
 try:
     with tempfile.NamedTemporaryFile(suffix='.txt', delete=False, mode='w', encoding='utf-8') as tf:
         tf.write('Hello attachment world')

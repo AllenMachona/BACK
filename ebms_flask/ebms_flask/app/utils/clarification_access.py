@@ -99,9 +99,9 @@ class ClarificationAccessService:
         visibility = ClarificationVisibility.query.filter_by(
             communication_id=communication_id,
             bidder_id=bidder_id
-        ).first()
+        ).filter(ClarificationVisibility.revoked_at.is_(None)).first()
         
-        if not visibility or visibility.revoked_at is not None:
+        if not visibility:
             return None
         
         visibility.revoked_at = datetime.utcnow()
@@ -184,7 +184,7 @@ class ClarificationAccessService:
     def convert_to_targeted(communication_id, reason=None):
         """Convert a public clarification to targeted.
         
-        Grants access to all current bidders, then removes access to others.
+        Existing access must be granted explicitly after the conversion.
         
         Args:
             communication_id: Communication ID
@@ -196,17 +196,6 @@ class ClarificationAccessService:
         
         # Change visibility type
         comm.visibility_type = 'targeted'
-        
-        # Grant access to all active bidders
-        from app.models.bidder import Bidder
-        active_bidders = Bidder.query.filter_by(active=True, suspended=False).all()
-        
-        for bidder in active_bidders:
-            ClarificationAccessService.grant_clarification_access(
-                communication_id=communication_id,
-                bidder_id=bidder.id,
-                reason=f"Converted to targeted: {reason}" if reason else "Converted to targeted"
-            )
         
         db.session.commit()
         return True

@@ -824,7 +824,12 @@ class ReportsService:
     # ------------------------------------------------------------------
     @staticmethod
     def generate_procurement_history_report(filters=None):
-        """Lifecycle state changes for procurements."""
+        """Lifecycle state changes for procurements.
+
+        The history table is the primary source. Older deployments recorded
+        transitions only in AuditLog, so unmatched status-change audit rows are
+        included as a compatibility fallback.
+        """
         filters = filters or {}
         query = ProcurementHistory.query
         if filters.get('procurement_id'):
@@ -836,8 +841,14 @@ class ReportsService:
         if filters.get('end_date'):
             query = query.filter(ProcurementHistory.performed_at <= filters['end_date'])
 
+        history_entries = query.order_by(ProcurementHistory.performed_at.desc()).all()
         rows = []
-        for entry in query.order_by(ProcurementHistory.performed_at.desc()).all():
+        history_keys = {
+            (entry.procurement_id, entry.previous_status, entry.new_status, entry.performed_by_id)
+            for entry in history_entries
+        }
+
+        for entry in history_entries:
             proc = entry.procurement
             performed_by = entry.performed_by
             approved_by = entry.approved_by
@@ -853,6 +864,47 @@ class ReportsService:
                 'Approved By': approved_by.full_name() if approved_by else '-',
                 'Reason': (reason[:60] + '...') if len(reason) > 60 else reason,
             })
+
+        audit_query = AuditLog.query.filter(
+            AuditLog.entity_type == 'Procurement',
+            AuditLog.action == 'PROCUREMENT_STATUS_CHANGED',
+        )
+        if filters.get('procurement_id'):
+            audit_query = audit_query.filter(AuditLog.entity_id == filters['procurement_id'])
+        if filters.get('start_date'):
+            audit_query = audit_query.filter(AuditLog.created_at >= filters['start_date'])
+        if filters.get('end_date'):
+            audit_query = audit_query.filter(AuditLog.created_at <= filters['end_date'])
+
+        for audit_entry in audit_query.order_by(AuditLog.created_at.desc()).all():
+            try:
+                previous_value = json.loads(audit_entry.previous_value or '{}')
+                new_value = json.loads(audit_entry.new_value or '{}')
+            except (TypeError, ValueError):
+                previous_value, new_value = {}, {}
+            previous_status = previous_value.get('status')
+            new_status = new_value.get('status')
+            audit_key = (audit_entry.entity_id, previous_status, new_status, audit_entry.user_id)
+            if audit_key in history_keys:
+                continue
+            if filters.get('action') and filters['action'] not in ('status_changed', new_status):
+                continue
+            proc = Procurement.query.get(audit_entry.entity_id)
+            user = User.query.get(audit_entry.user_id) if audit_entry.user_id else None
+            reason = audit_entry.reason or ''
+            rows.append({
+                'Tender Number': proc.tender_number if proc else '-',
+                'Action': 'status_changed',
+                'Previous Status': previous_status or '-',
+                'New Status': new_status or '-',
+                'Performed By': user.full_name() if user else '-',
+                'Performed At': audit_entry.created_at.strftime('%Y-%m-%d %H:%M') if audit_entry.created_at else '-',
+                'Requires Approval': 'No',
+                'Approved By': '-',
+                'Reason': (reason[:60] + '...') if len(reason) > 60 else reason,
+            })
+
+        rows.sort(key=lambda row: row['Performed At'], reverse=True)
         return rows
 
     @staticmethod

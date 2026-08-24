@@ -620,7 +620,9 @@ def _register_table_report(key, title, subtitle, icon, columns, filter_builder, 
 
 def _history_action_options():
     actions = db.session.query(distinct(ProcurementHistory.action)).all()
-    return [(a[0], a[0].replace('_', ' ').title()) for a in actions if a[0]]
+    values = {a[0] for a in actions if a[0]}
+    values.add('status_changed')
+    return [(action, action.replace('_', ' ').title()) for action in sorted(values)]
 
 # --- Tender Register -------------------------------------------------
 _register_table_report(

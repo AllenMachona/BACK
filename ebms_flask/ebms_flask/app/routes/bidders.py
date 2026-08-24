@@ -3,11 +3,13 @@ import secrets
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, abort
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.submission import Submission
 from app.models.communication import Communication
+from app.models.clarification import ClarificationVisibility
 from app.utils.crypto import encrypt_bytes, sha256_hex
 from app.utils.audit import log_action
 from app.utils.decorators import role_required
@@ -257,9 +259,17 @@ def workspace(procurement_id):
             return redirect(url_for('bidders.portal'))
 
     documents = procurement.communications.filter_by(type='addendum').all()
-    clarifications = procurement.communications.filter_by(type='clarification', is_public=True).order_by(
-        Communication.created_at.desc()
-    ).all()
+    clarifications = procurement.communications.filter(
+        Communication.type == 'clarification',
+        or_(
+            Communication.visibility_type == 'public',
+            Communication.id.in_(
+                db.session.query(ClarificationVisibility.communication_id).filter_by(
+                    bidder_id=current_user.bidder_id
+                ).filter(ClarificationVisibility.revoked_at.is_(None))
+            )
+        )
+    ).order_by(Communication.created_at.desc()).all()
     advertisement = procurement.communications.filter_by(type='advertisement').order_by(
         Communication.created_at.desc()
     ).first()

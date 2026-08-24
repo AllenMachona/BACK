@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.communication import Communication
+from app.models.clarification import ClarificationVisibility
 from app.models.complaint import Complaint
 from app.models.submission import Submission
 from app.models.user import User
@@ -22,6 +23,7 @@ from app.models.evaluator_assignment import EvaluatorAssignment
 from app.models.evaluator_feedback import EvaluatorFeedback
 from app.models.budget_entry import BudgetEntry
 from app.models.bidder_performance import BidderPerformance
+from app.models.history import ProcurementHistory
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
 from app.utils.crypto import decrypt_bytes
@@ -409,7 +411,20 @@ def detail(procurement_id):
         abort(403)
 
     committee = procurement.committee_members.all()
-    communications = procurement.communications.order_by(Communication.created_at.desc()).limit(10).all()
+    communications_query = procurement.communications
+    if current_user.has_role('bidder'):
+        communications_query = communications_query.filter(
+            or_(
+                Communication.visibility_type == 'public',
+                Communication.id.in_(
+                    db.session.query(ClarificationVisibility.communication_id).filter_by(
+                        bidder_id=current_user.bidder_id
+                    ).filter(ClarificationVisibility.revoked_at.is_(None))
+                ),
+                Communication.visibility_type.is_(None)
+            )
+        )
+    communications = communications_query.order_by(Communication.created_at.desc()).limit(10).all()
     complaints = procurement.complaints.order_by(Complaint.created_at.desc()).all()
     submissions = procurement.submissions.filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
     submission_count = procurement.submissions.filter_by(status='submitted').count()
@@ -1185,6 +1200,7 @@ def transition(procurement_id):
         flash(f'Cannot move from {procurement.status_label()} to that status.', 'danger')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
+    transition_reason = request.form.get('reason', '').strip()
     if to_status == 'cancelled':
         reason = request.form.get('cancelled_reason', '').strip()
         if not reason:
@@ -1193,6 +1209,7 @@ def transition(procurement_id):
         procurement.cancelled = True
         procurement.cancelled_reason = reason
         procurement.cancelled_at = datetime.utcnow()
+        transition_reason = reason
 
     if to_status == 'submission_open':
         deadline_raw = request.form.get('submission_deadline')
@@ -1227,8 +1244,20 @@ def transition(procurement_id):
     procurement.status = to_status
     db.session.commit()
 
+    history_entry = ProcurementHistory.log_action(
+        procurement_id=procurement.id,
+        action=to_status,
+        performed_by_id=current_user.id,
+        previous_status=previous_status,
+        new_status=to_status,
+        reason=transition_reason or None,
+    )
+    db.session.add(history_entry)
+    db.session.commit()
+
     log_action('PROCUREMENT_STATUS_CHANGED', entity_type='Procurement', entity_id=procurement.id,
-               previous_value={'status': previous_status}, new_value={'status': to_status})
+               previous_value={'status': previous_status}, new_value={'status': to_status},
+               reason=transition_reason or None)
 
     if to_status in NOTIFIABLE:
         if to_status == 'submission_open' and previous_status in ('closed', 'under_evaluation'):

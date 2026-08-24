@@ -139,7 +139,7 @@ def _notify_procurement_staff(title, body):
         .all()
     )
     for user in staff:
-        notify_user(user, 'request_submitted', title, body)
+        notify_user(user, 'request_submitted', title, body, email=False)
 
 
 def _notify_requester(request_obj, notif_type, title, body):

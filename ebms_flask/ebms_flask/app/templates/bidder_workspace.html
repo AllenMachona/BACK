@@ -469,7 +469,19 @@
                 {% if clarifications %}
                     {% for c in clarifications %}
                     <div class="p-3 border rounded bg-light mb-2">
-                        <p class="mb-0 text-dark"><i class="bi bi-chat-square-text me-2 text-primary"></i>{{ c.content }}</p>
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <p class="mb-0 text-dark"><i class="bi bi-chat-square-text me-2 text-primary"></i>{{ c.content }}</p>
+                            <div class="d-flex gap-2 flex-shrink-0">
+                                <a href="{{ url_for('clarifications.view_clarification', procurement_id=procurement.id, communication_id=c.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                {% if c.file_path %}
+                                <a href="{{ url_for('clarifications.download_clarification_file', procurement_id=procurement.id, communication_id=c.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-download me-1"></i>Download
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 {% else %}
