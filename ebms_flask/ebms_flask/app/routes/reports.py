@@ -161,8 +161,10 @@ def procurement_summary():
     report_data = ReportsService.generate_procurement_summary_report(filters)
     
     # Get filter options
-    statuses = [p.status for p in Procurement.query.distinct(Procurement.status).all()]
-    categories = [p.category for p in Procurement.query.distinct(Procurement.category).all() if p.category]
+    statuses = [status for (status,) in db.session.query(Procurement.status).distinct().order_by(Procurement.status).all() if status]
+    categories = [category for (category,) in db.session.query(Procurement.category).filter(
+        Procurement.category.isnot(None)
+    ).distinct().order_by(Procurement.category).all()]
     
     return render_template(
         'reports/procurement_summary.html',
