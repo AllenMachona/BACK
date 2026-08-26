@@ -131,11 +131,11 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Evaluation Method <span class="text-danger">*</span></label>
                             <select name="evaluation_method" class="form-select" required>
-                                <option value="pass_fail" {{ 'selected' if not form or form.get('evaluation_method') == 'pass_fail' else '' }}>Pass / Fail</option>
-                                <option value="scored" {{ 'selected' if form and form.get('evaluation_method') == 'scored' else '' }}>Scored</option>
-                                <option value="weighted" {{ 'selected' if form and form.get('evaluation_method') == 'weighted' else '' }}>Weighted</option>
-                                <option value="least_cost" {{ 'selected' if form and form.get('evaluation_method') == 'least_cost' else '' }}>Least Cost</option>
-                                <option value="quality_cost" {{ 'selected' if form and form.get('evaluation_method') == 'quality_cost' else '' }}>Quality &amp; Cost</option>
+                                <option value="least_cost_services" {{ 'selected' if not form or form.get('evaluation_method') == 'least_cost_services' else '' }}>Least cost Selection-Services</option>
+                                <option value="least_cost_supplies" {{ 'selected' if form and form.get('evaluation_method') == 'least_cost_supplies' else '' }}>Least Cost Selection-Supplies</option>
+                                <option value="quality_based" {{ 'selected' if form and form.get('evaluation_method') == 'quality_based' else '' }}>Quality based Selection</option>
+                                <option value="quality_cost_based" {{ 'selected' if form and form.get('evaluation_method') == 'quality_cost_based' else '' }}>Quality and Cost Based Selection</option>
+                                <option value="least_cost_works" {{ 'selected' if form and form.get('evaluation_method') == 'least_cost_works' else '' }}>Least cost Selection-Works</option>
                             </select>
                         </div>
                         <div class="col-md-4">

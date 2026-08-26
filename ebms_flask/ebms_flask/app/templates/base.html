@@ -35,10 +35,12 @@
         </a>
 
         <!-- Global search -->
+        {% if not is_admin %}
         <form class="ebms-search" method="GET" action="{{ url_for('procurements.search') }}" role="search" aria-label="Global search">
             <i class="bi bi-search search-icon" aria-hidden="true"></i>
             <input type="text" name="q" class="search-input" placeholder="Search procurements, users…" aria-label="Search">
         </form>
+        {% endif %}
 
         <div class="ebms-top-actions">
             <!-- Notifications -->
@@ -52,6 +54,13 @@
                 <i class="bi bi-chat-square-text" aria-hidden="true"></i>
                 <span class="count-badge" id="messagesCount" style="display:none;">0</span>
             </button>
+
+            {% if not is_admin and not is_bidder and (can_reports or current_user.role.can_create_procurement or current_user.role.can_approve_procurement) %}
+            <a class="topbar-icon-btn" href="{{ url_for('requests.queue') }}" aria-label="{{ incoming_requests_count }} pending requests" title="Incoming Requests">
+                <i class="bi bi-inbox" aria-hidden="true"></i>
+                {% if incoming_requests_count %}<span class="count-badge">{{ incoming_requests_count }}</span>{% endif %}
+            </a>
+            {% endif %}
 
             <!-- Dark mode toggle -->
             <button type="button" class="topbar-icon-btn" id="ebmsThemeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
@@ -143,10 +152,15 @@
         <nav class="ebms-sidebar" aria-label="Main navigation">
             <div class="ebms-nav-section">Overview</div>
 
-            {% if not is_bidder %}
+            {% if not is_bidder and not is_admin %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('dashboard.') else '' }}"
                href="{{ url_for('dashboard.dashboard') }}" data-title="Dashboard">
                 <i class="bi bi-speedometer2" aria-hidden="true"></i><span>Dashboard</span>
+            </a>
+            {% elif is_admin %}
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('reports.') else '' }}"
+               href="{{ url_for('reports.index') }}" data-title="Reports Centre">
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Reports Centre</span>
             </a>
             {% else %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('bidders.') else '' }}"
@@ -155,16 +169,25 @@
             </a>
             {% endif %}
 
-            {% if not is_bidder %}
+            {% if not is_bidder and not is_admin %}
             <div class="ebms-nav-section">Procurement</div>
+            {% if not is_admin %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('procurements.') and endpoint != 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.list_procurements') }}" data-title="Procurements">
                 <i class="bi bi-folder2-open" aria-hidden="true"></i><span>Procurements</span>
             </a>
-            {% if can_reports or is_admin %}
+            {% endif %}
+            {% if current_user.has_role('procurement_unit') %}
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'dashboard.manage_procurement_plans' else '' }}"
+               href="{{ url_for('dashboard.manage_procurement_plans') }}" data-title="Procurement Plans">
+                <i class="bi bi-calendar3" aria-hidden="true"></i><span>Procurement Plans</span>
+            </a>
+            {% endif %}
+            {% if can_reports and not is_admin %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('requests.') else '' }}"
                href="{{ url_for('requests.queue') }}" data-title="Incoming Requests">
                 <i class="bi bi-inbox" aria-hidden="true"></i><span>Incoming Requests</span>
+                {% if incoming_requests_count %}<span class="nav-badge" aria-label="{{ incoming_requests_count }} pending requests">{{ incoming_requests_count }}</span>{% endif %}
             </a>
             {% endif %}
             {% if is_requester %}
@@ -178,7 +201,7 @@
                 <i class="bi bi-list-check" aria-hidden="true"></i><span>My Requests</span>
             </a>
             {% endif %}
-            {% if can_payverify %}
+            {% if can_payverify and not is_admin %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.payment_verifications') }}" data-title="Payment Verifications">
                 <i class="bi bi-credit-card-2-front" aria-hidden="true"></i><span>Payment Verifications</span>

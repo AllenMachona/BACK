@@ -76,7 +76,7 @@
                 <label class="form-label small fw-bold" for="procurement-evaluation">Evaluation</label>
                 <select class="form-select" id="procurement-evaluation" name="evaluation_method">
                     <option value="all">All evaluation methods</option>
-                    {% for value, label in [('pass_fail', 'Pass / Fail'), ('scored', 'Scored'), ('weighted', 'Weighted'), ('least_cost', 'Least Cost'), ('quality_cost', 'Quality & Cost')] %}
+                    {% for value, label in [('least_cost_services', 'Least cost Selection-Services'), ('least_cost_supplies', 'Least Cost Selection-Supplies'), ('quality_based', 'Quality based Selection'), ('quality_cost_based', 'Quality and Cost Based Selection'), ('least_cost_works', 'Least cost Selection-Works')] %}
                     <option value="{{ value }}" {% if evaluation_filter == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>

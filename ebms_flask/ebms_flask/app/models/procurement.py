@@ -14,7 +14,7 @@ class Procurement(db.Model):
     ppra_code = db.Column(db.String(50))
     ppra_sub_code = db.Column(db.String(20))
     method = db.Column(db.String(30), nullable=False)  # open_domestic, open_international, restricted, rfq, direct, rfp...
-    evaluation_method = db.Column(db.String(30))        # pass_fail, scored, weighted, least_cost, quality_cost
+    evaluation_method = db.Column(db.String(50))        # least_cost_services, least_cost_supplies, quality_based, quality_cost_based, least_cost_works
     envelope_type = db.Column(db.String(10), default='single')  # single, dual
     estimated_value = db.Column(db.Numeric(15, 2), nullable=False)
     user_department = db.Column(db.String(150))

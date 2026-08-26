@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for
 from flask_login import current_user
 from app.extensions import db, login_manager, migrate
 from config import Config
@@ -110,6 +110,22 @@ def create_app(config_class=Config):
             message=SiteSetting.get('maintenance_message', 'The system is temporarily undergoing maintenance.'),
         ), 503
 
+    @app.before_request
+    def restrict_admin_procurement_access():
+        """Keep system administrators out of operational procurement workflows."""
+        if not current_user.is_authenticated or not current_user.has_role('system_admin'):
+            return None
+        endpoint = request.endpoint or ''
+        blocked_prefixes = ('procurements.', 'requests.', 'bidders.', 'evaluations.')
+        blocked_endpoints = {
+            'dashboard.dashboard', 'dashboard.public_tenders',
+            'dashboard.public_tender_detail', 'dashboard.public_procurement_plans',
+            'dashboard.manage_procurement_plans', 'dashboard.edit_procurement_plan',
+        }
+        if endpoint.startswith(blocked_prefixes) or endpoint in blocked_endpoints:
+            return redirect(url_for('reports.index'))
+        return None
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
@@ -144,9 +160,16 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_globals():
         from datetime import datetime
+        from app.models.request import FormDRequest, FormERequest, FormDERequest
+        pending_statuses = ('submitted', 'under_review')
+        incoming_requests_count = sum(
+            model.query.filter(model.status.in_(pending_statuses)).count()
+            for model in (FormDRequest, FormERequest, FormDERequest)
+        )
         return {
             'now': datetime.utcnow(),
             'site_settings': SiteSetting.as_dict(),
+            'incoming_requests_count': incoming_requests_count,
         }
 
     return app

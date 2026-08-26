@@ -1,12 +1,16 @@
 import json
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, request, abort
+from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
 from flask_login import login_required, current_user
 from sqlalchemy import case, func
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.bidder import Bidder
 from app.models.submission import Submission
+from app.models.complaint import Complaint
+from app.models.payment import BidderPayment
+from app.models.procurement_plan import ProcurementPlanItem
+from app.utils.decorators import role_required
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -43,6 +47,8 @@ def _deadline_order(descending=False):
 @dashboard_bp.route('/')
 def index():
     if current_user.is_authenticated:
+        if current_user.has_role('system_admin'):
+            return redirect(url_for('reports.index'))
         if current_user.has_role('bidder') or current_user.bidder_id:
             return redirect(url_for('bidders.portal'))
         return redirect(url_for('dashboard.dashboard'))
@@ -200,6 +206,78 @@ def public_tenders():
     )
 
 
+@dashboard_bp.route('/procurement-plans')
+def public_procurement_plans():
+    plans = ProcurementPlanItem.query.filter_by(status='published').order_by(
+        ProcurementPlanItem.financial_year.desc(),
+        ProcurementPlanItem.procurement_entity.asc(),
+        ProcurementPlanItem.planned_quarter.asc(),
+    ).all()
+    years = sorted({plan.financial_year for plan in plans}, reverse=True)
+    selected_year = (request.args.get('year') or '').strip()
+    if selected_year:
+        plans = [plan for plan in plans if plan.financial_year == selected_year]
+    return render_template('public_procurement_plans.html', plans=plans, years=years, selected_year=selected_year)
+
+
+@dashboard_bp.route('/procurement-plans/manage', methods=['GET', 'POST'])
+@login_required
+@role_required('procurement_unit')
+def manage_procurement_plans():
+    if request.method == 'POST':
+        plan_id = request.form.get('plan_id', type=int)
+        plan = ProcurementPlanItem.query.get(plan_id) if plan_id else None
+        if plan_id and not plan:
+            abort(404)
+        if request.form.get('action') == 'publish':
+            plan.status = 'published'
+            db.session.commit()
+            flash('Procurement plan published successfully.', 'success')
+            return redirect(url_for('dashboard.manage_procurement_plans'))
+        try:
+            estimated_value = float(request.form.get('estimated_value', ''))
+        except ValueError:
+            flash('Enter a valid estimated value.', 'danger')
+            return redirect(url_for('dashboard.manage_procurement_plans'))
+
+        if not plan:
+            plan = ProcurementPlanItem(created_by_id=current_user.id)
+            db.session.add(plan)
+        plan.procurement_entity = request.form.get('procurement_entity', '').strip()
+        plan.financial_year = request.form.get('financial_year', '').strip()
+        plan.title = request.form.get('title', '').strip()
+        plan.description = request.form.get('description', '').strip()
+        plan.category = request.form.get('category', '').strip()
+        plan.method = request.form.get('method', '').strip()
+        plan.estimated_value = estimated_value
+        plan.planned_quarter = request.form.get('planned_quarter', '').strip()
+        plan.status = 'published' if request.form.get('status') == 'published' else 'draft'
+        if not all((plan.procurement_entity, plan.financial_year, plan.title,
+                    plan.category, plan.method, plan.planned_quarter)):
+            flash('Complete all required procurement plan fields.', 'danger')
+            return redirect(url_for('dashboard.manage_procurement_plans'))
+        db.session.add(plan)
+        db.session.commit()
+        flash('Procurement plan item saved successfully.', 'success')
+        return redirect(url_for('dashboard.manage_procurement_plans'))
+
+    plans = ProcurementPlanItem.query.order_by(
+        ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
+    ).all()
+    return render_template('procurement_plan_manage.html', plans=plans)
+
+
+@dashboard_bp.route('/procurement-plans/<int:plan_id>/edit', methods=['GET'])
+@login_required
+@role_required('procurement_unit')
+def edit_procurement_plan(plan_id):
+    plan = ProcurementPlanItem.query.get_or_404(plan_id)
+    plans = ProcurementPlanItem.query.order_by(
+        ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
+    ).all()
+    return render_template('procurement_plan_manage.html', plans=plans, edit_plan=plan)
+
+
 @dashboard_bp.route('/tenders/<int:procurement_id>')
 def public_tender_detail(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
@@ -228,8 +306,61 @@ def dashboard():
 
     since = datetime.utcnow() - timedelta(hours=24)
     recent_submissions = Submission.query.filter(Submission.submitted_at >= since).count()
+    metric_max = max(active_tenders, pending_evaluations, registered_bidders, recent_submissions, 1)
+    dashboard_metrics = [
+        {'label': 'Active Tenders', 'value': active_tenders, 'note': 'Published and open for submission',
+         'icon': 'bi-file-earmark-text', 'tone': 'blue', 'url': url_for('reports.operational')},
+        {'label': 'Pending Evaluations', 'value': pending_evaluations, 'note': 'Awaiting committee action',
+         'icon': 'bi-hourglass-split', 'tone': 'gold', 'url': url_for('reports.operational')},
+        {'label': 'Registered Bidders', 'value': registered_bidders, 'note': 'Active supplier registry',
+         'icon': 'bi-people', 'tone': 'green', 'url': url_for('reports.bidder_registry')},
+        {'label': 'Recent Submissions', 'value': recent_submissions, 'note': 'Received in the last 24 hours',
+         'icon': 'bi-inbox', 'tone': 'blue', 'url': url_for('reports.bidder_participation')},
+    ]
 
     recent_procurements = Procurement.query.order_by(Procurement.updated_at.desc()).limit(6).all()
+
+    status_rows = db.session.query(
+        Procurement.status, func.count(Procurement.id)
+    ).group_by(Procurement.status).order_by(func.count(Procurement.id).desc()).all()
+    category_rows = db.session.query(
+        Procurement.category, func.count(Procurement.id)
+    ).group_by(Procurement.category).order_by(func.count(Procurement.id).desc()).all()
+    status_total = sum(count for _, count in status_rows) or 1
+    category_total = sum(count for _, count in category_rows) or 1
+    chart_colors = ['#1e88d6', '#2d6a35', '#d7952b', '#875c9e', '#c94b4b']
+    status_segments = []
+    segment_start = 0
+    for index, (_, count) in enumerate(status_rows):
+        segment_end = segment_start + (count / status_total * 100)
+        status_segments.append(f'{chart_colors[index % len(chart_colors)]} {segment_start:.2f}% {segment_end:.2f}%')
+        segment_start = segment_end
+    status_gradient = ', '.join(status_segments) or '#e9eef1 0 100%'
+    overdue_tenders = Procurement.query.filter(
+        Procurement.status == 'submission_open',
+        Procurement.submission_deadline.isnot(None),
+        Procurement.submission_deadline < datetime.utcnow(),
+    ).count()
+    closing_soon = Procurement.query.filter(
+        Procurement.status == 'submission_open',
+        Procurement.submission_deadline.isnot(None),
+        Procurement.submission_deadline >= datetime.utcnow(),
+        Procurement.submission_deadline <= datetime.utcnow() + timedelta(days=7),
+    ).count()
+    pending_payments = BidderPayment.query.filter_by(status='pending').count()
+    active_complaints = Complaint.query.filter(
+        Complaint.status.in_(['received', 'under_review', 'escalated'])
+    ).count()
+    dashboard_alerts = [
+        {'label': 'Overdue submission windows', 'count': overdue_tenders, 'tone': 'danger',
+         'icon': 'bi-alarm', 'url': url_for('procurements.list_procurements', status='submission_open')},
+        {'label': 'Tenders closing within 7 days', 'count': closing_soon, 'tone': 'warning',
+         'icon': 'bi-hourglass-split', 'url': url_for('procurements.list_procurements', status='submission_open')},
+        {'label': 'Payments awaiting verification', 'count': pending_payments, 'tone': 'info',
+         'icon': 'bi-credit-card-2-front', 'url': url_for('procurements.payment_verifications')},
+        {'label': 'Active complaints', 'count': active_complaints, 'tone': 'danger',
+         'icon': 'bi-exclamation-octagon', 'url': url_for('reports.complaints')},
+    ]
 
     return render_template(
         'dashboard.html',
@@ -237,5 +368,13 @@ def dashboard():
         pending_evaluations=pending_evaluations,
         registered_bidders=registered_bidders,
         recent_submissions=recent_submissions,
+        dashboard_metrics=dashboard_metrics,
+        metric_max=metric_max,
         recent_procurements=recent_procurements,
+        status_rows=status_rows,
+        status_total=status_total,
+        status_gradient=status_gradient,
+        category_rows=category_rows,
+        category_total=category_total,
+        dashboard_alerts=dashboard_alerts,
     )
