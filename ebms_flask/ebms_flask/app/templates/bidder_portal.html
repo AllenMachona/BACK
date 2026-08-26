@@ -114,7 +114,9 @@
                             <td><span class="badge badge-secondary">{{ p.category.title() }}</span></td>
                             <td><i class="bi bi-clock me-1 text-muted"></i>{{ p.submission_deadline.strftime('%Y-%m-%d %H:%M') if p.submission_deadline else 'TBA' }}</td>
                             <td>
-                                {% if pay and pay.status == 'approved' %}
+                                {% if not p.has_itt() and p.has_rfq() %}
+                                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>Unlocked</span>
+                                {% elif pay and pay.status == 'approved' %}
                                 <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>Unlocked</span>
                                 {% elif pay and pay.status == 'pending' %}
                                 <span class="badge badge-warning"><i class="bi bi-hourglass-split me-1"></i>Review Pending</span>

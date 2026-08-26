@@ -30,8 +30,6 @@ def migrate():
                 'form_d_filename': 'ALTER TABLE procurements ADD COLUMN form_d_filename VARCHAR(300)',
                 'form_e_file_path': 'ALTER TABLE procurements ADD COLUMN form_e_file_path VARCHAR(500)',
                 'form_e_filename': 'ALTER TABLE procurements ADD COLUMN form_e_filename VARCHAR(300)',
-                'rfce_file_path': 'ALTER TABLE procurements ADD COLUMN rfce_file_path VARCHAR(500)',
-                'rfce_filename': 'ALTER TABLE procurements ADD COLUMN rfce_filename VARCHAR(300)',
                 'itt_file_path': 'ALTER TABLE procurements ADD COLUMN itt_file_path VARCHAR(500)',
                 'itt_filename': 'ALTER TABLE procurements ADD COLUMN itt_filename VARCHAR(300)',
                 'rfq_file_path': 'ALTER TABLE procurements ADD COLUMN rfq_file_path VARCHAR(500)',

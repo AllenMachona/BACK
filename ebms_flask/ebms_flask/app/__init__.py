@@ -44,6 +44,7 @@ def create_app(config_class=Config):
         # as an empty box. Google Fonts are still allowed for the public/auth pages.
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"
         return response
+
     
     # SECURITY: Enforce HTTPS in production
     if not app.debug and app.config.get('REQUIRE_HTTPS', True):
@@ -82,6 +83,8 @@ def create_app(config_class=Config):
         User.ensure_auth_columns()
         from app.models.procurement import Procurement
         Procurement.ensure_schema_columns()
+        from app.models.award import Award
+        Award.ensure_schema_columns()
         from app.models.communication import Communication
         Communication.ensure_schema_columns()
         from app.models.message import Message

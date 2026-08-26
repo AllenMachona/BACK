@@ -43,63 +43,50 @@
         </div>
     </div>
 
-    <div class="row report-panels">
+    <section class="operational-trends mb-4" aria-labelledby="trend-heading">
+        <div class="operational-trends-head">
+            <div><span class="eyebrow">12-month movement</span><h3 id="trend-heading">Operational trends</h3><p>Use the direction of activity to plan capacity, monitor demand, and spot delivery pressure early.</p></div>
+            <span class="trend-live"><span></span>Live snapshot</span>
+        </div>
+        <div class="trend-chart-grid">
+            <article class="trend-panel">
+                <div class="trend-panel-head"><div><span class="trend-label">Procurement pipeline</span><h4>New records and planned value</h4></div><i class="bi bi-arrow-up-right"></i></div>
+                <div class="trend-legend"><span><b class="legend-line legend-blue"></b>Records</span><span><b class="legend-line legend-green"></b>Value (scaled)</span></div>
+                <div class="trend-svg-wrap"><svg class="trend-svg" viewBox="0 0 720 230" role="img" aria-label="Twelve month procurement records and value trend"><line x1="40" y1="25" x2="700" y2="25" class="trend-gridline"/><line x1="40" y1="110" x2="700" y2="110" class="trend-gridline"/><line x1="40" y1="195" x2="700" y2="195" class="trend-axis"/>{% set ns = namespace(points='', value_points='') %}{% for value in procurement_counts %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / trend_max) * 170) %}{% set ns.points = ns.points + x|string + ',' + y|string + ' ' %}{% endfor %}{% for value in procurement_values %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / value_max) * 170) %}{% set ns.value_points = ns.value_points + x|string + ',' + y|string + ' ' %}{% endfor %}<polyline points="{{ ns.value_points }}" class="trend-line trend-line-green"/><polyline points="{{ ns.points }}" class="trend-line trend-line-blue"/>{% for value in procurement_counts %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / trend_max) * 170) %}<circle cx="{{ x }}" cy="{{ y }}" r="4" class="trend-point trend-point-blue"><title>{{ month_labels[loop.index0] }}: {{ value }} records</title></circle>{% endfor %}{% for label in month_labels %}<text x="{{ 40 + (loop.index0 * 60) }}" y="220" class="trend-month">{{ label }}</text>{% endfor %}</svg></div>
+                <div class="trend-callout"><strong>{{ procurement_counts[-1] }}</strong><span>records created in {{ month_labels[-1] }}</span><a href="{{ url_for('reports.operational') }}">Open pipeline report <i class="bi bi-arrow-right"></i></a></div>
+            </article>
+            <article class="trend-panel">
+                <div class="trend-panel-head"><div><span class="trend-label">Market engagement</span><h4>Submissions and awards</h4></div><i class="bi bi-arrow-up-right"></i></div>
+                <div class="trend-legend"><span><b class="legend-line legend-gold"></b>Submissions</span><span><b class="legend-line legend-slate"></b>Awards</span></div>
+                <div class="trend-svg-wrap"><svg class="trend-svg" viewBox="0 0 720 230" role="img" aria-label="Twelve month submissions and awards trend"><line x1="40" y1="25" x2="700" y2="25" class="trend-gridline"/><line x1="40" y1="110" x2="700" y2="110" class="trend-gridline"/><line x1="40" y1="195" x2="700" y2="195" class="trend-axis"/>{% set ns = namespace(points='', award_points='') %}{% for value in submission_counts %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / trend_max) * 170) %}{% set ns.points = ns.points + x|string + ',' + y|string + ' ' %}{% endfor %}{% for value in award_counts %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / trend_max) * 170) %}{% set ns.award_points = ns.award_points + x|string + ',' + y|string + ' ' %}{% endfor %}<polyline points="{{ ns.award_points }}" class="trend-line trend-line-slate"/><polyline points="{{ ns.points }}" class="trend-line trend-line-gold"/>{% for value in submission_counts %}{% set x = 40 + (loop.index0 * 60) %}{% set y = 195 - ((value / trend_max) * 170) %}<circle cx="{{ x }}" cy="{{ y }}" r="4" class="trend-point trend-point-gold"><title>{{ month_labels[loop.index0] }}: {{ value }} submissions</title></circle>{% endfor %}{% for label in month_labels %}<text x="{{ 40 + (loop.index0 * 60) }}" y="220" class="trend-month">{{ label }}</text>{% endfor %}</svg></div>
+                <div class="trend-callout"><strong>{{ submission_counts[-1] }}</strong><span>submissions received in {{ month_labels[-1] }}</span><a href="{{ url_for('reports.bidder_participation') }}">Open participation report <i class="bi bi-arrow-right"></i></a></div>
+            </article>
+        </div>
+    </section>
+
+    <div class="report-pie-grid mb-4">
         <div class="col-md-6 mb-4">
             <div class="card report-panel h-100">
-                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Procurements by Category</h5></div>
-                <div class="card-body">
-                    {% if by_category %}
-                    <div class="table-responsive">
-                        <table class="table report-table align-middle">
-                            <thead><tr><th>Category</th><th>Count</th><th>Value (BWP)</th></tr></thead>
-                            <tbody>
-                                {% for category, count, value in by_category %}
-                                <tr>
-                                    <td><span class="badge badge-info">{{ category.title() }}</span></td>
-                                    <td class="fw-bold">{{ count }}</td>
-                                    <td>BWP {{ '{:,.2f}'.format(value) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>
-                    {% endif %}
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Procurements by Category</h5><span class="report-chart-caption">Volume and value mix</span></div>
+                <div class="card-body report-pie-body">
+                    {% if by_category %}<div class="report-pie" style="--pie-gradient: conic-gradient({{ category_gradient }});"><div><strong>{{ by_category|sum(attribute=1) }}</strong><small>records</small></div></div><div class="report-pie-legend">{% for category, count, value in by_category %}<a href="{{ url_for('procurements.list_procurements', category=category) }}"><span class="pie-dot pie-dot-{{ loop.index0 % 5 }}"></span><span>{{ category.replace('_', ' ').title() }}</span><strong>{{ count }}</strong><small>BWP {{ '{:,.0f}'.format(value) }}</small><i class="bi bi-chevron-right"></i></a>{% endfor %}</div>{% else %}<p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>{% endif %}
                 </div>
             </div>
         </div>
         <div class="col-md-6 mb-4">
             <div class="card report-panel h-100">
-                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Procurements by Method</h5></div>
-                <div class="card-body">
-                    {% if by_method %}
-                    <div class="table-responsive">
-                        <table class="table report-table align-middle">
-                            <thead><tr><th>Method</th><th>Count</th><th>Distribution</th></tr></thead>
-                            <tbody>
-                                {% for method, count, pct in by_method %}
-                                <tr>
-                                    <td><span class="badge badge-secondary">{{ method.replace('_',' ').title() }}</span></td>
-                                    <td class="fw-bold">{{ count }}</td>
-                                    <td>
-                                        <div class="progress-pill">
-                                            <span>{{ pct }}%</span>
-                                            <div class="progress-track"><div class="progress-fill" style="width: {{ pct }}%;"></div></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>
-                    {% endif %}
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Procurements by Method</h5><span class="report-chart-caption">Sourcing distribution</span></div>
+                <div class="card-body report-pie-body">
+                    {% if by_method %}<div class="report-pie report-pie-method" style="--pie-gradient: conic-gradient({{ method_gradient }});"><div><strong>{{ by_method|sum(attribute=1) }}</strong><small>records</small></div></div><div class="report-pie-legend">{% for method, count, pct in by_method %}<a href="{{ url_for('procurements.list_procurements', method=method) }}"><span class="pie-dot pie-dot-{{ loop.index0 % 5 }}"></span><span>{{ method.replace('_', ' ').title() }}</span><strong>{{ count }}</strong><small>{{ pct }}%</small><i class="bi bi-chevron-right"></i></a>{% endfor %}</div>{% else %}<p class="text-muted mb-0 py-3 text-center">No procurements recorded yet.</p>{% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <section class="attention-panel mb-4" aria-labelledby="attention-heading">
+        <div class="attention-panel-head"><div><span class="eyebrow">Risk control</span><h3 id="attention-heading">Attention required</h3><p>Prioritized operational exceptions that need an owner.</p></div><span class="attention-count">{{ attention_items|selectattr('count', 'gt', 0)|list|length }} active flags</span></div>
+        <div class="attention-grid">{% for item in attention_items %}<a class="attention-item attention-{{ item.tone }}" href="{{ item.url }}"><span class="attention-icon"><i class="bi {{ item.icon }}"></i></span><span><strong>{{ item.count }}</strong><small>{{ item.label }}</small></span><i class="bi bi-arrow-up-right attention-arrow"></i></a>{% endfor %}</div>
+    </section>
 
     <div class="card report-panel mb-4">
         <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-shield-check me-2 text-primary"></i>Compliance & Pipeline Snapshot</h5></div>

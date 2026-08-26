@@ -22,7 +22,7 @@ class DocumentVersioningService:
         Marks previous version as not current, preserves all history.
         
         Args:
-            document_type: Type of document (e.g., 'rfce', 'clarification', 'form_d')
+            document_type: Type of document (e.g., 'itt', 'clarification', 'form_d')
             entity_type: Entity type (e.g., 'Procurement', 'Communication')
             entity_id: Entity ID
             file_path: Path to the file

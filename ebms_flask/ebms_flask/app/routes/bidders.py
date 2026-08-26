@@ -78,7 +78,12 @@ def workspace(procurement_id):
     )
     if procurement.status not in ('published', 'submission_open', 'clarification_period') and not has_participated:
         abort(404)
-    has_approved_payment = current_user.bidder.has_approved_payment_for_procurement(procurement.id)
+    payment_required = procurement.has_itt()
+    has_approved_payment = (
+        not payment_required
+        or current_user.bidder.has_approved_payment_for_procurement(procurement.id)
+    )
+    award = procurement.award
     can_submit_bid = bool(
         has_approved_payment
         and procurement.status == 'submission_open'
@@ -169,19 +174,26 @@ def workspace(procurement_id):
             ).all()
 
             for officer in procurement_users:
-                notify_user(
-                    officer, 'payment_submitted',
-                    f'Payment Proof Submitted: {procurement.tender_number}',
-                    f'Bidder {current_user.bidder.company_name} has submitted proof of payment (Ref: {payment_reference}, Amount: BWP {amount:,.2f}) for {procurement.title}. Please review and verify.',
-                    procurement_id=procurement.id
-                )
+                try:
+                    notify_user(
+                        officer, 'payment_submitted',
+                        f'Payment Proof Submitted: {procurement.tender_number}',
+                        f'Bidder {current_user.bidder.company_name} has submitted proof of payment (Ref: {payment_reference}, Amount: BWP {amount:,.2f}) for {procurement.title}. Please review and verify.',
+                        procurement_id=procurement.id,
+                        email=False,
+                    )
+                except Exception:
+                    current_app.logger.exception(
+                        'Payment notification failed after proof was saved for procurement %s',
+                        procurement.id,
+                    )
 
             flash('Payment proof submitted successfully! Your submission is now pending Procurement verification. Tender documents will unlock once approved.', 'success')
             return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
 
         if action == 'submit_bid':
             from app.models.site_setting import SiteSetting
-            if not has_approved_payment:
+            if payment_required and not has_approved_payment:
                 flash('Bid submission is available only after your payment has been approved.', 'warning')
                 return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
             if SiteSetting.get('enable_bid_submission', 'true').lower() != 'true':
@@ -280,7 +292,6 @@ def workspace(procurement_id):
 
     # Query payment and document access for current bidder
     my_payment = current_user.bidder.get_payment_for_procurement(procurement.id)
-    has_rfce_access = current_user.bidder.has_document_access(procurement.id, 'rfce')
     has_itt_access = current_user.bidder.has_document_access(procurement.id, 'itt')
 
     if not has_approved_payment:
@@ -296,10 +307,11 @@ def workspace(procurement_id):
         advertisement=advertisement,
         my_submissions=my_submissions,
         my_payment=my_payment,
-        has_rfce_access=has_rfce_access,
         has_itt_access=has_itt_access,
+        payment_required=payment_required,
         has_approved_payment=has_approved_payment,
         can_submit_bid=can_submit_bid,
         has_submitted_bid=has_submitted_bid,
         procurement_progress=_procurement_progress(procurement),
+        award=award,
     )

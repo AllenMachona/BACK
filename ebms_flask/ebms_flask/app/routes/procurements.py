@@ -3,7 +3,7 @@ import mimetypes
 import os
 import random
 import secrets
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_file, send_from_directory, current_app
 from flask_login import login_required, current_user
@@ -24,6 +24,7 @@ from app.models.evaluator_assignment import EvaluatorAssignment
 from app.models.evaluator_feedback import EvaluatorFeedback
 from app.models.budget_entry import BudgetEntry
 from app.models.bidder_performance import BidderPerformance
+from app.models.award import Award
 from app.models.history import ProcurementHistory
 from app.utils.decorators import permission_required, role_required
 from app.utils.audit import log_action
@@ -284,7 +285,13 @@ def create():
                                    source_request=source_request, request_type=request_type, form=request.form)
 
         advertisement = request.files.get('advertisement_document')
-        if not advertisement or not advertisement.filename:
+        rfq_upload = request.files.get('rfq_document')
+        itt_upload = request.files.get('itt_document')
+        rfq_only = bool(
+            rfq_upload and rfq_upload.filename and
+            (not itt_upload or not itt_upload.filename)
+        )
+        if not rfq_only and (not advertisement or not advertisement.filename):
             flash('An advertisement document is required before creating the procurement.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
                                    source_request=source_request, request_type=request_type, form=request.form)
@@ -325,8 +332,26 @@ def create():
 
         deadline_raw = request.form.get('submission_deadline')
         clarification_deadline_raw = request.form.get('clarification_deadline')
-        deadline = datetime.fromisoformat(deadline_raw) if deadline_raw else None
-        clarification_deadline = datetime.fromisoformat(clarification_deadline_raw) if clarification_deadline_raw else None
+        try:
+            deadline = datetime.fromisoformat(deadline_raw) if deadline_raw else None
+        except ValueError:
+            flash('Please enter a valid submission deadline.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request, request_type=request_type, form=request.form)
+        if deadline and deadline.date() <= datetime.utcnow().date():
+            flash('The submission deadline must be tomorrow or a later date.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request, request_type=request_type, form=request.form)
+        try:
+            clarification_deadline = datetime.fromisoformat(clarification_deadline_raw) if clarification_deadline_raw else None
+        except ValueError:
+            flash('Please enter a valid clarification deadline.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request, request_type=request_type, form=request.form)
+        if clarification_deadline and clarification_deadline.date() <= datetime.utcnow().date():
+            flash('The clarification deadline must be tomorrow or a later date.', 'danger')
+            return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
+                                   source_request=source_request, request_type=request_type, form=request.form)
 
         tender_number = generate_tender_number()
 
@@ -339,7 +364,6 @@ def create():
         form_e_path, form_e_name = _save_procurement_document(request.files.get('form_e_document'), tender_number, 'form_e')
         if source_form_e_path and not form_e_path:
             form_e_path, form_e_name = source_form_e_path, source_form_e_name
-        rfce_path, rfce_name = _save_procurement_document(request.files.get('rfce_document'), tender_number, 'rfce')
         itt_path, itt_name = _save_procurement_document(request.files.get('itt_document'), tender_number, 'itt')
         rfq_path, rfq_name = _save_procurement_document(request.files.get('rfq_document'), tender_number, 'rfq')
 
@@ -363,8 +387,6 @@ def create():
             form_d_filename=form_d_name,
             form_e_file_path=form_e_path,
             form_e_filename=form_e_name,
-            rfce_file_path=rfce_path,
-            rfce_filename=rfce_name,
             itt_file_path=itt_path,
             itt_filename=itt_name,
             rfq_file_path=rfq_path,
@@ -375,26 +397,27 @@ def create():
         db.session.add(procurement)
         db.session.commit()
 
-        filename = secure_filename(f"{procurement.tender_number}_{secrets.token_hex(4)}_{advertisement.filename}")
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        advertisement.save(filepath)
+        if advertisement and advertisement.filename:
+            filename = secure_filename(f"{procurement.tender_number}_{secrets.token_hex(4)}_{advertisement.filename}")
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            advertisement.save(filepath)
 
-        doc = Communication(
-            procurement_id=procurement.id,
-            type='advertisement',
-            content=f'Advertisement document for {procurement.title}',
-            file_path=filepath,
-            original_filename=advertisement.filename,
-            is_public=True,
-            from_user_id=current_user.id,
-        )
-        db.session.add(doc)
-        db.session.commit()
+            doc = Communication(
+                procurement_id=procurement.id,
+                type='advertisement',
+                content=f'Advertisement document for {procurement.title}',
+                file_path=filepath,
+                original_filename=advertisement.filename,
+                is_public=True,
+                from_user_id=current_user.id,
+            )
+            db.session.add(doc)
+            db.session.commit()
 
         log_action('PROCUREMENT_CREATED', entity_type='Procurement', entity_id=procurement.id,
                    new_value={'tender_number': procurement.tender_number, 'title': procurement.title,
                               'has_form_d': bool(form_d_path), 'has_form_e': bool(form_e_path),
-                              'has_rfce': bool(rfce_path), 'has_itt': bool(itt_path),
+                              'has_itt': bool(itt_path),
                               'has_rfq': bool(rfq_path)})
 
         if source_request is not None:
@@ -560,6 +583,84 @@ def detail(procurement_id):
     )
 
 
+@procurements_bp.route('/<int:procurement_id>/award', methods=['GET', 'POST'])
+@login_required
+@permission_required('can_award')
+def award_workspace(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if procurement.status not in ('financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived'):
+        flash('This procurement is not ready for award review.', 'warning')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    submitted = procurement.submissions.filter_by(status='submitted').all()
+    bidder_ids = {submission.bidder_id for submission in submitted}
+    evaluations = procurement.evaluations.all()
+    scores = {}
+    for evaluation in evaluations:
+        score = evaluation.consensus_score if evaluation.consensus_score is not None else evaluation.score
+        if score is not None:
+            scores.setdefault(evaluation.bidder_id, []).append(float(score))
+    bidders = []
+    for bidder_id in bidder_ids:
+        bidder = Bidder.query.get(bidder_id)
+        bidder_scores = scores.get(bidder_id, [])
+        bidders.append({
+            'bidder': bidder,
+            'submission_count': sum(1 for submission in submitted if submission.bidder_id == bidder_id),
+            'score': round(sum(bidder_scores) / len(bidder_scores), 2) if bidder_scores else None,
+            'evaluation_count': len(bidder_scores),
+        })
+    bidders.sort(key=lambda row: (row['score'] is not None, row['score'] or 0), reverse=True)
+
+    award = procurement.award
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'publish':
+            if not award or procurement.status != 'award_pending_approval':
+                flash('Save an award recommendation before publishing it.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+            award.published_at = datetime.utcnow()
+            award.published_by_id = current_user.id
+            procurement.status = 'award_published'
+            db.session.commit()
+            for bidder_user in User.query.filter_by(bidder_id=award.winning_bidder_id).all():
+                notify_user(
+                    bidder_user,
+                    'award_published',
+                    f'Award Published: {procurement.tender_number}',
+                    f'Your bid for {procurement.title} has been selected. The cooling-off period ends on {award.cooling_off_expiry:%d %b %Y}.',
+                    procurement_id=procurement.id,
+                    email=False,
+                )
+            flash('Award published successfully. The cooling-off period is now active.', 'success')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+
+        winning_bidder_id = request.form.get('winning_bidder_id', type=int)
+        winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
+        if not winner or winner.id not in bidder_ids:
+            flash('Select a bidder with a submitted bid.', 'danger')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+        try:
+            award_value = float(request.form.get('award_value') or procurement.estimated_value or 0)
+        except ValueError:
+            flash('Enter a valid award value.', 'danger')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+        if not award:
+            award = Award(procurement_id=procurement.id, created_by_id=current_user.id)
+            db.session.add(award)
+        award.winning_bidder_id = winner.id
+        award.award_value = award_value
+        award.decision_reason = (request.form.get('decision_reason') or '').strip()
+        award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
+        award.cooling_off_expiry = datetime.utcnow() + timedelta(days=10)
+        procurement.status = 'award_pending_approval'
+        db.session.commit()
+        flash('Award recommendation saved and ready for publication.', 'success')
+        return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+
+    return render_template('procurement_award.html', procurement=procurement, bidders=bidders, award=award)
+
+
 def _procurement_management_access(procurement):
     return bool(
         current_user.role
@@ -722,13 +823,6 @@ def upload_documents(procurement_id):
             procurement.form_e_filename = name
             uploaded.append('FORM E')
 
-    if request.files.get('rfce_document'):
-        path, name = _save_procurement_document(request.files['rfce_document'], procurement.tender_number, 'rfce')
-        if path:
-            procurement.rfce_file_path = path
-            procurement.rfce_filename = name
-            uploaded.append('RFCE')
-
     if request.files.get('itt_document'):
         path, name = _save_procurement_document(request.files['itt_document'], procurement.tender_number, 'itt')
         if path:
@@ -772,9 +866,6 @@ def download_tender_document(procurement_id, doc_type):
     elif doc_type == 'form_e':
         filepath = procurement.form_e_file_path
         filename = procurement.form_e_filename
-    elif doc_type == 'rfce':
-        filepath = procurement.rfce_file_path
-        filename = procurement.rfce_filename
     elif doc_type == 'itt':
         filepath = procurement.itt_file_path
         filename = procurement.itt_filename
@@ -794,7 +885,7 @@ def download_tender_document(procurement_id, doc_type):
         if not current_user.can_access_procurement(procurement):
             abort(403)
 
-    elif doc_type in ('rfce', 'itt'):
+    elif doc_type == 'itt':
         # Gated by payment approval for bidders
         if current_user.has_role('bidder'):
             if procurement.status not in ('published', 'submission_open', 'clarification_period'):
@@ -837,9 +928,6 @@ def view_tender_document(procurement_id, doc_type):
     elif doc_type == 'form_e':
         filepath = procurement.form_e_file_path
         filename = procurement.form_e_filename
-    elif doc_type == 'rfce':
-        filepath = procurement.rfce_file_path
-        filename = procurement.rfce_filename
     elif doc_type == 'itt':
         filepath = procurement.itt_file_path
         filename = procurement.itt_filename
@@ -856,7 +944,7 @@ def view_tender_document(procurement_id, doc_type):
                        reason=f"Bidder/User attempted direct inline view of {doc_type.upper()}")
             abort(403)
 
-    elif doc_type in ('rfce', 'itt'):
+    elif doc_type == 'itt':
         if current_user.has_role('bidder'):
             if procurement.status not in ('published', 'submission_open', 'clarification_period'):
                 abort(404)
@@ -946,8 +1034,8 @@ def verify_payment(payment_id):
         payment.reviewed_at = datetime.utcnow()
         payment.notes = reason or 'Payment verified and approved by Procurement.'
 
-        # Grant access to RFCE and ITT
-        for doc_type in ('rfce', 'itt', 'all_bidder_docs'):
+        # Grant access to the paid ITT document.
+        for doc_type in ('itt', 'all_bidder_docs'):
             access = BidderDocumentAccess.query.filter_by(
                 procurement_id=procurement.id,
                 bidder_id=payment.bidder_id,
@@ -980,18 +1068,18 @@ def verify_payment(payment_id):
                    new_value={'bidder_id': payment.bidder_id, 'reference': payment.payment_reference,
                               'amount': float(payment.amount), 'procurement_id': procurement.id})
         log_action('DOCUMENT_ACCESS_GRANTED', entity_type='BidderDocumentAccess', entity_id=procurement.id,
-                   new_value={'bidder_id': payment.bidder_id, 'granted_by': current_user.id, 'documents': ['RFCE', 'ITT']})
+                   new_value={'bidder_id': payment.bidder_id, 'granted_by': current_user.id, 'documents': ['ITT']})
 
         # Notifications
         for u in bidder_users:
             notify_user(
                 u, 'payment_approved',
                 f'Payment Approved — Tender Documents Unlocked ({procurement.tender_number})',
-                f'Your payment (Ref: {payment.payment_reference}) for {procurement.title} has been verified and approved. You now have full access to view and download the RFCE and ITT documents.',
+                f'Your payment (Ref: {payment.payment_reference}) for {procurement.title} has been verified and approved. You now have access to view and download the ITT document.',
                 procurement_id=procurement.id
             )
 
-        flash(f'Payment {payment.payment_reference} from {payment.bidder.company_name} approved! RFCE and ITT access granted.', 'success')
+        flash(f'Payment {payment.payment_reference} from {payment.bidder.company_name} approved! ITT access granted.', 'success')
 
     elif action == 'reject':
         if not reason:
@@ -1025,7 +1113,7 @@ def verify_payment(payment_id):
             notify_user(
                 u, 'payment_rejected',
                 f'Payment Proof Rejected ({procurement.tender_number})',
-                f'Your payment submission (Ref: {payment.payment_reference}) for {procurement.title} was rejected. Reason: {reason}. RFCE and ITT remain locked.',
+                f'Your payment submission (Ref: {payment.payment_reference}) for {procurement.title} was rejected. Reason: {reason}. ITT remains locked.',
                 procurement_id=procurement.id
             )
 
@@ -1091,7 +1179,7 @@ def verify_payment(payment_id):
             notify_user(
                 u, 'access_revoked',
                 f'Document Access Revoked ({procurement.tender_number})',
-                f'Your access to RFCE and ITT for {procurement.title} has been revoked by Procurement. Reason: {reason or "Administrative action"}.',
+                f'Your ITT access for {procurement.title} has been revoked by Procurement. Reason: {reason or "Administrative action"}.',
                 procurement_id=procurement.id
             )
 

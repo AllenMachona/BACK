@@ -18,6 +18,13 @@
     </div>
 </div>
 
+{% if award and award.published_at and award.winning_bidder_id == current_user.bidder_id %}
+<section class="bidder-award-notice mb-4" aria-labelledby="bidder-award-heading">
+    <div class="bidder-award-emblem"><i class="bi bi-trophy-fill"></i></div>
+    <div><span class="eyebrow">Award notification</span><h2 id="bidder-award-heading">Your bid has been selected</h2><p>You have been awarded this procurement. The cooling-off period ends on <strong>{{ award.cooling_off_expiry.strftime('%d %b %Y') }}</strong>.</p><div class="bidder-award-meta"><span><small>Award value</small><strong>BWP {{ '{:,.2f}'.format(award.award_value or procurement.estimated_value or 0) }}</strong></span><span><small>Published</small><strong>{{ award.published_at.strftime('%d %b %Y') }}</strong></span></div></div>
+</section>
+{% endif %}
+
 <div class="row">
     <div class="col-md-8">
 
@@ -29,7 +36,7 @@
                     <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>Free Tender Documents (RFQ)</h5>
                     <small class="text-muted">Free-to-view documents — no payment required.</small>
                 </div>
-                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>Free Access</span>
+                <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>FREE</span>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -58,14 +65,15 @@
         </div>
         {% endif %}
 
-        <!-- Gated Official Tender Documents (RFCE & ITT) Card -->
+        {% if payment_required %}
+        <!-- Gated Official Tender Documents Card -->
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Documents (RFCE &amp; ITT)</h5>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Official Tender Documents (ITT)</h5>
                     <small class="text-muted">Payment-gated bidding documents authorized by PPRA.</small>
                 </div>
-                {% if has_rfce_access and has_itt_access %}
+                {% if has_itt_access %}
                 <span class="badge badge-success"><i class="bi bi-unlock-fill me-1"></i>All Documents Unlocked</span>
                 {% else %}
                 <span class="badge badge-warning"><i class="bi bi-lock-fill me-1"></i>Payment Approval Required</span>
@@ -73,45 +81,6 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <!-- RFCE Document -->
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded {{ 'bg-light border-success' if has_rfce_access else 'bg-light border-danger' }} h-100">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="fw-bold text-dark">
-                                    <i class="bi bi-file-earmark-text me-1 text-primary"></i>RFCE
-                                    <small class="d-block text-muted">Request for Clarification / Eligibility</small>
-                                </div>
-                                {% if has_rfce_access %}
-                                <span class="badge badge-success"><i class="bi bi-check-circle-fill me-1"></i>Unlocked</span>
-                                {% else %}
-                                <span class="badge badge-danger"><i class="bi bi-lock-fill me-1"></i>Locked</span>
-                                {% endif %}
-                            </div>
-
-                            {% if has_rfce_access %}
-                                {% if procurement.has_rfce() %}
-                                <div class="small text-muted mb-3"><i class="bi bi-file-earmark-check me-1 text-success"></i>{{ procurement.rfce_filename }}</div>
-                                <div class="d-flex gap-2">
-                                    <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill">
-                                        <i class="bi bi-eye me-1"></i>View Document
-                                    </a>
-                                    <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" class="btn btn-sm btn-success flex-fill">
-                                        <i class="bi bi-download me-1"></i>Download
-                                    </a>
-                                </div>
-                                {% else %}
-                                <p class="small text-muted mb-0">Procurement has not yet uploaded the RFCE file.</p>
-                                {% endif %}
-                            {% else %}
-                                <div class="alert alert-danger py-2 px-3 small mb-0">
-                                    <i class="bi bi-shield-lock-fill me-1"></i>
-                                    <strong>🔒 Payment approval required</strong>
-                                    <div class="mt-1 text-muted">Submit proof of payment in the section below to request document access.</div>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
                     <!-- ITT Document -->
                     <div class="col-md-6">
                         <div class="p-3 border rounded {{ 'bg-light border-success' if has_itt_access else 'bg-light border-danger' }} h-100">
@@ -153,13 +122,15 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
+        {% if payment_required %}
         <!-- Bidder Payment & Document Access Verification Section -->
         <div class="card mb-4" id="paymentSection">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Tender Document Payment &amp; Access Status</h5>
-                    <small class="text-muted">Submit payment reference and bank proof to unlock RFCE &amp; ITT documents.</small>
+                    <small class="text-muted">Submit payment reference and bank proof to unlock the ITT document.</small>
                 </div>
                 {% if my_payment %}
                     {% if my_payment.status == 'approved' %}
@@ -188,7 +159,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="submit_payment">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -222,7 +193,7 @@
                         <i class="bi bi-hourglass-split fs-4 me-3 text-warning"></i>
                         <div>
                             <h6 class="alert-heading fw-bold mb-1">Proof of Payment Under Review</h6>
-                            <p class="mb-2 small">Your payment proof has been submitted to the Procurement Department and is currently awaiting verification. Once verified and approved, the RFCE and ITT documents above will unlock automatically.</p>
+                            <p class="mb-2 small">Your payment proof has been submitted to the Procurement Department and is currently awaiting verification. Once verified and approved, the ITT document above will unlock automatically.</p>
                             <div class="p-2 bg-white rounded border small">
                                 <div><strong>Reference:</strong> <code>{{ my_payment.payment_reference }}</code></div>
                                 <div><strong>Amount Paid:</strong> BWP {{ '{:,.2f}'.format(my_payment.amount) }}</div>
@@ -240,7 +211,7 @@
                         <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
                         <div>
                             <h6 class="alert-heading fw-bold mb-1">Payment Verified &amp; Approved</h6>
-                            <p class="mb-2 small">Your payment was approved by Procurement{% if my_payment.reviewed_by %} ({{ my_payment.reviewed_by.full_name() }}){% endif %} on {{ my_payment.reviewed_at.strftime('%Y-%m-%d %H:%M') if my_payment.reviewed_at }}. You have active access to view and download all official tender documents (RFCE and ITT).</p>
+                            <p class="mb-2 small">Your payment was approved by Procurement{% if my_payment.reviewed_by %} ({{ my_payment.reviewed_by.full_name() }}){% endif %} on {{ my_payment.reviewed_at.strftime('%Y-%m-%d %H:%M') if my_payment.reviewed_at }}. You have active access to view and download the official ITT document.</p>
                             <div class="p-2 bg-white rounded border small">
                                 <div><strong>Reference:</strong> <code>{{ my_payment.payment_reference }}</code></div>
                                 <div><strong>Amount:</strong> BWP {{ '{:,.2f}'.format(my_payment.amount) }}</div>
@@ -267,7 +238,7 @@
 
                 <!-- Resubmission Form -->
                 <h6 class="fw-bold text-dark mb-2"><i class="bi bi-arrow-repeat me-1 text-primary"></i>Submit Corrected Proof of Payment</h6>
-                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="submit_payment">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -309,7 +280,7 @@
                 </div>
 
                 <h6 class="fw-bold text-dark mb-2"><i class="bi bi-arrow-repeat me-1 text-primary"></i>Submit New Proof of Payment</h6>
-                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="submit_payment">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -337,6 +308,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
 
         {% if has_approved_payment %}
         <div class="card mb-4">
@@ -380,7 +352,7 @@
                 <h5 class="mb-0"><i class="bi bi-cloud-upload me-2 text-primary"></i>Submit Your Encrypted Bid</h5>
                 {% if can_submit_bid %}
                 <span class="status-badge status-published"><i class="bi bi-circle-fill me-1"></i>Open</span>
-                {% elif procurement.status == 'submission_open' and not has_approved_payment %}
+                {% elif procurement.status == 'submission_open' and payment_required and not has_approved_payment %}
                 <div class="text-center py-4">
                     <i class="bi bi-credit-card-2-front text-warning fs-1 mb-2 d-block"></i>
                     <p class="text-muted mb-0">Bid submission will open after Procurement approves your payment.</p>
@@ -405,7 +377,7 @@
                 </div>
                 {% endif %}
 
-                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
+                <form method="POST" action="{{ url_for('bidders.workspace', procurement_id=procurement.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="submit_bid">
                     {% if procurement.envelope_type == 'dual' %}
                     <div class="row g-3 mb-3">
@@ -438,7 +410,7 @@
                         <i class="bi bi-{{ 'arrow-repeat' if has_submitted_bid else 'upload' }} me-1"></i>{{ 'Resubmit and replace bid' if has_submitted_bid else 'Encrypt &amp; Submit Bid' }}
                     </button>
                 </form>
-                {% elif procurement.status == 'submission_open' and not has_approved_payment %}
+                {% elif procurement.status == 'submission_open' and payment_required and not has_approved_payment %}
                 <div class="text-center py-4">
                     <i class="bi bi-credit-card-2-front text-warning fs-1 mb-2 d-block"></i>
                     <p class="text-muted mb-0">Bid submission will open after Procurement approves your payment.</p>

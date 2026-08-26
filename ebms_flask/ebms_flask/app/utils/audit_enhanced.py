@@ -50,7 +50,7 @@ def log_document_operation(doc_type, entity_type, entity_id, operation, file_nam
     """Log document-related operations with full context.
     
     Args:
-        doc_type: Document type (e.g., 'rfce', 'clarification', 'form_d')
+        doc_type: Document type (e.g., 'itt', 'clarification', 'form_d')
         entity_type: Entity type (e.g., 'Procurement', 'Communication')
         entity_id: Entity ID
         operation: 'upload', 'replace', 'restore', 'download', 'view', 'delete'
@@ -166,7 +166,7 @@ def log_version_restore(document_type, entity_type, entity_id, version_number, r
     """Log document version restoration.
     
     Args:
-        document_type: Type of document (e.g., 'rfce')
+        document_type: Type of document (e.g., 'itt')
         entity_type: Entity type (e.g., 'Procurement')
         entity_id: Entity ID
         version_number: Version being restored to

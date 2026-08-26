@@ -11,7 +11,7 @@ class DocumentVersion(db.Model):
     """Immutable version history for all significant documents.
     
     Supports:
-    - Tender documents (RFCE, ITT, Form D, Form E)
+    - Tender documents (ITT, Form D, Form E)
     - Clarification documents
     - Procurement addenda
     - Any audit-critical file
@@ -24,7 +24,7 @@ class DocumentVersion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
     # Document identification
-    document_type = db.Column(db.String(50), nullable=False, index=True)  # rfce, itt, clarification, addendum, form_d, etc.
+    document_type = db.Column(db.String(50), nullable=False, index=True)  # itt, clarification, addendum, form_d, etc.
     entity_type = db.Column(db.String(50), nullable=False, index=True)    # procurement, communication, etc.
     entity_id = db.Column(db.Integer, nullable=False, index=True)         # procurement_id, communication_id, etc.
     

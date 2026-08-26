@@ -177,18 +177,18 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Submission Deadline</label>
-                            <input type="datetime-local" name="submission_deadline" class="form-control form-control-lg" value="{{ form.get('submission_deadline', '') if form else '' }}">
-                            <div class="form-text">Can be set later when moving to Submission Open status.</div>
+                            <input type="datetime-local" name="submission_deadline" id="submission-deadline" class="form-control form-control-lg" value="{{ form.get('submission_deadline', '') if form else '' }}" required>
+                            <div class="form-text">Must be tomorrow or a later date.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Clarification Deadline</label>
-                            <input type="datetime-local" name="clarification_deadline" class="form-control form-control-lg" value="{{ form.get('clarification_deadline', '') if form else '' }}">
-                            <div class="form-text">Deadline for bidder clarification submissions.</div>
+                            <input type="datetime-local" name="clarification_deadline" id="clarification-deadline" class="form-control form-control-lg" value="{{ form.get('clarification_deadline', '') if form else '' }}">
+                            <div class="form-text">If set, must be tomorrow or a later date.</div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold">Public Advertisement Document <span class="text-danger">*</span></label>
-                            <input type="file" name="advertisement_document" class="form-control form-control-lg" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx" required>
-                            <div class="form-text">Published publicly as the general tender notice.</div>
+                            <label class="form-label fw-bold">Public Advertisement Document <span class="text-danger" id="advertisement-required-mark">*</span></label>
+                            <input type="file" name="advertisement_document" id="advertisement-document" class="form-control form-control-lg" accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx">
+                            <div class="form-text" id="advertisement-help">Required unless this is an RFQ-only procurement with no ITT document.</div>
                         </div>
                     </div>
                 </div>
@@ -237,11 +237,6 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-code text-warning me-1"></i>Upload RFCE (Request for Clarification / Eligibility)</label>
-                            <input type="file" name="rfce_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
-                            <div class="form-text">Official RFCE document for qualifying bidders.</div>
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-warning me-1"></i>Upload ITT (Invitation to Tender) — <span class="text-danger">Paid:</span> bidders must pay the tender fee to view</label>
                             <input type="file" name="itt_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
                             <div class="form-text">Comprehensive tender instructions and bill of quantities. Unlocked only after the bidder's tender fee payment is verified.</div>
@@ -283,4 +278,33 @@
     flex-shrink: 0;
 }
 </style>
+<script>
+    const deadlineInput = document.getElementById('submission-deadline');
+    if (deadlineInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const pad = value => String(value).padStart(2, '0');
+        deadlineInput.min = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00`;
+        const clarificationInput = document.getElementById('clarification-deadline');
+        if (clarificationInput) clarificationInput.min = deadlineInput.min;
+    }
+    const rfqInput = document.querySelector('input[name="rfq_document"]');
+    const ittInput = document.querySelector('input[name="itt_document"]');
+    const advertisementInput = document.getElementById('advertisement-document');
+    const advertisementMark = document.getElementById('advertisement-required-mark');
+    const advertisementHelp = document.getElementById('advertisement-help');
+    function updateAdvertisementRequirement() {
+        const rfqOnly = rfqInput && rfqInput.files.length > 0 && (!ittInput || ittInput.files.length === 0);
+        advertisementInput.required = !rfqOnly;
+        advertisementMark.hidden = rfqOnly;
+        advertisementHelp.textContent = rfqOnly
+            ? 'Optional for RFQ-only procurements. Bidders can access the RFQ without payment.'
+            : 'Required unless this is an RFQ-only procurement with no ITT document.';
+    }
+    if (rfqInput && ittInput && advertisementInput) {
+        rfqInput.addEventListener('change', updateAdvertisementRequirement);
+        ittInput.addEventListener('change', updateAdvertisementRequirement);
+        updateAdvertisementRequirement();
+    }
+</script>
 {% endblock %}

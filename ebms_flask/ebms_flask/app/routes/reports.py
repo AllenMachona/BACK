@@ -64,6 +64,64 @@ def operational():
 
     cancelled_count = Procurement.query.filter_by(cancelled=True).count()
 
+    def pie_gradient(rows, color_set):
+        total = sum(row[1] for row in rows) or 1
+        segments = []
+        start = 0.0
+        for index, row in enumerate(rows):
+            end = start + (row[1] / total * 100)
+            segments.append(f'{color_set[index % len(color_set)]} {start:.2f}% {end:.2f}%')
+            start = end
+        return ', '.join(segments) or '#e9eef1 0 100%'
+
+    category_gradient = pie_gradient(by_category, ['#1e88d6', '#2d6a35', '#d7952b', '#875c9e', '#c94b4b'])
+    method_gradient = pie_gradient(by_method, ['#1e88d6', '#2d6a35', '#d7952b', '#875c9e', '#c94b4b'])
+    attention_items = [
+        {'label': 'Overdue submission windows', 'count': overdue_closing, 'tone': 'danger',
+         'icon': 'bi-alarm', 'url': url_for('procurements.list_procurements', status='submission_open')},
+        {'label': 'Deadlines within 7 days', 'count': closing_soon, 'tone': 'warning',
+         'icon': 'bi-hourglass-split', 'url': url_for('procurements.list_procurements', status='submission_open')},
+        {'label': 'Active complaints requiring review', 'count': active_complaints, 'tone': 'danger',
+         'icon': 'bi-exclamation-octagon', 'url': url_for('reports.complaints')},
+        {'label': 'Cancelled procurements', 'count': cancelled_count, 'tone': 'muted',
+         'icon': 'bi-archive', 'url': url_for('reports.operational')},
+    ]
+
+    today = datetime.utcnow().date()
+    month_keys = []
+    year, month = today.year, today.month
+    for offset in range(11, -1, -1):
+        month_number = month - offset
+        month_year = year + (month_number - 1) // 12
+        month_value = (month_number - 1) % 12 + 1
+        month_keys.append((month_year, month_value))
+    month_labels = [datetime(y, m, 1).strftime('%b %y') for y, m in month_keys]
+    procurement_trend = {key: {'count': 0, 'value': 0.0} for key in month_keys}
+    submission_trend = {key: 0 for key in month_keys}
+    award_trend = {key: 0 for key in month_keys}
+    for procurement in Procurement.query.all():
+        if procurement.created_at:
+            key = (procurement.created_at.year, procurement.created_at.month)
+            if key in procurement_trend:
+                procurement_trend[key]['count'] += 1
+                procurement_trend[key]['value'] += float(procurement.estimated_value or 0)
+    for submission in Submission.query.all():
+        if submission.submitted_at:
+            key = (submission.submitted_at.year, submission.submitted_at.month)
+            if key in submission_trend:
+                submission_trend[key] += 1
+    for award in Award.query.all():
+        if award.decision_date:
+            key = (award.decision_date.year, award.decision_date.month)
+            if key in award_trend:
+                award_trend[key] += 1
+    procurement_counts = [procurement_trend[key]['count'] for key in month_keys]
+    procurement_values = [procurement_trend[key]['value'] for key in month_keys]
+    submission_counts = [submission_trend[key] for key in month_keys]
+    award_counts = [award_trend[key] for key in month_keys]
+    trend_max = max(procurement_counts + submission_counts + award_counts + [1])
+    value_max = max(procurement_values + [1])
+
     return render_template(
         'reports_operational.html',
         open_tenders=open_tenders,
@@ -74,6 +132,16 @@ def operational():
         by_method=[(m, c, round(c / total_methods * 100)) for m, c in by_method],
         overdue_closing=overdue_closing,
         cancelled_count=cancelled_count,
+        month_labels=month_labels,
+        procurement_counts=procurement_counts,
+        procurement_values=procurement_values,
+        submission_counts=submission_counts,
+        award_counts=award_counts,
+        trend_max=trend_max,
+        value_max=value_max,
+        category_gradient=category_gradient,
+        method_gradient=method_gradient,
+        attention_items=attention_items,
     )
 
 

@@ -23,7 +23,7 @@ class Procurement(db.Model):
     clarification_deadline = db.Column(db.DateTime)
     opening_scheduled_at = db.Column(db.DateTime)
 
-    # Status follows SOAR Appendix C's bid status lifecycle.
+    # Status follows SOAR Appendix C's bid status lifecyle.
     status = db.Column(db.String(30), default='draft', index=True)
 
     cancelled = db.Column(db.Boolean, default=False)
@@ -45,8 +45,6 @@ class Procurement(db.Model):
     form_e_filename = db.Column(db.String(300))
 
     # Bidder-facing tender documents (gated by payment verification)
-    rfce_file_path = db.Column(db.String(500))
-    rfce_filename = db.Column(db.String(300))
     itt_file_path = db.Column(db.String(500))
     itt_filename = db.Column(db.String(300))
     # Bidder-facing document that is free to view (no payment required),
@@ -71,9 +69,6 @@ class Procurement(db.Model):
     def has_form_e(self):
         return bool(self.form_e_file_path and self.form_e_filename)
 
-    def has_rfce(self):
-        return bool(self.rfce_file_path and self.rfce_filename)
-
     def has_itt(self):
         return bool(self.itt_file_path and self.itt_filename)
 
@@ -81,7 +76,7 @@ class Procurement(db.Model):
         return bool(self.rfq_file_path and self.rfq_filename)
 
     def has_tender_documents(self):
-        return self.has_rfce() or self.has_itt() or self.has_rfq()
+        return self.has_itt() or self.has_rfq()
 
     @staticmethod
     def ppra_code_options():
@@ -170,8 +165,6 @@ class Procurement(db.Model):
             'form_d_filename': 'ALTER TABLE procurements ADD COLUMN form_d_filename VARCHAR(300)',
             'form_e_file_path': 'ALTER TABLE procurements ADD COLUMN form_e_file_path VARCHAR(500)',
             'form_e_filename': 'ALTER TABLE procurements ADD COLUMN form_e_filename VARCHAR(300)',
-            'rfce_file_path': 'ALTER TABLE procurements ADD COLUMN rfce_file_path VARCHAR(500)',
-            'rfce_filename': 'ALTER TABLE procurements ADD COLUMN rfce_filename VARCHAR(300)',
             'itt_file_path': 'ALTER TABLE procurements ADD COLUMN itt_file_path VARCHAR(500)',
             'itt_filename': 'ALTER TABLE procurements ADD COLUMN itt_filename VARCHAR(300)',
             'rfq_file_path': 'ALTER TABLE procurements ADD COLUMN rfq_file_path VARCHAR(500)',

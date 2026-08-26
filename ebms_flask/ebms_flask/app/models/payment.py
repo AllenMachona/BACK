@@ -51,13 +51,13 @@ class BidderPayment(db.Model):
 
 
 class BidderDocumentAccess(db.Model):
-    """Tracks document-level access permissions granted to specific bidders for restricted procurement documents (RFCE, ITT)."""
+    """Tracks document-level access permissions granted to specific bidders for restricted ITT documents."""
     __tablename__ = 'bidder_document_accesses'
 
     id = db.Column(db.Integer, primary_key=True)
     procurement_id = db.Column(db.Integer, db.ForeignKey('procurements.id'), nullable=False, index=True)
     bidder_id = db.Column(db.Integer, db.ForeignKey('bidders.id'), nullable=False, index=True)
-    document_type = db.Column(db.String(30), nullable=False, default='all_bidder_docs')  # rfce, itt, all_bidder_docs
+    document_type = db.Column(db.String(30), nullable=False, default='all_bidder_docs')  # itt, all_bidder_docs
     payment_id = db.Column(db.Integer, db.ForeignKey('bidder_payments.id'))
 
     # Access status: active, revoked

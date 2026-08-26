@@ -16,6 +16,9 @@
         <p class="ebms-page-subtitle">{{ procurement.title }}</p>
     </div>
     <div class="ebms-page-actions">
+        {% if current_user.has_permission('can_award') and procurement.status in ('financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived') %}
+        <a href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}" class="btn btn-outline-success"><i class="bi bi-trophy me-1"></i>Award decision</a>
+        {% endif %}
         {% if current_user.has_permission('can_create_procurement') %}
         <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="btn btn-outline-primary">
             <i class="bi bi-chat-dots me-1"></i>Clarifications
@@ -146,10 +149,6 @@
                                 <input type="file" name="form_e_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">RFCE (Clarification / Eligibility)</label>
-                                <input type="file" name="rfce_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label small fw-bold">ITT (Invitation to Tender) — Paid</label>
                                 <input type="file" name="itt_document" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xlsx,.xls">
                             </div>
@@ -219,22 +218,6 @@
                                 <span class="badge badge-warning"><i class="bi bi-shield-lock me-1"></i>ITT: Paid · RFQ: Free</span>
                             </div>
 
-                            <!-- RFCE -->
-                            <div class="d-flex justify-content-between align-items-center p-2 bg-white rounded border mb-2">
-                                <div>
-                                    <strong class="d-block text-dark"><i class="bi bi-file-earmark-text text-warning me-1"></i>RFCE Document</strong>
-                                    <small class="text-muted">{{ procurement.rfce_filename or 'Not uploaded yet' }}</small>
-                                </div>
-                                {% if procurement.has_rfce() %}
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('procurements.view_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" target="_blank" class="btn btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
-                                    <a href="{{ url_for('procurements.download_tender_document', procurement_id=procurement.id, doc_type='rfce') }}" class="btn btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
-                                </div>
-                                {% else %}
-                                <span class="badge badge-secondary">Pending</span>
-                                {% endif %}
-                            </div>
-
                             <!-- ITT -->
                             <div class="d-flex justify-content-between align-items-center p-2 bg-white rounded border">
                                 <div>
@@ -277,7 +260,7 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Bidder Payment Verification</h5>
-                    <small class="text-muted">Review submitted proofs of payment and authorize RFCE/ITT document access.</small>
+                    <small class="text-muted">Review submitted proofs of payment and authorize ITT document access.</small>
                 </div>
                 <div>
                     {% if pending_payments_count > 0 %}
@@ -379,7 +362,7 @@
                                                         </div>
                                                         <div class="alert alert-success small mb-3">
                                                             <i class="bi bi-unlock-fill me-1"></i>
-                                                            Approving this payment will <strong>immediately grant this bidder permission</strong> to view and download RFCE and ITT documents.
+                                                            Approving this payment will <strong>immediately grant this bidder permission</strong> to view and download the ITT document.
                                                         </div>
                                                         <label class="form-label small fw-bold">Verification Note (optional)</label>
                                                         <input type="text" name="reason" class="form-control form-control-sm" placeholder="e.g. Bank slip verified with Finance">
@@ -456,7 +439,7 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>Are you sure you want to revoke RFCE and ITT document access for <strong>{{ p.bidder.company_name }}</strong>?</p>
+                                                        <p>Are you sure you want to revoke ITT document access for <strong>{{ p.bidder.company_name }}</strong>?</p>
                                                         <div class="mb-3">
                                                             <label class="form-label small fw-bold">Reason for Revocation</label>
                                                             <textarea name="reason" class="form-control" rows="2" placeholder="Administrative reason for revocation..."></textarea>
