@@ -115,7 +115,7 @@
         <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>Return Evaluation Feedback</h5>
     </div>
     <div class="card-body">
-        <p class="text-muted small mb-3">Attach your evaluation results or recommendation for the Procurement team.</p>
+        <p class="text-muted small mb-3">Attach your evaluation results or recommendation for the Procurement team. You can submit another version at any time while your assignment remains active.</p>
         <form method="POST" action="{{ url_for('evaluations.submit_feedback', procurement_id=procurement.id) }}" enctype="multipart/form-data" data-cancellable-upload>
             <div class="row g-3 align-items-end">
                 <div class="col-md-5">
@@ -138,6 +138,37 @@
     </div>
 </div>
 {% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Your Submitted Feedback</h5>
+        <span class="badge badge-primary">{{ evaluator_feedback|length }} Version(s)</span>
+    </div>
+    <div class="card-body">
+        {% if evaluator_feedback %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Document</th><th>Summary</th><th>Submitted At</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                    {% for feedback in evaluator_feedback %}
+                    <tr>
+                        <td><i class="bi bi-file-earmark-text me-1 text-primary"></i>{{ feedback.original_filename }}</td>
+                        <td class="text-muted">{{ feedback.feedback_text or 'No summary provided' }}</td>
+                        <td class="text-muted">{{ feedback.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('procurements.view_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="View feedback"><i class="bi bi-eye"></i></a>
+                            <a href="{{ url_for('procurements.download_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" class="btn btn-sm btn-outline-primary" title="Download feedback"><i class="bi bi-download"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No feedback document has been submitted yet.</p>
+        {% endif %}
+    </div>
+</div>
 
 <div class="card mb-4">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Evaluation Criteria Specifications</h5></div>
@@ -198,6 +229,10 @@
                 <div class="col-md-3">
                     <label class="form-label">Evaluator Comments</label>
                     <input type="text" name="comments" class="form-control" placeholder="Justification">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Evidence Reference</label>
+                    <input type="text" name="evidence_references" class="form-control" placeholder="Document/page/reference">
                 </div>
                 <div class="col-md-12 text-end">
                     <button type="submit" class="btn btn-primary px-4"><i class="bi bi-send me-1"></i>Submit Score</button>

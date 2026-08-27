@@ -17,6 +17,7 @@ from app.utils.decorators import role_required
 from app.models.user import User
 from app.models.role import Role
 from app.models.payment import BidderPayment, BidderDocumentAccess
+from app.models.complaint import Complaint
 from app.utils.notify import notify_user
 
 bidders_bp = Blueprint('bidders', __name__, url_prefix='/bidders')
@@ -66,6 +67,69 @@ def portal():
                            my_submissions=my_submissions, payments=payments)
 
 
+def _bidder_portal_data():
+    available = Procurement.query.filter(
+        Procurement.status.in_(['published', 'submission_open'])
+    ).order_by(Procurement.submission_deadline).all()
+    my_submissions = Submission.query.filter_by(
+        bidder_id=current_user.bidder_id, status='submitted'
+    ).order_by(Submission.submitted_at.desc()).all()
+    my_payments = BidderPayment.query.filter_by(bidder_id=current_user.bidder_id).all()
+    monitored_ids = {submission.procurement_id for submission in my_submissions}
+    monitored_ids.update(payment.procurement_id for payment in my_payments)
+    monitored = Procurement.query.filter(Procurement.id.in_(monitored_ids)).order_by(
+        Procurement.updated_at.desc()
+    ).all() if monitored_ids else []
+    payments = {p.id: current_user.bidder.get_payment_for_procurement(p.id) for p in available}
+    return available, monitored, my_submissions, payments
+
+
+@bidders_bp.route('/progress')
+@login_required
+@role_required('bidder')
+def progress():
+    _require_bidder()
+    _, monitored, my_submissions, _ = _bidder_portal_data()
+    return render_template('bidder_progress.html', monitored=monitored, my_submissions=my_submissions)
+
+
+@bidders_bp.route('/open-tenders')
+@login_required
+@role_required('bidder')
+def open_tenders():
+    _require_bidder()
+    available, _, _, payments = _bidder_portal_data()
+    return render_template('bidder_open_tenders.html', available=available, payments=payments)
+
+
+@bidders_bp.route('/complaints')
+@login_required
+@role_required('bidder')
+def complaints():
+    _require_bidder()
+    procurements = Procurement.query.join(
+        Submission, Submission.procurement_id == Procurement.id
+    ).filter(
+        Submission.bidder_id == current_user.bidder_id,
+        Submission.status == 'submitted',
+    ).distinct().order_by(Procurement.updated_at.desc()).all()
+    selected_id = request.args.get('procurement_id', type=int)
+    selected_procurement = next(
+        (procurement for procurement in procurements if procurement.id == selected_id),
+        procurements[0] if procurements else None,
+    )
+    selected_complaints = Complaint.query.filter_by(
+        procurement_id=selected_procurement.id,
+        bidder_id=current_user.bidder_id,
+    ).order_by(Complaint.created_at.desc()).all() if selected_procurement else []
+    return render_template(
+        'bidder_complaints.html',
+        procurements=procurements,
+        selected_procurement=selected_procurement,
+        selected_complaints=selected_complaints,
+    )
+
+
 @bidders_bp.route('/workspace/<int:procurement_id>', methods=['GET', 'POST'])
 @login_required
 @role_required('bidder')
@@ -104,6 +168,56 @@ def workspace(procurement_id):
                 db.session.commit()
                 log_action('QUESTION_SUBMITTED', entity_type='Communication', entity_id=comm.id)
                 flash('Your question has been submitted and will be published after review.', 'success')
+            return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+        if action == 'submit_complaint':
+            if not Submission.query.filter_by(
+                procurement_id=procurement.id,
+                bidder_id=current_user.bidder_id,
+                status='submitted',
+            ).first():
+                flash('You can post a complaint after submitting a bid for this procurement.', 'warning')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+            grounds = request.form.get('grounds', '').strip()
+            relief_sought = request.form.get('relief_sought', '').strip() or None
+            if not grounds:
+                flash('Please describe the grounds of your complaint.', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+            complaint = Complaint(
+                procurement_id=procurement.id,
+                bidder_id=current_user.bidder_id,
+                grounds=grounds,
+                relief_sought=relief_sought,
+                status='received',
+            )
+            db.session.add(complaint)
+            db.session.commit()
+            log_action(
+                'COMPLAINT_SUBMITTED',
+                entity_type='Complaint',
+                entity_id=complaint.id,
+                new_value={'procurement_id': procurement.id, 'bidder_id': current_user.bidder_id},
+            )
+
+            procurement_users = User.query.join(Role).filter(
+                Role.code.in_(['procurement_unit', 'system_admin', 'procurement_oversight'])
+            ).all()
+            for officer in procurement_users:
+                try:
+                    notify_user(
+                        officer,
+                        'complaint_received',
+                        f'Complaint Received: {procurement.tender_number}',
+                        f'{current_user.bidder.company_name} submitted a complaint for {procurement.title}.',
+                        procurement_id=procurement.id,
+                        email=False,
+                    )
+                except Exception:
+                    current_app.logger.exception(
+                        'Complaint notification failed after complaint %s was saved', complaint.id
+                    )
+            flash('Your complaint has been submitted and is now visible to Procurement.', 'success')
             return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
 
         if action == 'submit_payment':
@@ -289,6 +403,10 @@ def workspace(procurement_id):
         procurement_id=procurement.id, bidder_id=current_user.bidder_id, status='submitted'
     ).order_by(Submission.submitted_at.desc()).all()
     has_submitted_bid = bool(my_submissions)
+    my_complaints = Complaint.query.filter_by(
+        procurement_id=procurement.id,
+        bidder_id=current_user.bidder_id,
+    ).order_by(Complaint.created_at.desc()).all()
 
     # Query payment and document access for current bidder
     my_payment = current_user.bidder.get_payment_for_procurement(procurement.id)
@@ -314,4 +432,5 @@ def workspace(procurement_id):
         has_submitted_bid=has_submitted_bid,
         procurement_progress=_procurement_progress(procurement),
         award=award,
+        my_complaints=my_complaints,
     )

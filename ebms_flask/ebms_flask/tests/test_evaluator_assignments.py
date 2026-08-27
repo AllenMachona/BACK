@@ -373,12 +373,35 @@ class EvaluatorAssignmentTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Feedback document submitted', response.data)
 
+        response = self.client.post(
+            f'/evaluations/{procurement_id}/feedback',
+            data={
+                'feedback_text': 'Updated recommendation after clarification.',
+                'feedback_file': (io.BytesIO(b'Updated evaluator recommendation'), 'evaluation_result_v2.pdf'),
+            },
+            content_type='multipart/form-data',
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Your Submitted Feedback', response.data)
+        self.assertIn(b'evaluation_result_v2.pdf', response.data)
+
         with self.app.app_context():
-            feedback = EvaluatorFeedback.query.filter_by(procurement_id=procurement_id).first()
-            self.assertIsNotNone(feedback)
-            self._created['feedback'].append(feedback.id)
-            self._created['files'].append(feedback.file_path)
-            feedback_id = feedback.id
+            feedback_rows = EvaluatorFeedback.query.filter_by(
+                procurement_id=procurement_id,
+            ).order_by(EvaluatorFeedback.id).all()
+            self.assertEqual(len(feedback_rows), 2)
+            for feedback in feedback_rows:
+                self._created['feedback'].append(feedback.id)
+                self._created['files'].append(feedback.file_path)
+            feedback_id = feedback_rows[-1].id
+
+        self._login(self.eval_a_name)
+        response = self.client.get(
+            f'/procurements/{procurement_id}/evaluator-feedback/{feedback_id}/download'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, b'Updated evaluator recommendation')
 
         self._login(self.manager_name)
         detail_response = self.client.get(f'/procurements/{procurement_id}')
@@ -389,7 +412,7 @@ class EvaluatorAssignmentTests(unittest.TestCase):
             f'/procurements/{procurement_id}/evaluator-feedback/{feedback_id}/download'
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, b'Encrypted evaluator recommendation')
+        self.assertEqual(response.data, b'Updated evaluator recommendation')
 
     def test_non_procurement_user_cannot_manage_assignments(self):
         procurement_id = self._make_procurement()

@@ -16,8 +16,8 @@
         <p class="ebms-page-subtitle">{{ procurement.title }}</p>
     </div>
     <div class="ebms-page-actions">
-        {% if current_user.has_permission('can_award') and procurement.status in ('financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived') %}
-        <a href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}" class="btn btn-outline-success"><i class="bi bi-trophy me-1"></i>Award decision</a>
+        {% if current_user.has_permission('can_award') and procurement.status in ('under_evaluation', 'technical_opening', 'compliance_evaluation', 'technical_evaluation', 'technical_outcome_approved', 'financial_opening', 'financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived') %}
+        <a href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}" class="btn btn-outline-success"><i class="bi bi-trophy me-1"></i>View Award Bidders</a>
         {% endif %}
         {% if current_user.has_permission('can_create_procurement') %}
         <a href="{{ url_for('clarifications.list_clarifications', procurement_id=procurement.id) }}" class="btn btn-outline-primary">
@@ -43,6 +43,11 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.bidder_performance', procurement_id=procurement.id) }}"><i class="bi bi-graph-up-arrow me-1"></i>Bidder Performance</a>
     </li>
+    {% if current_user.has_permission('can_award') or current_user.has_role('procurement_unit') %}
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}"><i class="bi bi-trophy me-1"></i>Award Bidders</a>
+    </li>
+    {% endif %}
 </ul>
 {% endif %}
 <div class="row">

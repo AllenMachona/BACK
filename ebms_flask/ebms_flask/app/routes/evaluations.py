@@ -77,6 +77,10 @@ def detail(procurement_id):
         return submission_row.envelope_type in allowed_envelopes
 
     visible_submissions = [submission for submission in submitted_rows if _visible(submission)]
+    evaluator_feedback = EvaluatorFeedback.query.filter_by(
+        procurement_id=procurement.id,
+        evaluator_id=current_user.id,
+    ).order_by(EvaluatorFeedback.submitted_at.desc()).all()
 
     bids_received = sum(1 for s in submitted_rows if _visible(s))
     compliant = len({e.bidder_id for e in evaluations if e.evaluation_stage == 'compliance' and e.passed})
@@ -116,6 +120,7 @@ def detail(procurement_id):
         matrix=matrix,
         evaluator_scope_label=evaluator_scope_label,
         visible_submissions=visible_submissions,
+        evaluator_feedback=evaluator_feedback,
         can_submit_feedback=bool(assignment),
     )
 
@@ -192,7 +197,8 @@ def submit_score(procurement_id):
     stage = request.form.get('stage')
     score = request.form.get('score', type=float)
     passed = request.form.get('passed')
-    comments = request.form.get('comments', '')
+    comments = request.form.get('comments', '').strip() or None
+    evidence_references = request.form.get('evidence_references', '').strip() or None
 
     # Document-scope gate: an evaluator may only score stages their assigned
     # scope covers (technical -> technical envelopes, financial -> single).
@@ -211,7 +217,8 @@ def submit_score(procurement_id):
 
     evaluation = Evaluation(
         procurement_id=procurement_id, bidder_id=bidder_id, evaluator_id=current_user.id,
-        evaluation_stage=stage, score=score, passed=(passed == 'true') if passed else None, comments=comments,
+        evaluation_stage=stage, score=score, passed=(passed == 'true') if passed else None,
+        comments=comments, evidence_references=evidence_references,
     )
     db.session.add(evaluation)
     db.session.commit()

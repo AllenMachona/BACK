@@ -585,10 +585,19 @@ def detail(procurement_id):
 
 @procurements_bp.route('/<int:procurement_id>/award', methods=['GET', 'POST'])
 @login_required
-@permission_required('can_award')
 def award_workspace(procurement_id):
+    if not (
+        current_user.has_permission('can_award')
+        or current_user.has_role('procurement_unit')
+    ):
+        abort(403)
     procurement = Procurement.query.get_or_404(procurement_id)
-    if procurement.status not in ('financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived'):
+    if procurement.status not in (
+        'under_evaluation', 'technical_opening', 'compliance_evaluation',
+        'technical_evaluation', 'technical_outcome_approved', 'financial_opening',
+        'financial_evaluation', 'award_pending_approval', 'award_published',
+        'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived',
+    ):
         flash('This procurement is not ready for award review.', 'warning')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
@@ -601,24 +610,52 @@ def award_workspace(procurement_id):
         if score is not None:
             scores.setdefault(evaluation.bidder_id, []).append(float(score))
     bidders = []
+    feedback_document_count = procurement.evaluator_feedback.count()
     for bidder_id in bidder_ids:
         bidder = Bidder.query.get(bidder_id)
         bidder_scores = scores.get(bidder_id, [])
+        bidder_evaluations = [e for e in evaluations if e.bidder_id == bidder_id]
         bidders.append({
             'bidder': bidder,
             'submission_count': sum(1 for submission in submitted if submission.bidder_id == bidder_id),
             'score': round(sum(bidder_scores) / len(bidder_scores), 2) if bidder_scores else None,
             'evaluation_count': len(bidder_scores),
+            'written_feedback_count': sum(
+                1 for e in bidder_evaluations if e.comments or e.evidence_references
+            ),
+            'feedback_document_count': feedback_document_count,
         })
     bidders.sort(key=lambda row: (row['score'] is not None, row['score'] or 0), reverse=True)
 
     award = procurement.award
+    evaluator_feedback = procurement.evaluator_feedback.order_by(
+        EvaluatorFeedback.submitted_at.desc()
+    ).all()
     if request.method == 'POST':
         action = request.form.get('action')
-        if action == 'publish':
-            if not award or procurement.status != 'award_pending_approval':
+        if action in ('publish', 'award_tender'):
+            if action == 'publish' and (not award or procurement.status != 'award_pending_approval'):
                 flash('Save an award recommendation before publishing it.', 'danger')
                 return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+            if action == 'award_tender':
+                winning_bidder_id = request.form.get('winning_bidder_id', type=int)
+                winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
+                if not winner or winner.id not in bidder_ids:
+                    flash('Select a bidder with a submitted bid before awarding the tender.', 'danger')
+                    return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+                try:
+                    award_value = float(request.form.get('award_value') or procurement.estimated_value or 0)
+                except ValueError:
+                    flash('Enter a valid award value.', 'danger')
+                    return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+                if not award:
+                    award = Award(procurement_id=procurement.id, created_by_id=current_user.id)
+                    db.session.add(award)
+                award.winning_bidder_id = winner.id
+                award.award_value = award_value
+                award.decision_reason = (request.form.get('decision_reason') or '').strip()
+                award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
+                award.cooling_off_expiry = datetime.utcnow() + timedelta(days=10)
             award.published_at = datetime.utcnow()
             award.published_by_id = current_user.id
             procurement.status = 'award_published'
@@ -632,7 +669,7 @@ def award_workspace(procurement_id):
                     procurement_id=procurement.id,
                     email=False,
                 )
-            flash('Award published successfully. The cooling-off period is now active.', 'success')
+            flash('Tender awarded successfully. The winning bidder was notified and the cooling-off period is now active.', 'success')
             return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
 
         winning_bidder_id = request.form.get('winning_bidder_id', type=int)
@@ -658,7 +695,13 @@ def award_workspace(procurement_id):
         flash('Award recommendation saved and ready for publication.', 'success')
         return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
 
-    return render_template('procurement_award.html', procurement=procurement, bidders=bidders, award=award)
+    return render_template(
+        'procurement_award.html',
+        procurement=procurement,
+        bidders=bidders,
+        award=award,
+        evaluator_feedback=evaluator_feedback,
+    )
 
 
 def _procurement_management_access(procurement):
@@ -805,7 +848,13 @@ def add_performance_review(procurement_id):
 def upload_documents(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
 
-    if current_user.has_role('bidder') or not current_user.can_access_procurement(procurement):
+    is_submitting_evaluator = (
+        feedback.evaluator_id == current_user.id
+        and EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    )
+    if current_user.has_role('bidder') or (
+        not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
+    ):
         abort(403)
 
     uploaded = []
@@ -1305,7 +1354,13 @@ def download_evaluator_feedback(procurement_id, feedback_id):
         id=feedback_id, procurement_id=procurement.id
     ).first_or_404()
 
-    if current_user.has_role('bidder') or not current_user.can_access_procurement(procurement):
+    is_submitting_evaluator = (
+        feedback.evaluator_id == current_user.id
+        and EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    )
+    if current_user.has_role('bidder') or (
+        not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
+    ):
         abort(403)
     if not feedback.file_path or not os.path.isfile(feedback.file_path):
         abort(404)
@@ -1333,7 +1388,13 @@ def view_evaluator_feedback(procurement_id, feedback_id):
     feedback = EvaluatorFeedback.query.filter_by(
         id=feedback_id, procurement_id=procurement.id
     ).first_or_404()
-    if current_user.has_role('bidder') or not current_user.can_access_procurement(procurement):
+    is_submitting_evaluator = (
+        feedback.evaluator_id == current_user.id
+        and EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    )
+    if current_user.has_role('bidder') or (
+        not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
+    ):
         abort(403)
     if not feedback.file_path or not os.path.isfile(feedback.file_path):
         abort(404)

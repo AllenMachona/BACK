@@ -126,6 +126,7 @@ class ReportsService:
             award_status = 'awarded' if (proc_id, bidder_id) in awarded_pairs else None
 
             rows.append({
+                'procurement_id': proc_id,
                 'procurement_title': title,
                 'tender_number': tender_num,
                 'bidder_name': company,
@@ -356,7 +357,7 @@ class ReportsService:
                 'Tender Number': proc.tender_number if proc else '-',
                 'Title': proc.title if proc else '-',
                 'Winning Bidder': bidder.company_name if bidder else '-',
-                'Award Value': f'{float(proc.estimated_value or 0):,.2f}' if proc else '-',
+                'Award Value': f'{float(award.award_value or 0):,.2f}',
                 'Decision Date': award.decision_date.strftime('%Y-%m-%d') if award.decision_date else '-',
                 'Cooling-off Expiry': award.cooling_off_expiry.strftime('%Y-%m-%d') if award.cooling_off_expiry else '-',
                 'Cooling-off Active': 'Yes' if award.cooling_off_active() else 'No',

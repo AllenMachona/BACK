@@ -120,7 +120,7 @@
                 <tbody>
                     {% for row in report_data %}
                     <tr>
-                        <td><strong>{{ row.procurement_title }}</strong></td>
+                        <td><strong>{{ row.procurement_title }}</strong><small class="d-block text-muted">{{ row.tender_number }}</small></td>
                         <td>{{ row.bidder_name }}</td>
                         <td>{{ row.submission_date.strftime('%d %b %Y') if row.submission_date else '-' }}</td>
                         <td>

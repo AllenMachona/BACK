@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}My Procurement Progress - EBMS Botswana{% endblock %}
+{% block content %}
+<div class="container-main">
+    <div class="page-header"><div><span class="eyebrow">Bidder Workspace</span><h1><i class="bi bi-activity me-2"></i>My Procurement Progress</h1><p class="page-subtitle">Track tenders where your company has submitted a bid.</p></div></div>
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center"><h5 class="mb-0">Participating Procurements</h5><span class="badge badge-info">{{ monitored|length }}</span></div>
+        <div class="card-body">
+        {% if monitored %}<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Tender</th><th>Stage</th><th>My Submitted Bids</th><th>Updated</th><th class="text-end">Action</th></tr></thead><tbody>
+        {% for p in monitored %}{% set progress = 'Awarded' if p.status in ['award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived'] else ('Under Evaluation' if p.status in ['under_evaluation', 'closed', 'technical_opening', 'compliance_evaluation', 'technical_evaluation', 'technical_outcome_approved', 'financial_opening', 'financial_evaluation', 'award_pending_approval'] else ('Open for Bidding' if p.status in ['published', 'submission_open', 'clarification_period'] else p.status_label())) %}
+        <tr><td><strong>{{ p.tender_number }}</strong><small class="d-block text-muted">{{ p.title }}</small></td><td><span class="badge badge-{{ 'success' if progress == 'Awarded' else ('warning' if progress == 'Under Evaluation' else 'info') }}">{{ progress }}</span></td><td>{{ my_submissions|selectattr('procurement_id', 'equalto', p.id)|list|length }}</td><td class="text-muted small">{{ p.updated_at.strftime('%Y-%m-%d %H:%M') if p.updated_at else '-' }}</td><td class="text-end"><a href="{{ url_for('bidders.workspace', procurement_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Open Workspace</a></td></tr>
+        {% endfor %}</tbody></table></div>{% else %}<div class="text-center py-5"><i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i><p class="text-muted mb-0">You have not submitted a bid yet.</p></div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

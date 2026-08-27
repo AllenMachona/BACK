@@ -145,6 +145,79 @@ def operational():
     )
 
 
+@reports_bp.route('/finance')
+@login_required
+@permission_required('can_view_all_records')
+def finance():
+    procurements = Procurement.query.order_by(Procurement.created_at.desc()).all()
+    payments = BidderPayment.query.all()
+    awards = Award.query.all()
+    entries = BudgetEntry.query.all()
+    estimated_budget = sum(float(p.estimated_value or 0) for p in procurements)
+    awarded_value = sum(float(a.award_value or 0) for a in awards)
+    posted_spend = sum(float(e.signed_amount or 0) for e in entries)
+    approved_payments = sum(float(p.amount or 0) for p in payments if p.status == 'approved')
+    pending_payments = [p for p in payments if p.status == 'pending']
+    rejected_payments = [p for p in payments if p.status in ('rejected', 'resubmission_required')]
+    payment_statuses = [('Approved', sum(1 for p in payments if p.status == 'approved'), '#16805c'),
+                        ('Pending', len(pending_payments), '#c4871d'),
+                        ('Rejected / Correction', len(rejected_payments), '#c44444')]
+    payment_total = sum(count for _, count, _ in payment_statuses) or 1
+    payment_mix = []
+    payment_start = 0.0
+    for name, count, color in payment_statuses:
+        payment_end = payment_start + (count / payment_total * 100)
+        payment_mix.append((name, count, color, payment_start, payment_end, round(count / payment_total * 100, 1)))
+        payment_start = payment_end
+    breakdown = {
+        'commitments': sum(float(e.amount or 0) for e in entries if e.entry_type == 'commitment'),
+        'invoices': sum(float(e.amount or 0) for e in entries if e.entry_type == 'invoice'),
+        'payments': sum(float(e.amount or 0) for e in entries if e.entry_type == 'payment'),
+        'adjustments': sum(float(e.signed_amount or 0) for e in entries if e.entry_type == 'adjustment'),
+    }
+    today = datetime.utcnow().date()
+    month_keys = []
+    for offset in range(11, -1, -1):
+        number = today.month - offset
+        month_keys.append((today.year + (number - 1) // 12, (number - 1) % 12 + 1))
+    monthly = {key: {'payments': 0.0, 'spend': 0.0, 'awards': 0.0} for key in month_keys}
+    for p in payments:
+        if p.status == 'approved' and p.submitted_at:
+            key = (p.submitted_at.year, p.submitted_at.month)
+            if key in monthly: monthly[key]['payments'] += float(p.amount or 0)
+    for e in entries:
+        if e.entry_date:
+            key = (e.entry_date.year, e.entry_date.month)
+            if key in monthly: monthly[key]['spend'] += float(e.signed_amount or 0)
+    for a in awards:
+        if a.decision_date:
+            key = (a.decision_date.year, a.decision_date.month)
+            if key in monthly: monthly[key]['awards'] += float(a.award_value or 0)
+    categories = {}
+    for p in procurements:
+        name = (p.category or 'Unclassified').replace('_', ' ').title()
+        categories[name] = categories.get(name, 0.0) + float(p.estimated_value or 0)
+    category_mix = sorted(categories.items(), key=lambda item: item[1], reverse=True)
+    category_total = sum(value for _, value in category_mix) or 1
+    category_mix = [(name, value, round(value / category_total * 100, 1)) for name, value in category_mix]
+    over_budget = sum(1 for p in procurements if sum(float(e.signed_amount or 0) for e in p.budget_entries.all()) > float(p.estimated_value or 0))
+    attention_items = [
+        {'label': 'Payments awaiting verification', 'count': len(pending_payments), 'value': sum(float(p.amount or 0) for p in pending_payments), 'tone': 'warning', 'url': url_for('procurements.payment_verifications', status='pending')},
+        {'label': 'Rejected or correction payments', 'count': len(rejected_payments), 'value': sum(float(p.amount or 0) for p in rejected_payments), 'tone': 'danger', 'url': url_for('procurements.payment_verifications', status='rejected')},
+        {'label': 'Over budget procurements', 'count': over_budget, 'value': 0, 'tone': 'danger', 'url': url_for('procurements.list_procurements')},
+        {'label': 'Awards missing recorded value', 'count': sum(1 for a in awards if not a.award_value), 'value': 0, 'tone': 'warning', 'url': url_for('reports.awards')},
+    ]
+    return render_template('reports/finance.html', procurements=procurements,
+        estimated_budget=estimated_budget, awarded_value=awarded_value, posted_spend=posted_spend,
+        approved_payments=approved_payments, pending_payments=sum(float(p.amount or 0) for p in pending_payments),
+        breakdown=breakdown, category_mix=category_mix, payment_mix=payment_mix,
+        attention_items=attention_items,
+        month_labels=[datetime(y, m, 1).strftime('%b %y') for y, m in month_keys],
+        monthly_payments=[monthly[k]['payments'] for k in month_keys],
+        monthly_spend=[monthly[k]['spend'] for k in month_keys],
+        monthly_awards=[monthly[k]['awards'] for k in month_keys])
+
+
 @reports_bp.route('/bidder-participation')
 @login_required
 @permission_required('can_view_all_records')
@@ -154,6 +227,8 @@ def bidder_participation():
     procurement_id = request.args.get('procurement_id', type=int)
     bidder_id = request.args.get('bidder_id', type=int)
     status = request.args.get('status', type=str)
+    date_from = request.args.get('date_from', type=str)
+    date_to = request.args.get('date_to', type=str)
     
     filters = {}
     if procurement_id:
@@ -162,6 +237,16 @@ def bidder_participation():
         filters['bidder_id'] = bidder_id
     if status:
         filters['status'] = status
+    if date_from:
+        try:
+            filters['start_date'] = datetime.strptime(date_from, '%Y-%m-%d')
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            filters['end_date'] = datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1)
+        except ValueError:
+            pass
     
     report_data = ReportsService.generate_bidder_participation_report(filters)
     
@@ -173,7 +258,7 @@ def bidder_participation():
     
     return render_template(
         'reports/bidder_participation.html',
-        data=report_data,
+        report_data=report_data,
         procurements=procurements,
         bidders=bidders,
         statuses=statuses,
@@ -189,6 +274,8 @@ def export_bidder_participation():
     procurement_id = request.args.get('procurement_id', type=int)
     bidder_id = request.args.get('bidder_id', type=int)
     status = request.args.get('status', type=str)
+    date_from = request.args.get('date_from', type=str)
+    date_to = request.args.get('date_to', type=str)
     
     filters = {}
     if procurement_id:
@@ -197,6 +284,16 @@ def export_bidder_participation():
         filters['bidder_id'] = bidder_id
     if status:
         filters['status'] = status
+    if date_from:
+        try:
+            filters['start_date'] = datetime.strptime(date_from, '%Y-%m-%d')
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            filters['end_date'] = datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1)
+        except ValueError:
+            pass
     
     excel_file = ExcelExportService.export_bidder_participation_report(filters)
     
@@ -508,6 +605,8 @@ REPORT_CATALOG = [
         'name': 'Finance & Payments',
         'icon': 'bi-wallet2',
         'reports': [
+            {'key': 'finance', 'count_key': 'finance', 'title': 'Finance Overview',
+             'desc': 'Budgets, awards, payments, commitments, spend trends and attention flags.', 'icon': 'bi-wallet2'},
             {'key': 'payments', 'count_key': 'payments', 'title': 'Payment Verification',
              'desc': 'Tender-document payments and their verification status.', 'icon': 'bi-credit-card'},
             {'key': 'budget', 'count_key': 'budget_entries', 'title': 'Budget & Expenditure',
