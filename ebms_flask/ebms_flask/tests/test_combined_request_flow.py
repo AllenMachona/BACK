@@ -135,6 +135,38 @@ class CombinedRequestWorkflowTests(unittest.TestCase):
             self.assertTrue(request_obj.has_form_d())
             self.assertTrue(request_obj.has_form_e())
 
+    def test_requester_can_submit_draft_without_reuploading_saved_documents(self):
+        self._login('req_combo_test')
+        draft_response = self.client.post('/requests/new', data={
+            'department': 'Ministry of Health',
+            'justification': 'Keep saved Form D and Form E when submitting draft',
+            'action': 'save_draft',
+            'form_d_document': self._pdf(b'%PDF-1.4 D', 'form_d.pdf'),
+            'form_e_document': self._pdf(b'%PDF-1.4 E', 'form_e.pdf'),
+        }, content_type='multipart/form-data', follow_redirects=False)
+
+        self.assertEqual(draft_response.status_code, 302)
+        with self.app.app_context():
+            request_obj = FormDERequest.query.filter_by(requester_id=self.requester_a_id, status='draft').order_by(
+                FormDERequest.id.desc()).first()
+            self.assertIsNotNone(request_obj)
+            request_id = request_obj.id
+
+        submit_response = self.client.post('/requests/new', data={
+            'request_id': request_id,
+            'department': 'Ministry of Health',
+            'justification': 'Keep saved Form D and Form E when submitting draft',
+            'action': 'submit',
+        }, content_type='multipart/form-data', follow_redirects=True)
+
+        self.assertEqual(submit_response.status_code, 200)
+        self.assertIn(b'Request submitted to Procurement', submit_response.data)
+        with self.app.app_context():
+            request_obj = FormDERequest.query.get(request_id)
+            self.assertEqual(request_obj.status, 'submitted')
+            self.assertTrue(request_obj.has_form_d())
+            self.assertTrue(request_obj.has_form_e())
+
     def test_requester_cannot_override_department_or_upload_invalid_file(self):
         self._login('req_combo_test')
         response = self.client.post('/requests/new', data={

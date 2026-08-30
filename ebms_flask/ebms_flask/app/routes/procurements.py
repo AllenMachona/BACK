@@ -1046,6 +1046,27 @@ def download_payment_proof(payment_id):
     return send_from_directory(directory, basename, as_attachment=True, download_name=payment.proof_filename)
 
 
+@procurements_bp.route('/payments/<int:payment_id>/supporting-document')
+@login_required
+def download_payment_supporting_document(payment_id):
+    payment = BidderPayment.query.get_or_404(payment_id)
+
+    if current_user.has_role('bidder'):
+        if payment.bidder_id != current_user.bidder_id:
+            abort(403)
+    else:
+        if not (current_user.has_role('system_admin') or current_user.has_role('procurement_unit') or
+                current_user.has_role('procurement_oversight') or current_user.has_role('accounting_officer')):
+            abort(403)
+
+    if not payment.supporting_document_path or not os.path.exists(payment.supporting_document_path):
+        abort(404)
+
+    directory = os.path.dirname(payment.supporting_document_path)
+    basename = os.path.basename(payment.supporting_document_path)
+    return send_from_directory(directory, basename, as_attachment=True, download_name=payment.supporting_document_filename)
+
+
 @procurements_bp.route('/payments/<int:payment_id>/verify', methods=['POST'])
 @login_required
 def verify_payment(payment_id):

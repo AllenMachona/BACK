@@ -224,6 +224,7 @@ def workspace(procurement_id):
             payment_reference = request.form.get('payment_reference', '').strip()
             amount_raw = request.form.get('amount', '').strip()
             proof_file = request.files.get('proof_file')
+            supporting_document = request.files.get('supporting_document')
 
             if not payment_reference:
                 flash('Payment reference is required.', 'danger')
@@ -246,6 +247,14 @@ def workspace(procurement_id):
             filepath = os.path.join(payments_dir, filename)
             proof_file.save(filepath)
 
+            support_path = None
+            support_filename = None
+            if supporting_document and supporting_document.filename:
+                support_token = secrets.token_hex(4)
+                support_filename = secure_filename(f"{procurement.tender_number}_{current_user.bidder_id}_{support_token}_{supporting_document.filename}")
+                support_path = os.path.join(payments_dir, support_filename)
+                supporting_document.save(support_path)
+
             # Check if there is an existing payment record to update (resubmission)
             payment = BidderPayment.query.filter_by(
                 procurement_id=procurement.id,
@@ -257,6 +266,9 @@ def workspace(procurement_id):
                 payment.amount = amount
                 payment.proof_file_path = filepath
                 payment.proof_filename = proof_file.filename
+                if support_path:
+                    payment.supporting_document_path = support_path
+                    payment.supporting_document_filename = supporting_document.filename
                 payment.status = 'pending'
                 payment.notes = None
                 payment.submitted_at = datetime.utcnow()
@@ -272,6 +284,8 @@ def workspace(procurement_id):
                     amount=amount,
                     proof_file_path=filepath,
                     proof_filename=proof_file.filename,
+                    supporting_document_path=support_path,
+                    supporting_document_filename=support_filename,
                     status='pending'
                 )
                 db.session.add(payment)

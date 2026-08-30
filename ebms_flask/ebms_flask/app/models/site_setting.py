@@ -54,6 +54,11 @@ class SiteSetting(db.Model):
             'required_procurement_documents': ('Required Procurement Documents', 'advertisement', 'Comma-separated document types required before publication.'),
             'approval_levels': ('Approval Levels', '1', 'Number of approval levels required for configured workflows.'),
             'default_procurement_status': ('Default Procurement Status', 'draft', 'Initial status for newly created procurements.'),
+            'request_statuses': ('Request Statuses', 'draft,submitted,under_review,converted,rejected', 'Allowed internal lifecycle states for procurement requests.'),
+            'request_categories': ('Request Categories', 'works,services,consultancy,supplies,combination', 'Comma-separated categories used in request forms.'),
+            'request_methods': ('Request Methods', 'open_domestic,open_international,restricted,rfq,direct,rfp', 'Comma-separated procurement methods used in request forms.'),
+            'request_document_extensions': ('Request Document Extensions', 'pdf,doc,docx,xls,xlsx', 'Comma-separated signed document extensions accepted for requests.'),
+            'request_document_max_mb': ('Request Document Max MB', '25', 'Maximum size of each uploaded signed request document.'),
             'tender_number_prefix': ('Tender Number Prefix', 'TB', 'Prefix used for generated tender numbers.'),
             'bid_submission_deadline_min_hours': ('Minimum Bid Deadline (Hours)', '24', 'Minimum time allowed between publication and bid deadline.'),
             'allowed_document_extensions': ('Allowed Document Extensions', 'pdf,doc,docx,xls,xlsx,png,jpg,jpeg', 'Comma-separated upload extensions accepted by the platform.'),
@@ -95,25 +100,34 @@ class SiteSetting(db.Model):
 
     @classmethod
     def as_dict(cls):
-        cached = getattr(g, '_site_settings', None)
-        if cached is not None:
-            return cached
+        try:
+            cached = getattr(g, '_site_settings', None)
+            if cached is not None:
+                return cached
+        except RuntimeError:
+            cached = None
         try:
             cached = {setting.key: setting.value for setting in cls.query.all()}
-            g._site_settings = cached
+            try:
+                g._site_settings = cached
+            except RuntimeError:
+                pass
             return cached
-        except (OperationalError, ProgrammingError):
+        except (OperationalError, ProgrammingError, RuntimeError):
             return {}
 
     @classmethod
     def get(cls, key, default=''):
-        cached = getattr(g, '_site_settings', None)
-        if cached is not None:
-            return cached.get(key, default)
+        try:
+            cached = getattr(g, '_site_settings', None)
+            if cached is not None:
+                return cached.get(key, default)
+        except RuntimeError:
+            cached = None
         try:
             item = cls.query.filter_by(key=key).first()
             return item.value if item else default
-        except (OperationalError, ProgrammingError):
+        except (OperationalError, ProgrammingError, RuntimeError):
             return default
 
     def __repr__(self):

@@ -1,20 +1,43 @@
 import json
+import re
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
 from flask_login import login_required, current_user
-from sqlalchemy import case, func
+from sqlalchemy import case, func, or_
 from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.bidder import Bidder
 from app.models.submission import Submission
 from app.models.complaint import Complaint
 from app.models.payment import BidderPayment
-from app.models.procurement_plan import ProcurementPlanItem
+from app.models.procurement_plan import ProcurementPlanItem, PROCUREMENT_PLAN_STATUSES
 from app.utils.decorators import role_required
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 PUBLIC_PROCUREMENT_STATUSES = ['published', 'submission_open', 'clarification_period', 'award_published']
+FINANCIAL_YEAR_HINT = 'Financial year must use the format 2026/27, 2027/28, 2029/30, etc.'
+
+
+def _generate_financial_year_options(start_year=None, years_ahead=8):
+    current_year = start_year or datetime.utcnow().year
+    options = []
+    for year in range(current_year - 2, current_year + years_ahead):
+        suffix = str((year + 1) % 100).zfill(2)
+        options.append(f'{year}/{suffix}')
+    return options
+
+
+def _validate_financial_year(value):
+    text = (value or '').strip()
+    if not text:
+        return None, 'Financial year is required.'
+    if not re.fullmatch(r'\d{4}/\d{2}', text):
+        return None, f'{FINANCIAL_YEAR_HINT} Example: 2026/27.'
+    start_year, end_year = text.split('/')
+    if int(end_year) != (int(start_year) % 100) + 1:
+        return None, f'{FINANCIAL_YEAR_HINT} Example: 2026/27.'
+    return text, None
 
 
 def _category_key(category_value):
@@ -208,16 +231,51 @@ def public_tenders():
 
 @dashboard_bp.route('/procurement-plans')
 def public_procurement_plans():
-    plans = ProcurementPlanItem.query.filter_by(status='published').order_by(
+    plans_query = ProcurementPlanItem.query.filter(ProcurementPlanItem.status.in_(PROCUREMENT_PLAN_STATUSES))
+    selected_year = (request.args.get('year') or '').strip()
+    selected_quarter = (request.args.get('quarter') or '').strip()
+    selected_method = (request.args.get('method') or '').strip()
+    selected_category = (request.args.get('category') or '').strip()
+    query_text = (request.args.get('q') or '').strip()
+
+    if selected_year:
+        plans_query = plans_query.filter(ProcurementPlanItem.financial_year == selected_year)
+    if selected_quarter:
+        plans_query = plans_query.filter(ProcurementPlanItem.planned_quarter == selected_quarter)
+    if selected_method:
+        plans_query = plans_query.filter(ProcurementPlanItem.method == selected_method)
+    if selected_category:
+        plans_query = plans_query.filter(ProcurementPlanItem.category == selected_category)
+    if query_text:
+        plans_query = plans_query.filter(
+            or_(
+                ProcurementPlanItem.title.ilike(f'%{query_text}%'),
+                ProcurementPlanItem.procurement_entity.ilike(f'%{query_text}%'),
+                ProcurementPlanItem.description.ilike(f'%{query_text}%')
+            )
+        )
+
+    plans = plans_query.order_by(
         ProcurementPlanItem.financial_year.desc(),
         ProcurementPlanItem.procurement_entity.asc(),
         ProcurementPlanItem.planned_quarter.asc(),
     ).all()
-    years = sorted({plan.financial_year for plan in plans}, reverse=True)
-    selected_year = (request.args.get('year') or '').strip()
-    if selected_year:
-        plans = [plan for plan in plans if plan.financial_year == selected_year]
-    return render_template('public_procurement_plans.html', plans=plans, years=years, selected_year=selected_year)
+    years = sorted({plan.financial_year for plan in plans_query.all()}, reverse=True)
+    methods = sorted({plan.method for plan in plans_query.all() if plan.method})
+    categories = sorted({plan.category for plan in plans_query.all() if plan.category})
+
+    return render_template(
+        'public_procurement_plans.html',
+        plans=plans,
+        years=years,
+        selected_year=selected_year,
+        selected_quarter=selected_quarter,
+        selected_method=selected_method,
+        selected_category=selected_category,
+        query_text=query_text,
+        methods=methods,
+        categories=categories,
+    )
 
 
 @dashboard_bp.route('/procurement-plans/manage', methods=['GET', 'POST'])
@@ -229,29 +287,34 @@ def manage_procurement_plans():
         plan = ProcurementPlanItem.query.get(plan_id) if plan_id else None
         if plan_id and not plan:
             abort(404)
-        if request.form.get('action') == 'publish':
-            plan.status = 'published'
-            db.session.commit()
-            flash('Procurement plan published successfully.', 'success')
-            return redirect(url_for('dashboard.manage_procurement_plans'))
         try:
             estimated_value = float(request.form.get('estimated_value', ''))
         except ValueError:
             flash('Enter a valid estimated value.', 'danger')
             return redirect(url_for('dashboard.manage_procurement_plans'))
 
+        financial_year, year_error = _validate_financial_year(request.form.get('financial_year'))
+        if year_error:
+            flash(year_error, 'danger')
+            return redirect(url_for('dashboard.manage_procurement_plans'))
+
+        status = (request.form.get('status') or 'upcoming').strip().lower()
+        if status not in PROCUREMENT_PLAN_STATUSES:
+            flash('Select a valid procurement plan status.', 'danger')
+            return redirect(url_for('dashboard.manage_procurement_plans'))
+
         if not plan:
             plan = ProcurementPlanItem(created_by_id=current_user.id)
             db.session.add(plan)
         plan.procurement_entity = request.form.get('procurement_entity', '').strip()
-        plan.financial_year = request.form.get('financial_year', '').strip()
+        plan.financial_year = financial_year
         plan.title = request.form.get('title', '').strip()
         plan.description = request.form.get('description', '').strip()
         plan.category = request.form.get('category', '').strip()
         plan.method = request.form.get('method', '').strip()
         plan.estimated_value = estimated_value
         plan.planned_quarter = request.form.get('planned_quarter', '').strip()
-        plan.status = 'published' if request.form.get('status') == 'published' else 'draft'
+        plan.status = status
         if not all((plan.procurement_entity, plan.financial_year, plan.title,
                     plan.category, plan.method, plan.planned_quarter)):
             flash('Complete all required procurement plan fields.', 'danger')
@@ -264,7 +327,7 @@ def manage_procurement_plans():
     plans = ProcurementPlanItem.query.order_by(
         ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
     ).all()
-    return render_template('procurement_plan_manage.html', plans=plans)
+    return render_template('procurement_plan_manage.html', plans=plans, financial_year_options=_generate_financial_year_options())
 
 
 @dashboard_bp.route('/procurement-plans/<int:plan_id>/edit', methods=['GET'])
@@ -275,7 +338,7 @@ def edit_procurement_plan(plan_id):
     plans = ProcurementPlanItem.query.order_by(
         ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
     ).all()
-    return render_template('procurement_plan_manage.html', plans=plans, edit_plan=plan)
+    return render_template('procurement_plan_manage.html', plans=plans, edit_plan=plan, financial_year_options=_generate_financial_year_options())
 
 
 @dashboard_bp.route('/tenders/<int:procurement_id>')

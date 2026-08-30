@@ -88,7 +88,8 @@
                         <th>Tender Number &amp; Title</th>
                         <th>Payment Reference</th>
                         <th>Amount</th>
-                        <th>Proof Document</th>
+                        <th><i class="bi bi-file-earmark-check text-success me-1"></i>Proof of Payment</th>
+                        <th><i class="bi bi-file-earmark-text text-info me-1"></i>Youth-Owned Supporting</th>
                         <th>Submitted At</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
@@ -110,9 +111,24 @@
                         <td><code>{{ p.payment_reference }}</code></td>
                         <td class="fw-bold text-dark">BWP {{ '{:,.2f}'.format(p.amount) }}</td>
                         <td>
-                            <a href="{{ url_for('procurements.download_payment_proof', payment_id=p.id) }}" class="btn btn-sm btn-outline-secondary" title="Download Proof File">
-                                <i class="bi bi-paperclip me-1"></i>{{ p.proof_filename[:16] }}...
-                            </a>
+                            <div class="d-flex flex-column gap-1">
+                                <small class="text-muted fw-bold"><i class="bi bi-check-circle me-1 text-success"></i>Payment Proof</small>
+                                <a href="{{ url_for('procurements.download_payment_proof', payment_id=p.id) }}" class="btn btn-sm btn-outline-success" title="Download Bank Deposit Receipt or Payment Proof">
+                                    <i class="bi bi-download me-1"></i>{{ p.proof_filename[:14] }}...
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            {% if p.supporting_document_filename %}
+                            <div class="d-flex flex-column gap-1">
+                                <small class="text-muted fw-bold"><i class="bi bi-award me-1 text-info"></i>Youth Certificate</small>
+                                <a href="{{ url_for('procurements.download_payment_supporting_document', payment_id=p.id) }}" class="btn btn-sm btn-outline-info" title="Download Youth Ownership Certificate or Supporting Document">
+                                    <i class="bi bi-download me-1"></i>{{ p.supporting_document_filename[:12] }}...
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small d-block">—</span>
+                            {% endif %}
                         </td>
                         <td class="small text-muted">{{ p.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
@@ -167,7 +183,12 @@
                                                     <div><strong>Tender:</strong> {{ p.procurement.title }}</div>
                                                     <div><strong>Payment Reference:</strong> <code>{{ p.payment_reference }}</code></div>
                                                     <div><strong>Amount:</strong> BWP {{ '{:,.2f}'.format(p.amount) }}</div>
-                                                    <div><strong>Proof File:</strong> {{ p.proof_filename }}</div>
+                                                    <div class="mt-2 pt-2 border-top">
+                                                        <div class="mb-2"><strong><i class="bi bi-check-circle me-1 text-success"></i>Proof of Payment:</strong><br/><small class="text-muted">{{ p.proof_filename }}</small></div>
+                                                        {% if p.supporting_document_filename %}
+                                                        <div><strong><i class="bi bi-award me-1 text-info"></i>Youth-Owned Supporting:</strong><br/><small class="text-muted">{{ p.supporting_document_filename }}</small></div>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                                 <div class="alert alert-success small mb-3">
                                                     <i class="bi bi-unlock-fill me-1"></i>

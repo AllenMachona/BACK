@@ -24,6 +24,7 @@ from app.extensions import db
 from app.models.procurement import Procurement
 from app.models.request import FormDRequest, FormERequest, FormDERequest, REQUEST_STATUSES
 from app.models.role import Role
+from app.models.site_setting import SiteSetting
 from app.models.user import User
 from app.utils.audit import log_action
 from app.utils.decorators import role_required
@@ -31,11 +32,16 @@ from app.utils.notify import notify_user
 
 requests_bp = Blueprint('requests', __name__, url_prefix='/requests')
 
-CATEGORY_OPTIONS = ['works', 'services', 'consultancy', 'supplies', 'combination']
-METHOD_OPTIONS = ['open_domestic', 'open_international', 'restricted', 'rfq', 'direct', 'rfp']
+def _db_choice_list(key, default):
+    raw = SiteSetting.get(key, default)
+    return [item.strip() for item in str(raw).split(',') if item.strip()]
+
+
+CATEGORY_OPTIONS = _db_choice_list('request_categories', 'works,services,consultancy,supplies,combination')
+METHOD_OPTIONS = _db_choice_list('request_methods', 'open_domestic,open_international,restricted,rfq,direct,rfp')
 HUMANIZED_STATUS = {s: s.replace('_', ' ').title() for s in REQUEST_STATUSES}
-REQUEST_DOCUMENT_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx'}
-REQUEST_DOCUMENT_MAX_BYTES = 25 * 1024 * 1024
+REQUEST_DOCUMENT_EXTENSIONS = set(_db_choice_list('request_document_extensions', 'pdf,doc,docx,xls,xlsx'))
+REQUEST_DOCUMENT_MAX_BYTES = int(SiteSetting.get('request_document_max_mb', '25')) * 1024 * 1024
 
 
 def _is_procurement_staff(user=None):
@@ -99,8 +105,10 @@ def _save_signed_form(file_storage, form_type):
     return filepath, file_storage.filename
 
 
-def _validate_request_document(file_storage, label):
+def _validate_request_document(file_storage, label, allow_missing=False):
     if not file_storage or not file_storage.filename:
+        if allow_missing:
+            return None
         return f'Please attach the signed/certified copy of {label}.'
     original_name = secure_filename(file_storage.filename)
     extension = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else ''
@@ -170,7 +178,28 @@ def hub():
 @login_required
 @role_required('requester')
 def new_form():
-    return render_template('requests/new_form.html', form=None)
+    draft_request = None
+    return render_template('requests/new_form.html', form=None, draft_request=draft_request)
+
+
+@requests_bp.route('/de/<int:request_id>/edit', methods=['GET'])
+@login_required
+@role_required('requester')
+def edit_form_de(request_id):
+    request_obj = FormDERequest.query.get_or_404(request_id)
+    if request_obj.requester_id != current_user.id:
+        abort(403)
+    if request_obj.status not in ('draft', 'submitted'):
+        flash('Only draft requests can be edited.', 'warning')
+        return redirect(url_for('requests.my_requests'))
+    return render_template(
+        'requests/new_form.html',
+        form={
+            'department': request_obj.department or current_user.department or '',
+            'justification': request_obj.justification or '',
+        },
+        draft_request=request_obj,
+    )
 
 
 @requests_bp.route('/new', methods=['POST'])
@@ -185,13 +214,51 @@ def submit_form_de():
     record.
     """
     justification = (request.form.get('justification') or '').strip()
-    department = (current_user.department or '').strip()
+    department = (request.form.get('department') or current_user.department or '').strip()
+    save_as_draft = request.form.get('action') == 'save_draft'
+    request_id = request.form.get('request_id', type=int)
+    request_obj = None
+    if request_id:
+        request_obj = FormDERequest.query.filter_by(id=request_id, requester_id=current_user.id).first()
+    if not request_obj:
+        request_obj = FormDERequest(requester_id=current_user.id, submitted_by_id=current_user.id)
+        db.session.add(request_obj)
 
-    errors = []
     form_d_file = request.files.get('form_d_document')
     form_e_file = request.files.get('form_e_document')
-    form_d_error = _validate_request_document(form_d_file, 'Form D')
-    form_e_error = _validate_request_document(form_e_file, 'Form E')
+
+    if save_as_draft:
+        if form_d_file and form_d_file.filename:
+            d_path, d_name = _save_signed_form(form_d_file, 'form_d')
+            request_obj.form_d_file_path = d_path
+            request_obj.form_d_filename = d_name
+        if form_e_file and form_e_file.filename:
+            e_path, e_name = _save_signed_form(form_e_file, 'form_e')
+            request_obj.form_e_file_path = e_path
+            request_obj.form_e_filename = e_name
+
+        request_obj.department = department
+        request_obj.justification = justification
+        request_obj.status = 'draft'
+        request_obj.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Draft saved successfully. You can edit it later before submission.', 'success')
+        return redirect(url_for('requests.drafts'))
+
+    errors = []
+    if form_d_file and form_d_file.filename:
+        form_d_error = _validate_request_document(form_d_file, 'Form D', allow_missing=False)
+    elif request_obj and request_obj.form_d_file_path and os.path.isfile(request_obj.form_d_file_path):
+        form_d_error = None
+    else:
+        form_d_error = 'Please attach the signed/certified copy of Form D.'
+    if form_e_file and form_e_file.filename:
+        form_e_error = _validate_request_document(form_e_file, 'Form E', allow_missing=False)
+    elif request_obj and request_obj.form_e_file_path and os.path.isfile(request_obj.form_e_file_path):
+        form_e_error = None
+    else:
+        form_e_error = 'Please attach the signed/certified copy of Form E.'
+
     if form_d_error:
         errors.append(form_d_error)
     if form_e_error:
@@ -200,32 +267,29 @@ def submit_form_de():
     if errors:
         for error in errors:
             flash(error, 'danger')
-        return render_template('requests/new_form.html', form=request.form)
+        return render_template('requests/new_form.html', form=request.form, draft_request=request_obj)
 
-    d_path, d_name = _save_signed_form(form_d_file, 'form_d')
-    e_path, e_name = _save_signed_form(form_e_file, 'form_e')
-
-    request_obj = FormDERequest(
-        requester_id=current_user.id,
-        submitted_by_id=current_user.id,
-        status='submitted',
-        department=department,
-        justification=justification,
-        form_d_file_path=d_path,
-        form_d_filename=d_name,
-        form_e_file_path=e_path,
-        form_e_filename=e_name,
-    )
-    db.session.add(request_obj)
+    if form_d_file and form_d_file.filename:
+        d_path, d_name = _save_signed_form(form_d_file, 'form_d')
+        request_obj.form_d_file_path = d_path or request_obj.form_d_file_path
+        request_obj.form_d_filename = d_name or request_obj.form_d_filename
+    if form_e_file and form_e_file.filename:
+        e_path, e_name = _save_signed_form(form_e_file, 'form_e')
+        request_obj.form_e_file_path = e_path or request_obj.form_e_file_path
+        request_obj.form_e_filename = e_name or request_obj.form_e_filename
+    request_obj.department = department
+    request_obj.justification = justification
+    request_obj.status = 'submitted'
+    request_obj.submitted_by_id = current_user.id
     db.session.commit()
 
     log_action('REQUEST_DE_SUBMITTED', entity_type='FormDERequest', entity_id=request_obj.id,
                new_value={'requester': current_user.full_name(), 'department': department,
-                          'status': 'submitted', 'has_form_d': bool(d_path), 'has_form_e': bool(e_path)})
+                          'status': 'submitted', 'has_form_d': bool(request_obj.form_d_file_path), 'has_form_e': bool(request_obj.form_e_file_path)})
     log_action('REQUEST_DE_FORM_D_UPLOADED', entity_type='FormDERequest', entity_id=request_obj.id,
-               new_value={'filename': d_name})
+               new_value={'filename': request_obj.form_d_filename})
     log_action('REQUEST_DE_FORM_E_UPLOADED', entity_type='FormDERequest', entity_id=request_obj.id,
-               new_value={'filename': e_name})
+               new_value={'filename': request_obj.form_e_filename})
     _notify_procurement_staff(
         f'New procurement request from {current_user.full_name()}',
         f'{current_user.full_name()} ({department or "Department not set"}) submitted a '
@@ -247,6 +311,16 @@ def new_form_d():
 @role_required('requester')
 def new_form_e():
     return redirect(url_for('requests.new_form'))
+
+
+@requests_bp.route('/drafts')
+@login_required
+@role_required('requester')
+def drafts():
+    de_items = FormDERequest.query.filter_by(requester_id=current_user.id, status='draft').order_by(
+        FormDERequest.updated_at.desc(), FormDERequest.created_at.desc()).all()
+    items = [dict(form_type='de', request=x) for x in de_items]
+    return render_template('requests/drafts.html', items=items, status_labels=HUMANIZED_STATUS)
 
 
 @requests_bp.route('/my')
@@ -666,6 +740,32 @@ def download_form_de_document(request_id, doc_type):
     directory = os.path.dirname(file_path)
     basename = os.path.basename(file_path)
     return send_from_directory(directory, basename, as_attachment=True, download_name=filename)
+
+
+@requests_bp.route('/de/<int:request_id>/preview/<doc_type>')
+@login_required
+def preview_form_de_document(request_id, doc_type):
+    """Open a saved draft document inline in the browser when possible."""
+    request_obj = FormDERequest.query.get_or_404(request_id)
+    _require_request_access(request_obj)
+
+    if doc_type == 'form_d':
+        file_path = request_obj.form_d_file_path
+        filename = request_obj.form_d_filename
+    elif doc_type == 'form_e':
+        file_path = request_obj.form_e_file_path
+        filename = request_obj.form_e_filename
+    else:
+        abort(404)
+
+    if not file_path or not filename or not os.path.isfile(file_path):
+        abort(404)
+
+    log_action('REQUEST_DE_DOCUMENT_PREVIEWED', entity_type='FormDERequest', entity_id=request_obj.id,
+               new_value={'doc_type': doc_type, 'filename': filename})
+    directory = os.path.dirname(file_path)
+    basename = os.path.basename(file_path)
+    return send_from_directory(directory, basename, as_attachment=False, download_name=filename)
 
 
 @requests_bp.route('/de/<int:request_id>/review', methods=['POST'])

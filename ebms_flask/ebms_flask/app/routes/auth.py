@@ -104,17 +104,27 @@ def register():
         # Validate all required fields
         department = sanitize_string(request.form.get('department', '').strip(), max_length=100)
         designation = sanitize_string(request.form.get('designation', '').strip(), max_length=100)
-        compliance_file = request.files.get('compliance_document')
-        
+        required_documents = [
+            {'field_name': 'cipa_document', 'document_type': 'cipa_equivalent', 'label': 'CIPA / Equivalent'},
+            {'field_name': 'tax_certificate', 'document_type': 'tax_certificate', 'label': 'Tax Certificate'},
+        ]
+
         if not all([username, email, first_name, last_name, password, department, designation]):
             flash('Please complete all required fields.', 'danger')
             return render_template('register.html')
 
         allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
-        file_extension = os.path.splitext(compliance_file.filename)[1].lower().lstrip('.') if compliance_file and compliance_file.filename else ''
-        if not compliance_file or not compliance_file.filename or file_extension not in allowed_extensions:
-            flash('Please upload a compliance document (PDF, PNG, JPG, DOC, or DOCX).', 'danger')
-            return render_template('register.html')
+        uploaded_documents = []
+        for item in required_documents:
+            file = request.files.get(item['field_name'])
+            if not file or not file.filename:
+                flash('Please upload both required compliance documents: CIPA / Equivalent and Tax Certificate.', 'danger')
+                return render_template('register.html')
+            extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
+            if extension not in allowed_extensions:
+                flash(f'Please upload a valid {item["label"]} document (PDF, PNG, JPG, DOC, or DOCX).', 'danger')
+                return render_template('register.html')
+            uploaded_documents.append((item['document_type'], item['label'], file))
 
         # SECURITY: Validate email format
         if not validate_email(email):
@@ -156,14 +166,16 @@ def register():
 
         compliance_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'bidder_compliance')
         os.makedirs(compliance_dir, exist_ok=True)
-        compliance_filename = secure_filename(f'{bidder.id}_{secrets.token_hex(8)}_{compliance_file.filename}')
-        compliance_path = os.path.join(compliance_dir, compliance_filename)
-        compliance_file.save(compliance_path)
-        db.session.add(BidderComplianceDocument(
-            bidder_id=bidder.id,
-            file_path=compliance_path,
-            original_filename=compliance_file.filename,
-        ))
+        for document_type, label, file_obj in uploaded_documents:
+            compliance_filename = secure_filename(f'{bidder.id}_{document_type}_{secrets.token_hex(8)}_{file_obj.filename}')
+            compliance_path = os.path.join(compliance_dir, compliance_filename)
+            file_obj.save(compliance_path)
+            db.session.add(BidderComplianceDocument(
+                bidder_id=bidder.id,
+                document_type=document_type,
+                file_path=compliance_path,
+                original_filename=file_obj.filename,
+            ))
 
         user = User(
             username=username,

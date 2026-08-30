@@ -118,6 +118,12 @@
       }
 
       form.addEventListener('submit', function (event) {
+        var submitter = event.submitter || submitButton;
+
+        if (submitter && submitter.name) {
+          return;
+        }
+
         event.preventDefault();
         if (request) return;
 
@@ -128,10 +134,19 @@
           progress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100);
         });
         request.addEventListener('load', function () {
-          if (request.status >= 200 && request.status < 400) {
-            window.location.assign(request.responseURL || form.action);
+          var successStatus = request.status >= 200 && request.status < 400;
+          var redirectStatus = request.status >= 300 && request.status < 400;
+          var redirectLocation = request.responseURL || request.getResponseHeader('Location') || form.action;
+
+          if (successStatus || redirectStatus) {
+            try {
+              window.location.assign(redirectLocation || form.action);
+            } catch (error) {
+              window.location.href = form.action;
+            }
             return;
           }
+
           resetUploadState();
           showToast('The upload could not be completed. Please try again.', 'error');
         });
@@ -139,10 +154,16 @@
           resetUploadState();
           showToast('A network error interrupted the upload.', 'error');
         });
+
+        var formData = new FormData(form);
+        if (submitter && submitter.name) {
+          formData.append(submitter.name, submitter.value);
+        }
+
         submitButton.disabled = true;
         submitButton.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>Uploading...';
         progress.hidden = false;
-        request.send(new FormData(form));
+        request.send(formData);
       });
     });
   }

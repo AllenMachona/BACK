@@ -182,6 +182,9 @@ def users():
     compliance_queue = BidderComplianceDocument.query.filter_by(status='pending').order_by(
         BidderComplianceDocument.submitted_at.asc()
     ).all()
+    compliance_queue_by_bidder = {}
+    for document in compliance_queue:
+        compliance_queue_by_bidder.setdefault(document.bidder_id, []).append(document)
     roles = Role.query.all()
 
     role_distribution = []
@@ -197,7 +200,8 @@ def users():
     return render_template(
         'admin_users.html', users=all_users, roles=roles,
         role_distribution=role_distribution, mfa_enabled=mfa_enabled,
-        mfa_disabled=mfa_disabled, locked=locked, compliance_queue=compliance_queue,
+        mfa_disabled=mfa_disabled, locked=locked,
+        compliance_queue_by_bidder=compliance_queue_by_bidder,
     )
 
 
@@ -283,11 +287,19 @@ def review_bidder_compliance(document_id):
         flash('A rejection reason is required.', 'danger')
         return redirect(url_for('admin.users'))
 
+    bidder_documents = BidderComplianceDocument.query.filter_by(bidder_id=document.bidder_id).all()
+    if not bidder_documents:
+        flash('No compliance documents were found for this bidder.', 'danger')
+        return redirect(url_for('admin.users'))
+
     user = document.bidder.portal_users.first()
-    document.status = decision
-    document.review_notes = notes or None
-    document.reviewed_at = datetime.utcnow()
-    document.reviewed_by_id = current_user.id
+    reviewed_at = datetime.utcnow()
+    for compliance_document in bidder_documents:
+        compliance_document.status = decision
+        compliance_document.review_notes = notes if decision == 'rejected' else None
+        compliance_document.reviewed_at = reviewed_at
+        compliance_document.reviewed_by_id = current_user.id
+
     document.bidder.active = decision == 'approved'
     document.bidder.verified = decision == 'approved'
     if user:
@@ -307,7 +319,7 @@ def review_bidder_compliance(document_id):
     else:
         email_sent = False
     log_action('BIDDER_COMPLIANCE_REVIEWED', entity_type='BidderComplianceDocument', entity_id=document.id,
-               new_value={'decision': decision, 'user_id': user.id if user else None})
+               new_value={'decision': decision, 'user_id': user.id if user else None, 'bidder_id': document.bidder_id})
     if email_sent:
         flash(f'Bidder account {decision}; notification email sent.', 'success')
     elif not current_app.config.get('MAIL_CONFIGURED'):

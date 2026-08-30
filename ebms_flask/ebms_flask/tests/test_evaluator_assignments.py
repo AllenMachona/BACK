@@ -149,6 +149,7 @@ class EvaluatorAssignmentTests(unittest.TestCase):
             db.session.add(bidder_user)
             db.session.commit()
         self.bidder_user_id = bidder_user.id
+        self.bidder_user_name = bidder_user.username
         self._created['users'].append(bidder_user.id)
     def _login(self, username):
         self.client.get('/logout', follow_redirects=True)
@@ -421,6 +422,32 @@ class EvaluatorAssignmentTests(unittest.TestCase):
         response = self._assign(procurement_id, self.eval_a_id, 'both')
 
         self.assertEqual(response.status_code, 403)
+
+    def test_evaluator_cannot_send_direct_messages_to_bidder_users(self):
+        self._login(self.eval_a_name)
+
+        response = self.client.post('/messages/send', data={
+            'message_type': 'direct',
+            'recipient_user_id': self.bidder_user_id,
+            'subject': 'Restricted contact',
+            'body': 'This message should be blocked.',
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('restricted', response.get_data(as_text=True).lower())
+
+    def test_bidder_cannot_send_direct_messages_to_evaluator_users(self):
+        self._login(self.bidder_user_name)
+
+        response = self.client.post('/messages/send', data={
+            'message_type': 'direct',
+            'recipient_user_id': self.eval_a_id,
+            'subject': 'Restricted contact',
+            'body': 'This message should be blocked.',
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('restricted', response.get_data(as_text=True).lower())
 
 
 if __name__ == '__main__':

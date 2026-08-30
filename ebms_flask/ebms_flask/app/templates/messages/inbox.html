@@ -130,7 +130,7 @@
                             <select name="recipient_user_id" id="recipientUser" class="form-select">
                                 <option value="">Choose a user...</option>
                                 {% for user in all_users %}
-                                    {% if user.id != current_user.id %}
+                                    {% if user.id != current_user.id and not (current_user.has_role('evaluator') and user.has_role('bidder')) and not (current_user.has_role('bidder') and user.has_role('evaluator')) %}
                                         <option value="{{ user.id }}">{{ user.full_name() }} ({{ user.role.name }})</option>
                                     {% endif %}
                                 {% endfor %}
@@ -147,7 +147,7 @@
                             </div>
                             <div id="usersList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
                                 {% for user in all_users %}
-                                    {% if user.id != current_user.id %}
+                                    {% if user.id != current_user.id and not (current_user.has_role('evaluator') and user.has_role('bidder')) and not (current_user.has_role('bidder') and user.has_role('evaluator')) %}
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="user_ids" value="{{ user.id }}">
                                             <label class="form-check-label">{{ user.full_name() }} <small class="text-muted">({{ user.role.name }})</small></label>
@@ -173,10 +173,12 @@
                             </div>
                             <div id="rolesList" style="display: none; margin-left: 1.5rem; margin-top: 0.5rem;">
                                 {% for role in all_roles %}
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="role_ids" value="{{ role.id }}">
-                                        <label class="form-check-label">{{ role.name }}</label>
-                                    </div>
+                                    {% if not (current_user.has_role('evaluator') and role.code == 'bidder') and not (current_user.has_role('bidder') and role.code == 'evaluator') %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="role_ids" value="{{ role.id }}">
+                                            <label class="form-check-label">{{ role.name }}</label>
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
                         </div>

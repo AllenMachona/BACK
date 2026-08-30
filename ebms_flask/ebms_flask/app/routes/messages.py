@@ -194,6 +194,23 @@ def _mark_thread_read(thread_id, user_id):
             log_message_read(r.message_id, user_id)
 
 
+def _message_block_for_user(sender, target_user=None, target_role_code=None):
+    """Return a blocking error message when a sender is not allowed to contact the target."""
+    if sender is None:
+        return None
+    if sender.has_role('evaluator'):
+        if target_user and target_user.has_role('bidder'):
+            return 'Evaluators are restricted from direct communication with bidders. Please contact your supervisor.'
+        if target_role_code == 'bidder':
+            return 'Evaluators are restricted from communication with bidders. Please contact your supervisor.'
+    if sender.has_role('bidder'):
+        if target_user and target_user.has_role('evaluator'):
+            return 'Bidders are restricted from communicating with evaluators. Please contact your supervisor.'
+        if target_role_code == 'evaluator':
+            return 'Bidders are restricted from communicating with evaluators. Please contact your supervisor.'
+    return None
+
+
 @messages_bp.route('/')
 @login_required
 def inbox():
@@ -298,6 +315,9 @@ def send_message():
     message_type = (request.form.get('message_type') or 'direct').strip()
     procurement_id = request.form.get('procurement_id', type=int)
 
+    # SECURITY: Restrict evaluators from communicating with bidders
+    is_evaluator = current_user.has_role('evaluator')
+    
     def _fail(message):
         if is_ajax:
             return jsonify({'status': 'error', 'message': message}), 400
@@ -328,6 +348,11 @@ def send_message():
             recipient = User.query.get(recipient_id)
             if not recipient:
                 return _fail('Recipient not found.')
+            
+            # SECURITY: Prevent cross-group contact between evaluators and bidders.
+            blocked = _message_block_for_user(current_user, recipient)
+            if blocked:
+                return _fail(blocked)
 
             message = MessagingService.send_direct_message(
                 subject=subject,
@@ -338,6 +363,10 @@ def send_message():
             )
 
         elif message_type == 'broadcast':
+            # SECURITY: Evaluators cannot broadcast to bidders
+            if is_evaluator:
+                return _fail('Evaluators cannot send broadcast messages.')
+            
             message = MessagingService.send_broadcast_message(
                 subject=subject,
                 body=body,
@@ -357,6 +386,19 @@ def send_message():
 
             if not (user_ids or bidder_ids or role_ids):
                 return _fail('Please select at least one target.')
+            
+            # SECURITY: Prevent cross-group contact between evaluators and bidders.
+            selected_users = User.query.filter(User.id.in_(user_ids)).all() if user_ids else []
+            for selected_user in selected_users:
+                blocked = _message_block_for_user(current_user, selected_user)
+                if blocked:
+                    return _fail(blocked)
+
+            selected_roles = Role.query.filter(Role.id.in_(role_ids)).all() if role_ids else []
+            for selected_role in selected_roles:
+                blocked = _message_block_for_user(current_user, target_role_code=selected_role.code)
+                if blocked:
+                    return _fail(blocked)
 
             message = MessagingService.send_targeted_message(
                 subject=subject,
@@ -569,6 +611,29 @@ def reply_thread(thread_id):
         abort(404)
 
     body = (request.form.get('body') or '').strip()
+
+    # SECURITY: Restrict evaluators and bidders from mixing with each other
+    is_evaluator = current_user.has_role('evaluator')
+    is_bidder = current_user.has_role('bidder')
+    if is_evaluator or is_bidder:
+        participant_ids = root.participant_user_ids()
+        other_participants = [
+            User.query.get(uid) for uid in participant_ids
+            if User.query.get(uid) and User.query.get(uid).id != current_user.id
+        ]
+        if any(
+            (is_evaluator and p and p.has_role('bidder')) or
+            (is_bidder and p and p.has_role('evaluator'))
+            for p in other_participants
+        ):
+            def _fail(message):
+                if is_ajax:
+                    return jsonify({'status': 'error', 'message': message}), 403
+                flash(message, 'danger')
+                return redirect(url_for('messages.thread_view', thread_id=thread_id)), 403
+            if is_evaluator:
+                return _fail('Evaluators cannot communicate with bidders. This thread involves external parties.')
+            return _fail('Bidders cannot communicate with evaluators. This thread involves internal reviewers.')
 
     def _fail(message):
         if is_ajax:

@@ -27,11 +27,31 @@ Procurement record it produced (1:1).
 from datetime import datetime
 
 from app.extensions import db
+from flask import has_app_context
 from sqlalchemy import text
 
-# Keep the status vocabulary in one place so routes never hardcode a typoable
-# value; mirrors how procurements.py keeps TRANSITIONS explicit.
-REQUEST_STATUSES = ['submitted', 'under_review', 'converted', 'rejected']
+
+def _status_list_from_settings():
+    """Read request lifecycle states without assuming an app context exists."""
+    default = 'draft,submitted,under_review,converted,rejected'
+    try:
+        from app.models.site_setting import SiteSetting
+        if has_app_context():
+            raw = SiteSetting.get('request_statuses', default)
+            if raw:
+                return str(raw)
+    except Exception:
+        pass
+    return default
+
+
+# Keep the status vocabulary centralized in the database while keeping a safe
+# default for older databases / bootstrap environments.
+REQUEST_STATUSES = [
+    status.strip()
+    for status in _status_list_from_settings().split(',')
+    if status.strip()
+]
 
 FORM_TYPE_LABELS = {
     'form_d': 'Form D',

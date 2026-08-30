@@ -15,6 +15,8 @@ class BidderPayment(db.Model):
     amount = db.Column(db.Numeric(15, 2), nullable=False)
     proof_file_path = db.Column(db.String(500), nullable=False)
     proof_filename = db.Column(db.String(300), nullable=False)
+    supporting_document_path = db.Column(db.String(500))
+    supporting_document_filename = db.Column(db.String(300))
 
     # Status: pending, approved, rejected, resubmission_required
     status = db.Column(db.String(30), default='pending', nullable=False, index=True)

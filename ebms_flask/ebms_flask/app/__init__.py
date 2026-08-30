@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask import Flask, request, render_template, redirect, url_for
 from flask_login import current_user
 from app.extensions import db, login_manager, migrate
@@ -91,9 +91,61 @@ def create_app(config_class=Config):
         Message.ensure_schema_columns()
         from app.models.request import ensure_schema_columns
         ensure_schema_columns()
-        from app.models.role import Role  
+        from app.models.role import Role
+        from app.models.user import User
         Role.ensure_default_roles()
-        if Role.query.count() == 0:
+
+        def ensure_default_login_users():
+            default_password = 'ChangeMe123!'
+            role_map = {role.code: role for role in Role.query.all()}
+            default_users = [
+                ('admin', 'admin@pe.gov.bw', 'System', 'Administrator', 'system_admin', 'ICT'),
+                ('d.tlou', 'd.tlou@pe.gov.bw', 'David', 'Tlou', 'procurement_unit', 'Procurement'),
+                ('j.molefe', 'j.molefe@pe.gov.bw', 'John', 'Molefe', 'accounting_officer', 'Head Office'),
+                ('n.kgosi', 'n.kgosi@pe.gov.bw', 'Naledi', 'Kgosi', 'evaluator', 'Engineering'),
+                ('t.mmutle', 't.mmutle@health.gov.bw', 'Thabo', 'Mmutle', 'requester', 'Ministry of Health'),
+                ('a.seretse', 'a.seretse@moe.gov.bw', 'Ame', 'Seretse', 'requester', 'Ministry of Education'),
+                ('bidder1', 'bids@mokwenaconstruction.co.bw', 'Karabo', 'Mokwena', 'bidder', 'Construction'),
+            ]
+
+            for username, email, first_name, last_name, role_code, department in default_users:
+                if role_code not in role_map:
+                    continue
+                user = User.query.filter_by(username=username).first()
+                if not user:
+                    user = User(
+                        username=username,
+                        email=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        role_id=role_map[role_code].id,
+                        department=department,
+                        is_active=True,
+                    )
+                    db.session.add(user)
+                user.email = email
+                user.first_name = first_name
+                user.last_name = last_name
+                user.role_id = role_map[role_code].id
+                user.department = department
+                user.is_active = True
+                user.failed_login_attempts = 0
+                user.locked_until = None
+                user.set_password(default_password)
+                if role_code == 'bidder':
+                    user.email_confirmed_at = datetime.utcnow()
+                    user.email_confirmation_token = None
+                    user.email_confirmation_expires_at = None
+            db.session.commit()
+
+        ensure_default_login_users()
+
+        has_system_admin = bool(
+            User.query.join(Role, User.role_id == Role.id)
+            .filter(Role.code == 'system_admin')
+            .first()
+        )
+        if User.query.count() == 0 or not has_system_admin:
             try:
                 import seed
                 seed.seed_data()

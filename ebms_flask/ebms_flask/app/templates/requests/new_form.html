@@ -14,6 +14,9 @@
         <p class="ebms-page-subtitle">Attach your signed Form D &amp; Form E documents in one submission — Procurement will handle the procurement details</p>
     </div>
     <div class="ebms-page-actions">
+        <a href="{{ url_for('requests.drafts') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-text"></i>Drafts
+        </a>
         <a href="{{ url_for('requests.my_requests') }}" class="btn btn-outline-secondary">
             <i class="bi bi-list-check"></i>My Requests
         </a>
@@ -35,6 +38,9 @@
         </div>
 
         <form method="POST" action="{{ url_for('requests.submit_form_de') }}" enctype="multipart/form-data" id="combined-request-form" data-cancellable-upload>
+            {% if draft_request %}
+                <input type="hidden" name="request_id" value="{{ draft_request.id }}">
+            {% endif %}
             <div class="card mb-4">
                 <div class="card-header bg-white d-flex align-items-center gap-2">
                     <span class="step-badge">1</span>
@@ -44,10 +50,10 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-bold">Requesting Department / Entity</label>
-                            <input type="text" class="form-control" readonly
-                                   value="{{ (form.get('department', '') if form else current_user.department) }}"
-                                aria-describedby="requester-department-help">
-                            <div id="requester-department-help" class="form-text">Taken from your user profile and controlled by your department.</div>
+                            <input type="text" name="department" class="form-control"
+                                   value="{{ (form.get('department', '') if form else (draft_request.department or current_user.department or '')) }}"
+                                   aria-describedby="requester-department-help">
+                            <div id="requester-department-help" class="form-text">This can be saved as part of a draft and edited later.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Justification</label>
@@ -66,24 +72,59 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload signed / certified FORM D <span class="text-danger">*</span></label>
-                            <input type="file" name="form_d_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls" required>
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-lock text-primary me-1"></i>Upload signed / certified FORM D</label>
+                            <input type="file" name="form_d_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            {% if draft_request and draft_request.has_form_d() %}
+                            <div class="mt-2 d-flex flex-column gap-2">
+                                <div class="form-text text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Saved draft currently has: <strong>{{ draft_request.form_d_filename }}</strong>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{{ url_for('requests.preview_form_de_document', request_id=draft_request.id, doc_type='form_d') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </a>
+                                    <a href="{{ url_for('requests.download_form_de_document', request_id=draft_request.id, doc_type='form_d') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
                             <div class="form-text">Procurement Requisition — the department's request and authorization to procure. Stored internally, never exposed to bidders.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-primary me-1"></i>Upload signed / certified FORM E <span class="text-danger">*</span></label>
-                            <input type="file" name="form_e_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls" required>
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-ruled text-primary me-1"></i>Upload signed / certified FORM E</label>
+                            <input type="file" name="form_e_document" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls">
+                            {% if draft_request and draft_request.has_form_e() %}
+                            <div class="mt-2 d-flex flex-column gap-2">
+                                <div class="form-text text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Saved draft currently has: <strong>{{ draft_request.form_e_filename }}</strong>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{{ url_for('requests.preview_form_de_document', request_id=draft_request.id, doc_type='form_e') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </a>
+                                    <a href="{{ url_for('requests.download_form_de_document', request_id=draft_request.id, doc_type='form_e') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
                             <div class="form-text">Specification &amp; Budget Clearance — technical specification and evidence of budget availability. Stored internally, never exposed to bidders.</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <a href="{{ url_for('requests.my_requests') }}" class="btn btn-outline-secondary px-4">Cancel</a>
-                <button type="submit" class="btn btn-primary px-4">
-                    <i class="bi bi-send me-1"></i>Submit to Procurement
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary px-4">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i>Save as Draft
+                    </button>
+                    <button type="submit" name="action" value="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-send me-1"></i>Submit to Procurement
+                    </button>
+                </div>
             </div>
         </form>
     </div>
