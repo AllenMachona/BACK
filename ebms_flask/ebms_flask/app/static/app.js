@@ -76,8 +76,10 @@
   function initCancellableUploads() {
     var forms = document.querySelectorAll('form[data-cancellable-upload]');
     Array.prototype.forEach.call(forms, function (form) {
-      var submitButton = form.querySelector('button[type="submit"]');
       var fileInputs = form.querySelectorAll('input[type="file"]');
+      if (fileInputs.length > 1) return;
+
+      var submitButton = form.querySelector('button[type="submit"]');
       if (!submitButton) return;
 
       var progress = document.createElement('progress');

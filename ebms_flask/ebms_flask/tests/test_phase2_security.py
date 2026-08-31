@@ -52,6 +52,10 @@ class Phase2SecurityTests(unittest.TestCase):
         self.assertIn('Security Services', labels['100'])
         self.assertIn('General Supplies', labels['211'])
 
+    def test_ppra_description_returns_code_name_and_subcode_description(self):
+        self.assertIn('Clinical waste', Procurement.ppra_description('103', '03'))
+        self.assertIn('Security Services', Procurement.ppra_description('100', '01'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -199,7 +199,7 @@ class Procurement(db.Model):
         return list((code_data.get('subcodes') or {}).keys())
 
     @staticmethod
-    def ppra_description(code, sub_code=None):
+    def ppra_description_for(code, sub_code=None):
         normalised_code = str(code or '').strip()
         if not normalised_code:
             return ''
@@ -208,15 +208,20 @@ class Procurement(db.Model):
         if '-' in normalised_code and not sub_key:
             sub_key = normalised_code.split('-', 1)[1]
         lookup = Procurement.ppra_classification_lookup()
-        data = lookup.get(code_key)
-        if not data:
-            return ''
+        data = lookup.get(code_key, {})
+        label = (data.get('label') or '').strip()
         subcodes = data.get('subcodes') or {}
         if sub_key and sub_key != '00' and sub_key.lower() != 'none':
             sub_description = subcodes.get(sub_key)
             if sub_description:
-                return f"{data.get('title', 'Procurement')} - {sub_description}"
-        return data.get('description', '')
+                if label:
+                    return f"{label} - {sub_description}"
+                return str(sub_description)
+        return label
+
+    @staticmethod
+    def ppra_description(code, sub_code=None):
+        return Procurement.ppra_description_for(code, sub_code)
 
     def full_ppra_code(self):
         code = (self.ppra_code or '').strip()

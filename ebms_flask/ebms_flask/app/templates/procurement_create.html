@@ -25,7 +25,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-9">
-        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data" data-cancellable-upload>
+        <form method="POST" action="{{ url_for('procurements.create') }}" id="create-procurement-form" enctype="multipart/form-data">
             {% if source_request %}
             <input type="hidden" name="request_id" value="{{ source_request.id }}">
             <input type="hidden" name="request_type" value="{{ request_type }}">

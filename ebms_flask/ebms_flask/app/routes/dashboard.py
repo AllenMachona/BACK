@@ -241,6 +241,7 @@ def public_procurement_plans():
     selected_quarter = (request.args.get('quarter') or '').strip()
     selected_method = (request.args.get('method') or '').strip()
     selected_category = (request.args.get('category') or '').strip()
+    selected_ppra_code = (request.args.get('ppra_code') or '').strip()
     query_text = (request.args.get('q') or '').strip()
 
     if selected_year:
@@ -251,12 +252,21 @@ def public_procurement_plans():
         plans_query = plans_query.filter(ProcurementPlanItem.method == selected_method)
     if selected_category:
         plans_query = plans_query.filter(ProcurementPlanItem.category == selected_category)
-    if query_text:
+    if selected_ppra_code:
         plans_query = plans_query.filter(
             or_(
-                ProcurementPlanItem.title.ilike(f'%{query_text}%'),
-                ProcurementPlanItem.procurement_entity.ilike(f'%{query_text}%'),
-                ProcurementPlanItem.description.ilike(f'%{query_text}%')
+                ProcurementPlanItem.ppra_code == selected_ppra_code,
+                ProcurementPlanItem.ppra_code.like(f'{selected_ppra_code}-%')
+            )
+        )
+    if query_text:
+        like_term = f'%{query_text}%'
+        plans_query = plans_query.filter(
+            or_(
+                ProcurementPlanItem.title.ilike(like_term),
+                ProcurementPlanItem.procurement_entity.ilike(like_term),
+                ProcurementPlanItem.description.ilike(like_term),
+                ProcurementPlanItem.ppra_description.ilike(like_term)
             )
         )
 
@@ -268,6 +278,8 @@ def public_procurement_plans():
     years = sorted({plan.financial_year for plan in plans_query.all()}, reverse=True)
     methods = sorted({plan.method for plan in plans_query.all() if plan.method})
     categories = sorted({plan.category for plan in plans_query.all() if plan.category})
+    ppra_codes = ProcurementPlanItem.ppra_code_options()
+    ppra_code_labels = ProcurementPlanItem.ppra_code_labels()
 
     return render_template(
         'public_procurement_plans.html',
@@ -277,9 +289,12 @@ def public_procurement_plans():
         selected_quarter=selected_quarter,
         selected_method=selected_method,
         selected_category=selected_category,
+        selected_ppra_code=selected_ppra_code,
         query_text=query_text,
         methods=methods,
         categories=categories,
+        ppra_codes=ppra_codes,
+        ppra_code_labels=ppra_code_labels,
     )
 
 
@@ -287,6 +302,11 @@ def public_procurement_plans():
 @login_required
 @role_required('procurement_unit')
 def manage_procurement_plans():
+    ppra_codes = ProcurementPlanItem.ppra_code_options()
+    ppra_sub_codes = ProcurementPlanItem.ppra_sub_code_options()
+    ppra_code_labels = ProcurementPlanItem.ppra_code_labels()
+    ppra_lookup = ProcurementPlanItem.ppra_classification_lookup()
+
     if request.method == 'POST':
         plan_id = request.form.get('plan_id', type=int)
         plan = ProcurementPlanItem.query.get(plan_id) if plan_id else None
@@ -311,10 +331,21 @@ def manage_procurement_plans():
         if not plan:
             plan = ProcurementPlanItem(created_by_id=current_user.id)
             db.session.add(plan)
+
+        ppra_base = (request.form.get('ppra_code') or '').strip()
+        ppra_sub_code = (request.form.get('ppra_sub_code') or '').strip()
+        auto_ppra_description = ProcurementPlanItem.ppra_description_for(ppra_base, ppra_sub_code)
+        ppra_description_input = (request.form.get('ppra_description') or '').strip()
+        if not ppra_description_input:
+            ppra_description_input = auto_ppra_description
+
         plan.procurement_entity = request.form.get('procurement_entity', '').strip()
         plan.financial_year = financial_year
         plan.title = request.form.get('title', '').strip()
-        plan.description = request.form.get('description', '').strip()
+        plan.description = (request.form.get('description') or ppra_description_input or auto_ppra_description).strip() if (request.form.get('description') or ppra_description_input or auto_ppra_description) else None
+        plan.ppra_code = ppra_base
+        plan.ppra_sub_code = ppra_sub_code if ppra_sub_code and ppra_sub_code not in ('00', 'none') else None
+        plan.ppra_description = ppra_description_input or auto_ppra_description
         plan.category = request.form.get('category', '').strip()
         plan.method = request.form.get('method', '').strip()
         plan.estimated_value = estimated_value
@@ -332,7 +363,9 @@ def manage_procurement_plans():
     plans = ProcurementPlanItem.query.order_by(
         ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
     ).all()
-    return render_template('procurement_plan_manage.html', plans=plans, financial_year_options=_generate_financial_year_options())
+    return render_template('procurement_plan_manage.html', plans=plans, financial_year_options=_generate_financial_year_options(),
+                          ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes, ppra_code_labels=ppra_code_labels,
+                          ppra_lookup=ppra_lookup, edit_plan=None)
 
 
 @dashboard_bp.route('/procurement-plans/<int:plan_id>/edit', methods=['GET'])
@@ -343,7 +376,13 @@ def edit_procurement_plan(plan_id):
     plans = ProcurementPlanItem.query.order_by(
         ProcurementPlanItem.financial_year.desc(), ProcurementPlanItem.created_at.desc()
     ).all()
-    return render_template('procurement_plan_manage.html', plans=plans, edit_plan=plan, financial_year_options=_generate_financial_year_options())
+    ppra_codes = ProcurementPlanItem.ppra_code_options()
+    ppra_sub_codes = ProcurementPlanItem.ppra_sub_code_options()
+    ppra_code_labels = ProcurementPlanItem.ppra_code_labels()
+    ppra_lookup = ProcurementPlanItem.ppra_classification_lookup()
+    return render_template('procurement_plan_manage.html', plans=plans, edit_plan=plan, financial_year_options=_generate_financial_year_options(),
+                          ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes, ppra_code_labels=ppra_code_labels,
+                          ppra_lookup=ppra_lookup)
 
 
 @dashboard_bp.route('/tenders/<int:procurement_id>')

@@ -83,6 +83,8 @@ def create_app(config_class=Config):
         User.ensure_auth_columns()
         from app.models.procurement import Procurement
         Procurement.ensure_schema_columns()
+        from app.models.procurement_plan import ProcurementPlanItem
+        ProcurementPlanItem.ensure_schema_columns()
         from app.models.award import Award
         Award.ensure_schema_columns()
         from app.models.communication import Communication

@@ -16,6 +16,18 @@ from app.utils.security import validate_email
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+SETTING_GROUPS = [
+    ('Branding', ['app_name', 'app_tagline', 'system_description', 'public_home_title', 'public_home_intro', 'website_url', 'portal_primary_color', 'portal_secondary_color']),
+    ('Contact & organisation', ['support_email', 'support_phone', 'contact_address', 'default_country', 'default_timezone', 'currency', 'date_format', 'time_format']),
+    ('Access & authentication', ['allow_registration', 'enable_supplier_registration', 'supplier_approval_required', 'supplier_verification_required', 'minimum_password_length', 'require_password_uppercase', 'require_password_number', 'require_password_special', 'session_lifetime_hours', 'login_max_attempts', 'login_lockout_minutes', 'password_expiry_days']),
+    ('Procurement lifecycle', ['default_procurement_status', 'enabled_procurement_methods', 'required_procurement_documents', 'direct_procurement_threshold', 'open_procurement_threshold', 'lot_splitting_warning_threshold', 'tender_number_prefix', 'bid_submission_deadline_min_hours', 'approval_levels', 'workflow_rejection_behaviour', 'workflow_escalation_days']),
+    ('Suppliers & bidders', ['required_supplier_documents', 'supplier_categories', 'default_bidder_status', 'require_bidder_document_review', 'default_public_entity_status', 'show_financial_year_in_portal']),
+    ('Document controls', ['allowed_document_extensions', 'request_document_extensions', 'request_document_max_mb', 'max_upload_size_mb', 'document_retention_days', 'file_naming_rule']),
+    ('Email, notifications & alerts', ['smtp_host', 'smtp_port', 'sender_email', 'email_sender_name', 'email_encryption', 'enable_email', 'enable_system_notifications', 'enable_notifications', 'notification_frequency', 'notification_retention_days', 'email_template_account_approved', 'email_template_account_rejected']),
+    ('Security & compliance', ['deadline_reminder_days', 'enable_audit_log', 'audit_log_retention_days']),
+    ('Maintenance & support', ['maintenance_mode', 'maintenance_message']),
+]
+
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -23,6 +35,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 def settings():
     SiteSetting.ensure_defaults()
     settings_rows = SiteSetting.query.order_by(SiteSetting.label).all()
+    setting_map = {row.key: row for row in settings_rows}
 
     if request.method == 'POST':
         boolean_keys = {
@@ -30,7 +43,8 @@ def settings():
             'supplier_verification_required', 'enable_email', 'enable_system_notifications',
             'enable_supplier_registration', 'enable_bid_submission', 'enable_notifications',
             'enable_audit_log', 'require_password_uppercase', 'require_password_number',
-            'require_password_special',
+            'require_password_special', 'require_bidder_document_review',
+            'show_financial_year_in_portal',
         }
         numeric_keys = {
             'deadline_reminder_days', 'direct_procurement_threshold',
@@ -116,6 +130,7 @@ def settings():
     encryption_status = 'Configured' if current_app.config.get('SUBMISSION_ENCRYPTION_KEY') else 'Missing'
 
     return render_template('admin_settings.html', settings_rows=settings_rows,
+                           setting_groups=SETTING_GROUPS, setting_map=setting_map,
                            mail_status=mail_status, database_status=database_status,
                            upload_folder=upload_folder, upload_status=upload_status,
                            encryption_status=encryption_status)
