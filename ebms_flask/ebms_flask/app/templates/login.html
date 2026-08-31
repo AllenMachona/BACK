@@ -2,508 +2,551 @@
 {% block title %}Login - EBMS{% endblock %}
 {% block guest_content %}
 <style>
-    .ebms-theme-wrap {
-        --primary: #00d4ff;
-        --primary-alt: #2dd4bf;
-        --danger: #ff6b6b;
-        --success: #4ade80;
-        --bg-left: linear-gradient(135deg, #2d3561 0%, #1a1f3a 100%);
-        --bg-right: #2a2e48;
-        --text-light: #ffffff;
-        --text-muted: #a0aec0;
-        --field-bg: rgba(255, 255, 255, 0.08);
-        --field-border: rgba(0, 212, 255, 0.2);
-        --field-bg-focus: rgba(0, 212, 255, 0.12);
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    :root {
+        --ebms-blue: #0d9ae6;
+        --ebms-blue-deep: #008ed6;
+        --ebms-sky: #17b4ff;
+        --ebms-dark: #0b8dd2;
+        --card-bg: rgba(255,255,255,0.97);
+        --auth-form-bg: #ffffff;
+        --text-dark: #1e2a38;
+        --text-soft: #6b7a89;
+        --line: rgba(13, 100, 153, 0.2);
+        --nav-link: rgba(17, 31, 45, 0.8);
+        --page-bg: #f6f9fc;
     }
 
     body.guest-auth {
-        background: var(--bg-right);
         margin: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    .page-shell {
-        min-height: 100vh;
-        display: grid;
-        grid-template-columns: 1.12fr 1fr;
-        gap: 0;
-        padding: 0;
-        margin: 0 auto;
-        position: relative;
-        max-width: 980px;
-        width: calc(100% - 88px);
-    }
-
-    .auth-layout {
-        width: 100%;
-        display: contents;
-    }
-
-    .intro-copy {
-        background: var(--bg-left);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 30px 26px;
-        text-align: center;
-        position: relative;
+        background: var(--page-bg);
+        font-family: 'Segoe UI', 'Arial', sans-serif;
+        color: var(--text-dark);
         overflow: hidden;
+        height: 100vh;
     }
 
-    .intro-copy::before {
+    .ebms-auth-shell {
+        position: relative;
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+            linear-gradient(180deg, #f7fafd 0%, #edf5fb 100%);
+    }
+
+    .ebms-auth-shell::before,
+    .ebms-auth-shell::after {
         content: "";
         position: absolute;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
         border-radius: 50%;
-        bottom: -80px;
-        left: -80px;
-        z-index: 0;
+        background: rgba(13, 154, 230, 0.05);
+        pointer-events: none;
     }
 
-    .intro-copy > * {
-        position: relative;
-        z-index: 1;
+    .ebms-auth-shell::before {
+        width: 1200px;
+        height: 1200px;
+        left: -420px;
+        top: 60px;
     }
 
-    .brand-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0;
-        margin-bottom: 24px;
+    .ebms-auth-shell::after {
+        width: 720px;
+        height: 720px;
+        right: -150px;
+        top: -120px;
     }
 
-    .brand-row .auth-logo {
-        display: none;
-    }
-
-    .brand-text {
-        font-size: 16px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--primary);
-        margin: 0;
-        text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-    }
-
-    .eyebrow {
-        display: none;
-    }
-
-    .eyebrow::before {
-        display: none;
-    }
-
-    .page-title {
-        font-size: 36px;
-        line-height: 1.2;
-        letter-spacing: -0.02em;
-        font-weight: 700;
-        color: var(--text-light);
-        margin: 0 0 12px;
-        max-width: 35ch;
-    }
-
-    .page-sub {
-        font-size: 15px;
-        color: var(--text-muted);
-        margin: 0;
-        max-width: 30ch;
-    }
-
-    .tagline-sub {
-        display: none;
-    }
-
-    .mini-feature-list {
-        display: none;
-    }
-
-    .auth-panel {
-        background: var(--bg-right);
-        border: none;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding: 24px 20px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .panel-inner {
-        width: 100%;
-        max-width: 340px;
-        padding: 0;
-    }
-
-    .auth-slider {
-        position: relative;
-        width: 100%;
-        min-height: 660px;
-        overflow: visible;
-    }
-
-    .auth-slide {
+    .ebms-network {
         position: absolute;
         inset: 0;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(28px);
-        transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         pointer-events: none;
+        opacity: 0.95;
+        background:
+            radial-gradient(circle at 15% 28%, rgba(13,154,230,0.22) 0, rgba(13,154,230,0.04) 16%, transparent 28%),
+            radial-gradient(circle at 60% 50%, rgba(13,154,230,0.18) 0, rgba(13,154,230,0.03) 18%, transparent 28%),
+            linear-gradient(rgba(13, 154, 230, 0.16) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(13, 154, 230, 0.16) 1px, transparent 1px),
+            linear-gradient(180deg, rgba(7, 20, 30, 0.90) 0%, rgba(15, 29, 40, 0.92) 100%);
+        background-size: 100% 100%, 100% 100%, 68px 68px, 68px 68px, 100% 100%;
+        mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
+        -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
+        animation: networkDrift 18s linear infinite alternate;
     }
 
-    .auth-shell .sign-in-slide {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-        pointer-events: auto;
+    .ebms-network::before,
+    .ebms-network::after {
+        content: "";
+        position: absolute;
+        inset: 0;
     }
 
-    .auth-shell.show-signup .sign-in-slide {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(-28px);
-        pointer-events: none;
+    .ebms-network::before {
+        background:
+            linear-gradient(120deg, transparent 0 22%, rgba(255,255,255,0.45) 22.6%, transparent 23.8%),
+            linear-gradient(140deg, transparent 0 46%, rgba(255,255,255,0.4) 46.8%, transparent 47.6%),
+            linear-gradient(80deg, transparent 0 63%, rgba(255,255,255,0.38) 63.8%, transparent 64.8%);
+        opacity: 0.85;
     }
 
-    .auth-shell.show-signup .sign-up-slide {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-        pointer-events: auto;
+    .ebms-network::after {
+        background:
+            radial-gradient(circle at 30% 22%, rgba(255,255,255,0.9) 0 1.2%, transparent 1.8%),
+            radial-gradient(circle at 52% 42%, rgba(255,255,255,0.85) 0 1.2%, transparent 1.8%),
+            radial-gradient(circle at 72% 66%, rgba(255,255,255,0.85) 0 1.2%, transparent 1.8%);
+        opacity: 0.9;
     }
 
-    .ebms-alert {
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 18px;
-        font-size: 13px;
-        border: 1px solid transparent;
+    @keyframes networkDrift {
+        0% { transform: translate3d(-10px, 0, 0) scale(1); opacity: 0.75; }
+        50% { transform: translate3d(18px, -12px, 0) scale(1.08); opacity: 0.96; }
+        100% { transform: translate3d(8px, 12px, 0) scale(1.04); opacity: 0.8; }
     }
 
-    .ebms-alert.alert-danger {
-        border-color: rgba(255, 107, 107, 0.3);
-        background: rgba(255, 107, 107, 0.1);
-        color: var(--danger);
+    .ebms-auth-inner {
+        position: relative;
+        z-index: 1;
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 18px 26px 30px;
+        height: 100vh;
     }
 
-    .ebms-alert.alert-success {
-        border-color: rgba(74, 222, 128, 0.3);
-        background: rgba(74, 222, 128, 0.1);
-        color: var(--success);
-    }
-
-    .ebms-alert.alert-warning,
-    .ebms-alert.alert-info {
-        border-color: rgba(0, 212, 255, 0.3);
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--primary);
-    }
-
-    .form-head { margin-bottom: 12px; }
-
-    .form-head h2 {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--text-light);
-        margin: 0;
-    }
-
-    .form-head p {
-        margin: 0;
-        font-size: 13px;
-        color: var(--text-muted);
-        display: none;
-    }
-
-    .field { margin-bottom: 10px; }
-
-    .field label {
-        display: block;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-muted);
-        margin-bottom: 4px;
-        text-transform: capitalize;
-    }
-
-    .field .form-control {
-        width: 100%;
-        background: var(--field-bg);
-        border: 1px solid var(--field-border);
-        border-radius: 8px;
-        color: var(--text-light);
-        padding: 9px 11px;
-        font-size: 13px;
-        font-family: inherit;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .field .form-control::placeholder {
-        color: rgba(160, 174, 192, 0.5);
-    }
-
-    .field .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        background: var(--field-bg-focus);
-        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
-    }
-
-    .row-between {
+    .ebms-top-nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 12px;
-        gap: 12px;
+        gap: 20px;
+        padding: 8px 10px 20px;
     }
 
-    .remember {
+    .ebms-brand {
+        font-size: clamp(2.1rem, 3vw, 3.2rem);
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        color: rgba(17, 31, 45, 0.95);
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .ebms-nav {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--text-muted);
+        gap: clamp(18px, 2vw, 36px);
+        list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
-    .remember input {
-        accent-color: var(--primary);
-        cursor: pointer;
-    }
-
-    .small-link {
-        font-size: 12px;
-        color: var(--primary);
+    .ebms-nav a {
+        color: var(--nav-link);
+        font-size: 1.1rem;
         text-decoration: none;
+        font-weight: 500;
+        transition: opacity 0.2s ease;
+    }
+
+    .ebms-nav a:hover {
+        opacity: 0.8;
+    }
+
+    .ebms-nav-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1;
+    }
+
+    .ebms-nav {
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(13, 154, 230, 0.15);
+        border-radius: 16px;
+        padding: 10px 18px;
+        box-shadow: 0 8px 22px rgba(18, 82, 130, 0.04);
+    }
+
+    .ebms-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 90px;
+        padding: 40px 40px 10px;
+    }
+
+    .ebms-hero-copy {
+        flex: 1.1;
+        padding-left: 28px;
+        max-width: 780px;
+    }
+
+    .ebms-page-title {
+        margin: 0;
+        font-size: clamp(4rem, 6vw, 9rem);
+        line-height: 0.9;
+        letter-spacing: -0.08em;
+        font-weight: 800;
+        color: rgba(17, 31, 45, 0.98);
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.75s ease forwards;
+    }
+
+    .ebms-subtitle {
+        margin-top: 18px;
+        font-size: clamp(1.7rem, 2vw, 3rem);
+        line-height: 1.2;
+        letter-spacing: -0.05em;
+        color: rgba(17, 31, 45, 0.8);
+        max-width: 760px;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.8s ease 0.1s forwards;
+    }
+
+    .ebms-description {
+        margin-top: 26px;
+        max-width: 760px;
+        font-size: 1.18rem;
+        line-height: 1.7;
+        color: rgba(17, 31, 45, 0.75);
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.9s ease 0.2s forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ebms-cta-row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 28px;
+    }
+
+    .ebms-primary-btn,
+    .ebms-ghost-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 28px;
+        border-radius: 40px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ebms-primary-btn {
+        background: rgba(13, 154, 230, 0.08);
+        border: 1px solid rgba(13, 154, 230, 0.25);
+        color: var(--ebms-blue-deep);
+        box-shadow: 0 10px 28px rgba(0, 52, 98, 0.05);
+    }
+
+    .ebms-ghost-btn {
+        background: rgba(255,255,255,0.3);
+        border: 1px solid rgba(13, 154, 230, 0.15);
+        color: var(--text-dark);
+    }
+
+    .ebms-primary-btn:hover,
+    .ebms-ghost-btn:hover,
+    .ebms-login-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .ebms-slider {
+        width: 100%;
+        max-width: 520px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .ebms-card {
+        width: min(100%, 440px);
+        background: rgba(255,255,255,0.98);
+        border: 1px solid rgba(13, 154, 230, 0.18);
+        border-radius: 18px;
+        box-shadow: 0 34px 80px rgba(13, 65, 102, 0.12);
+        padding: 22px 24px 18px;
+        margin-top: -8px;
+        color: var(--text-dark);
+    }
+
+    .ebms-card-title {
+        text-align: center;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(17, 27, 39, 0.88);
+        margin: 0 0 24px;
+    }
+
+    .ebms-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .ebms-form-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(13, 100, 153, 0.18);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.28);
+    }
+
+    .ebms-form-row .ebms-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: #0f172a;
+        opacity: 0.88;
+        flex-shrink: 0;
+    }
+
+    .ebms-form-row svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .ebms-form-row input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 1rem;
+        color: var(--text-dark);
         font-weight: 600;
-        transition: color 0.2s ease;
+        letter-spacing: 0.04em;
+        padding: 0;
     }
 
-    .small-link:hover {
-        color: var(--primary-alt);
+    .ebms-form-row input::placeholder {
+        color: rgba(24, 39, 55, 0.72);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.82rem;
     }
 
-    .submit-btn {
+    .ebms-action-row {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+        margin-top: -4px;
+    }
+
+    .ebms-link {
+        color: rgba(17, 27, 39, 0.7);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .ebms-login-btn {
         width: 100%;
         border: none;
-        border-radius: 8px;
-        padding: 10px 12px;
-        font-family: inherit;
-        font-weight: 700;
-        font-size: 14px;
-        color: #1a1f3a;
-        background: linear-gradient(135deg, var(--primary) 0%, #00a8cc 100%);
+        background: linear-gradient(135deg, #1db0eb 0%, #0a9ae7 100%);
+        color: #fff;
+        min-height: 60px;
+        border-radius: 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-        box-shadow: 0 8px 20px rgba(0, 212, 255, 0.25);
+        box-shadow: 0 18px 30px rgba(13, 120, 186, 0.24);
+        transition: transform 0.2s ease;
     }
 
-    .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(0, 212, 255, 0.35);
-        opacity: 0.95;
+    .ebms-dots {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 28px;
+        margin-left: 8px;
     }
 
-    .submit-btn:active {
-        transform: translateY(0);
+    .ebms-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.28);
+        border: 1px solid rgba(255,255,255,0.6);
     }
 
-    .foot-note {
-        text-align: center;
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 20px;
+    .ebms-dot.active {
+        background: rgba(255,255,255,0.9);
     }
 
-    .foot-note a {
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 700;
-        transition: color 0.2s ease;
-    }
-
-    .foot-note a:hover {
-        color: var(--primary-alt);
-    }
-
-    .sign-up-slide .row-2 {
+    .ebms-card-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 20px;
+    }
+
+    .ebms-card-field {
+        display: flex;
+        flex-direction: column;
         gap: 10px;
     }
 
-    .sign-up-slide .field {
-        margin-bottom: 8px;
+    .ebms-card-field .ebms-form-row {
+        gap: 10px;
+        padding-bottom: 10px;
     }
 
-    @media (max-width: 1024px) {
-        .page-shell {
+    .ebms-card-field .ebms-form-row input {
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 1100px) {
+        .ebms-hero {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        .ebms-slider {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .ebms-card {
+            width: min(100%, 520px);
+        }
+    }
+
+    @media (max-width: 760px) {
+        .ebms-top-nav {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ebms-nav {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ebms-hero {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .ebms-hero-copy {
+            padding-left: 0;
+        }
+
+        .ebms-card-grid {
             grid-template-columns: 1fr;
         }
 
-        .intro-copy {
-            padding: 40px 30px;
+        .ebms-page-title {
+            font-size: 3.5rem;
         }
 
-        .auth-panel {
-            padding: 40px 30px;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .intro-copy {
-            padding: 30px 20px;
-        }
-
-        .auth-panel {
-            padding: 30px 20px;
-        }
-
-        .panel-inner {
-            max-width: 100%;
-        }
-
-        .page-title {
-            font-size: 28px;
+        .ebms-subtitle {
+            font-size: 2.3rem;
         }
     }
 </style>
 
-<div class="ebms-theme-wrap">
-    <div class="page-shell">
-        <div class="intro-copy" id="intro-section">
-            <div class="brand-row">
-                <p class="brand-text">EBMS Botswana</p>
+<div class="ebms-auth-shell">
+    <div class="ebms-network" aria-hidden="true"></div>
+    <div class="ebms-auth-inner">
+        <nav class="ebms-top-nav" aria-label="Main navigation">
+            <h1 class="ebms-brand">EBMS</h1>
+
+            <div class="ebms-nav-wrap">
+                <ul class="ebms-nav">
+                    <li><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+                    <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
+                    <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
+                    <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="ebms-hero">
+            <div class="ebms-hero-copy">
+                <h2 class="ebms-page-title">Creative.</h2>
+                <div class="ebms-subtitle">EBMS Procurement Portal</div>
+                <p class="ebms-description">
+                    The Electronic Bid Management System (EBMS) is a digital procurement platform designed to make public-sector bidding more transparent, efficient, and accountable. It connects procuring entities, suppliers, and stakeholders in one secure environment for tender discovery, submission tracking, approvals, and procurement communication.
+                </p>
+
+                <div class="ebms-cta-row">
+                    <a href="{{ url_for('dashboard.public_tenders') }}" class="ebms-primary-btn">Learn More</a>
+                </div>
+
+                <div class="ebms-dots" aria-label="Page indicators">
+                    <span class="ebms-dot active"></span>
+                    <span class="ebms-dot"></span>
+                    <span class="ebms-dot"></span>
+                    <span class="ebms-dot"></span>
+                </div>
             </div>
 
-            <h1 class="page-title">Hello! Welcome to EBMS</h1>
-            <p class="page-sub">Public Procurement &amp; Bid Management</p>
-            <div style="margin-top: 32px;">
-                <button type="button" class="submit-btn" data-auth-toggle="signup" style="display: inline-block; width: auto; padding: 10px 28px; text-decoration: none; text-align: center;">Sign Up</button>
-            </div>
-        </div>
+            <div class="ebms-slider">
+                <div class="ebms-card">
+                    <h3 class="ebms-card-title">Your Company</h3>
 
-        <div class="auth-panel auth-shell" id="ebms-auth-card">
-            <div class="panel-inner">
-                <div class="auth-slider">
-                    <div class="auth-slide sign-in-slide is-active">
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="ebms-alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="ebms-alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
-                        <div class="form-head">
-                            <h2>Sign In</h2>
+                    <form method="POST" action="{{ url_for('auth.login') }}" class="ebms-form">
+                        <div class="ebms-form-row">
+                            <span class="ebms-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+                            </span>
+                            <input type="text" name="username" placeholder="Enter username" required autofocus>
                         </div>
 
-                        <form method="POST" action="{{ url_for('auth.login') }}">
-                            <div class="field">
-                                <label>Login or email</label>
-                                <input type="text" name="username" class="form-control" placeholder="Enter your login or email" required autofocus>
-                            </div>
-                            <div class="field">
-                                <label>Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
-                            </div>
-                            <div class="row-between">
-                                <label class="remember">
-                                    <input type="checkbox" name="remember" id="remember">
-                                    <span>Remember me</span>
-                                </label>
-                                <a href="{{ url_for('auth.forgot_password') }}" class="small-link">Forgot password?</a>
-                            </div>
-                            <button type="submit" class="submit-btn">Sign In</button>
-                        </form>
-
-                        <p class="foot-note">New here? <button type="button" class="small-link" data-auth-toggle="signup" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;">Create account</button></p>
-                    </div>
-
-                    <div class="auth-slide sign-up-slide">
-                        <div class="form-head">
-                            <h2>Create Account</h2>
+                        <div class="ebms-form-row">
+                            <span class="ebms-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
+                            </span>
+                            <input type="password" name="password" placeholder="Enter password" required>
                         </div>
 
-                        <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data" data-cancellable-upload>
-                            <div class="row-2">
-                                <div class="field">
-                                    <label>First name</label>
-                                    <input type="text" name="first_name" class="form-control" required>
-                                </div>
-                                <div class="field">
-                                    <label>Last name</label>
-                                    <input type="text" name="last_name" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>Username</label>
-                                <input type="text" name="username" class="form-control" required>
-                            </div>
-                            <div class="field">
-                                <label>Email</label>
-                                <input type="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="row-2">
-                                <div class="field">
-                                    <label>Company</label>
-                                    <input type="text" name="department" class="form-control" required>
-                                </div>
-                                <div class="field">
-                                    <label>Title</label>
-                                    <input type="text" name="designation" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="row-2">
-                                <div class="field">
-                                    <label>Password</label>
-                                    <input type="password" name="password" class="form-control" required>
-                                </div>
-                                <div class="field">
-                                    <label>Confirm</label>
-                                    <input type="password" name="confirm_password" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>CIPA Document</label>
-                                <input type="file" name="cipa_document" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
-                            </div>
-                            <div class="field">
-                                <label>Tax Certificate</label>
-                                <input type="file" name="tax_certificate" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
-                            </div>
-                            <input type="hidden" name="role_code" value="bidder">
-                            <button type="submit" class="submit-btn">Create Account</button>
-                        </form>
+                        <div class="ebms-action-row">
+                            <a href="{{ url_for('auth.forgot_password') }}" class="ebms-link">Forgot password?</a>
+                        </div>
 
-                        <p class="foot-note">Already a member? <button type="button" class="small-link" data-auth-toggle="signin" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;">Sign In</button></p>
-                    </div>
+                        <button type="submit" class="ebms-login-btn">Login</button>
+                    </form>
+
+                    <p class="foot-note" style="margin-top: 18px; font-size: 0.82rem; color: rgba(17,27,39,0.7);">
+                        New here?
+                        <a href="{{ url_for('auth.register') }}" style="color: var(--ebms-blue-deep); text-decoration: none; font-weight: 700;">Create account</a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script>
-    (function () {
-        const shell = document.querySelector('.auth-shell');
-        if (!shell) return;
-
-        const toggleButtons = document.querySelectorAll('[data-auth-toggle]');
-        toggleButtons.forEach(function (button) {
-            button.addEventListener('click', function () {
-                const target = button.dataset.authToggle;
-                shell.classList.toggle('show-signup', target === 'signup');
-            });
-        });
-    })();
-</script>
 {% endblock %}

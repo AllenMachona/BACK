@@ -224,6 +224,7 @@ def create():
 
     ppra_codes = Procurement.ppra_code_options()
     ppra_sub_codes = Procurement.ppra_sub_code_options()
+    ppra_code_labels = Procurement.ppra_code_labels()
 
     # Optional combined Form D & E request that spawned this creation. The
     # request's documents and justification carry over into the record, and the
@@ -262,14 +263,16 @@ def create():
         if envelope_type not in ('single', 'dual'):
             flash('Please select whether this procurement uses a single or dual envelope.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         try:
             estimated_value = float(request.form['estimated_value'])
         except (KeyError, ValueError):
             flash('A valid estimated value is required.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         tender_fee = 0.0
         if request.form.get('tender_fee'):
@@ -282,7 +285,8 @@ def create():
         if not procurement_entity:
             flash('A procurement entity is required.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         advertisement = request.files.get('advertisement_document')
         rfq_upload = request.files.get('rfq_document')
@@ -294,10 +298,15 @@ def create():
         if not rfq_only and (not advertisement or not advertisement.filename):
             flash('An advertisement document is required before creating the procurement.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         ppra_base = request.form.get('ppra_code', '').strip()
         ppra_sub_code = request.form.get('ppra_sub_code', '').strip()
+        ppra_description = (request.form.get('ppra_description') or '').strip()
+        auto_ppra_description = Procurement.ppra_description(ppra_base, ppra_sub_code)
+        if not ppra_description:
+            ppra_description = auto_ppra_description
         ppra_code = ppra_base
         if ppra_sub_code and ppra_sub_code not in ('00', 'none'):
             ppra_code = f'{ppra_base}-{ppra_sub_code}'
@@ -308,7 +317,7 @@ def create():
         governance = Procurement(
             tender_number='TBD',
             title=request.form['title'],
-            description=request.form.get('description'),
+            description=(request.form.get('description') or ppra_description or auto_ppra_description).strip() if (request.form.get('description') or ppra_description or auto_ppra_description) else None,
             category=request.form['category'],
             procurement_entity=procurement_entity,
             ppra_code=ppra_code,
@@ -325,7 +334,8 @@ def create():
         if governance['errors']:
             flash('Direct procurement exceeds the approved threshold and is not permitted.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         if governance['warnings']:
             flash('Governance check noted a review risk: lot splitting or high-value procedure review required.', 'warning')
@@ -337,21 +347,25 @@ def create():
         except ValueError:
             flash('Please enter a valid submission deadline.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
         if deadline and deadline.date() <= datetime.utcnow().date():
             flash('The submission deadline must be tomorrow or a later date.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
         try:
             clarification_deadline = datetime.fromisoformat(clarification_deadline_raw) if clarification_deadline_raw else None
         except ValueError:
             flash('Please enter a valid clarification deadline.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
         if clarification_deadline and clarification_deadline.date() <= datetime.utcnow().date():
             flash('The clarification deadline must be tomorrow or a later date.', 'danger')
             return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                                   source_request=source_request, request_type=request_type, form=request.form)
+                                   ppra_code_labels=ppra_code_labels, source_request=source_request,
+                                   request_type=request_type, form=request.form)
 
         tender_number = generate_tender_number()
 
@@ -444,7 +458,8 @@ def create():
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
     return render_template('procurement_create.html', ppra_codes=ppra_codes, ppra_sub_codes=ppra_sub_codes,
-                           source_request=source_request, request_type=request_type)
+                           ppra_code_labels=ppra_code_labels, source_request=source_request,
+                           request_type=request_type)
 
 
 @procurements_bp.route('/search')
@@ -758,6 +773,40 @@ def bidder_performance(procurement_id):
         performance_bidders=Bidder.query.filter_by(active=True).order_by(
             Bidder.company_name
         ).all(),
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/payment-verification')
+@login_required
+def payment_verification(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+    payments = BidderPayment.query.options(
+        selectinload(BidderPayment.bidder),
+        selectinload(BidderPayment.reviewed_by),
+    ).filter_by(procurement_id=procurement.id).order_by(BidderPayment.submitted_at.desc()).all()
+    return render_template(
+        'procurement_payment_verification.html',
+        procurement=procurement,
+        payments=payments,
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/sealed-bid-submissions')
+@login_required
+def sealed_bid_submissions(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _procurement_management_access(procurement):
+        abort(403)
+    submissions = procurement.submissions.options(
+        selectinload(Submission.bidder)
+    ).filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
+    return render_template(
+        'procurement_sealed_bids.html',
+        procurement=procurement,
+        submissions=submissions,
+        submission_count=len(submissions),
     )
 
 

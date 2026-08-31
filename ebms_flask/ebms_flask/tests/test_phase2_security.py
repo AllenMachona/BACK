@@ -38,6 +38,20 @@ class Phase2SecurityTests(unittest.TestCase):
         self.assertIn('101', options)
         self.assertIn('100-01', options)
 
+    def test_ppra_classification_lookup_has_descriptions_for_code_and_subcode(self):
+        self.assertIn('100', Procurement.ppra_classification_lookup())
+        self.assertIn('01', Procurement.ppra_sub_codes_for('100'))
+        description = Procurement.ppra_description('100', '01')
+        self.assertIsInstance(description, str)
+        self.assertTrue(description)
+        self.assertIn('construction', description.lower())
+
+    def test_ppra_code_labels_include_code_and_name(self):
+        labels = Procurement.ppra_code_labels()
+        self.assertIn('100', labels)
+        self.assertIn('Security Services', labels['100'])
+        self.assertIn('General Supplies', labels['211'])
+
 
 if __name__ == '__main__':
     unittest.main()

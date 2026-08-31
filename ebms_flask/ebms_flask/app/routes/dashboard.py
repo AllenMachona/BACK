@@ -141,6 +141,11 @@ def index():
     )
 
 
+@dashboard_bp.route('/about')
+def about():
+    return render_template('public_about.html')
+
+
 @dashboard_bp.route('/tenders')
 def public_tenders():
     query = Procurement.query.filter(Procurement.status.in_(PUBLIC_PROCUREMENT_STATUSES))

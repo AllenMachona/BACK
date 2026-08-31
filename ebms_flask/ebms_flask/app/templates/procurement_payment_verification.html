@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Bidder Payment Verification - {{ procurement.tender_number }}{% endblock %}
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door me-1"></i>Home</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('procurements.list_procurements') }}">Procurements</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}">{{ procurement.tender_number }}</a>
+    <span class="crumb-divider"><i class="bi bi-chevron-right"></i></span>
+    <span>Bidder Payment Verification</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head">
+    <div>
+        <h1 class="ebms-page-title"><i class="bi bi-credit-card-2-front me-2"></i>Bidder Payment Verification</h1>
+        <p class="ebms-page-subtitle">{{ procurement.tender_number }} · {{ procurement.title }}</p>
+    </div>
+    <div class="ebms-page-actions">
+        <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Overview</a>
+        <span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<ul class="procurement-workspace-nav">
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}"><i class="bi bi-file-earmark-text me-1"></i>Overview</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.budget_spend', procurement_id=procurement.id) }}"><i class="bi bi-wallet2 me-1"></i>Budget &amp; Spend</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.bidder_performance', procurement_id=procurement.id) }}"><i class="bi bi-graph-up-arrow me-1"></i>Bidder Performance</a></li>
+    <li class="nav-item"><a class="nav-link active" href="{{ url_for('procurements.payment_verification', procurement_id=procurement.id) }}"><i class="bi bi-credit-card-2-front me-1"></i>Bidder Payment Verification</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.sealed_bid_submissions', procurement_id=procurement.id) }}"><i class="bi bi-box-seam me-1"></i>Sealed Bid Submissions</a></li>
+</ul>
+
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>Bidder Payment Verification</h5>
+            <small class="text-muted">Review submitted proofs of payment and authorize ITT document access.</small>
+        </div>
+        <span class="badge badge-primary">{{ payments|length }} Payment(s)</span>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Bidder / Company</th>
+                        <th>Payment Ref</th>
+                        <th>Amount</th>
+                        <th>Proof</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ p.bidder.company_name }}</td>
+                        <td><code>{{ p.payment_reference }}</code></td>
+                        <td class="fw-bold">BWP {{ '{:,.2f}'.format(p.amount or 0) }}</td>
+                        <td>
+                            {% if p.proof_file_path %}
+                            <a href="{{ url_for('procurements.download_payment_proof', payment_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download</a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ p.submitted_at.strftime('%Y-%m-%d %H:%M') if p.submitted_at else '—' }}</td>
+                        <td>
+                            {% if p.status == 'approved' %}
+                            <span class="badge badge-success">Approved</span>
+                            {% elif p.status == 'rejected' %}
+                            <span class="badge badge-danger">Rejected</span>
+                            {% elif p.status == 'resubmission_required' %}
+                            <span class="badge badge-warning">Resubmission required</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if p.status == 'pending' %}
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ p.id }}"><i class="bi bi-check-circle me-1"></i>Approve</button>
+                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ p.id }}"><i class="bi bi-arrow-repeat me-1"></i>Resubmit</button>
+                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ p.id }}"><i class="bi bi-x-circle me-1"></i>Reject</button>
+                            </div>
+                            {% elif p.status == 'resubmission_required' %}
+                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resubmitModal{{ p.id }}"><i class="bi bi-arrow-repeat me-1"></i>Review</button>
+                            {% else %}
+                            <span class="text-muted small">Reviewed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if p.status in ('pending', 'rejected', 'resubmission_required') %}
+                    <div class="modal fade text-start" id="approveModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('procurements.verify_payment', payment_id=p.id) }}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-success"><i class="bi bi-check-circle me-2"></i>Approve Payment</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Approve payment proof submitted by <strong>{{ p.bidder.company_name }}</strong>?</p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-dark">Optional approval note</label>
+                                            <textarea name="reason" class="form-control" rows="2" placeholder="Payment verified against bank receipt and reference match..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle me-1"></i>Approve Payment</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade text-start" id="rejectModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('procurements.verify_payment', payment_id=p.id) }}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-danger"><i class="bi bi-x-circle me-2"></i>Reject Payment</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Reject payment proof for <strong>{{ p.bidder.company_name }}</strong>:</p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-dark">Reason <span class="text-danger">*</span></label>
+                                            <textarea name="reason" class="form-control" rows="3" placeholder="Explain why the proof is rejected..." required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle me-1"></i>Reject Payment</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade text-start" id="resubmitModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('procurements.verify_payment', payment_id=p.id) }}">
+                                    <input type="hidden" name="action" value="request_resubmission">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-warning"><i class="bi bi-arrow-repeat me-2"></i>Request Correction</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Request resubmission from <strong>{{ p.bidder.company_name }}</strong>:</p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-dark">Instructions / Reason <span class="text-danger">*</span></label>
+                                            <textarea name="reason" class="form-control" rows="3" placeholder="Specify what the bidder needs to correct..." required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-send me-1"></i>Send Resubmission Request</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-credit-card text-muted fs-1 mb-3 d-block"></i>
+            <h5>No payment proofs yet</h5>
+            <p class="text-muted mb-0">No payment proofs have been submitted by bidders for this tender yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

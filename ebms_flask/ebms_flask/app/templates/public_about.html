@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% block title %}About EBMS{% endblock %}
+{% block guest_content %}
+<style>
+    :root {
+        --ebms-blue: #0d9ae6;
+        --ebms-blue-deep: #008ed6;
+        --ebms-sky: #17b4ff;
+        --bg-soft: #edf5fb;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --text-dark: #162331;
+        --muted: #5d7184;
+        --line: rgba(13, 100, 153, 0.12);
+    }
+
+    body.guest-auth {
+        margin: 0;
+        background: linear-gradient(180deg, #f5f9fc 0%, #edf5fb 100%);
+        color: var(--text-dark);
+        font-family: 'Segoe UI', 'Arial', sans-serif;
+    }
+
+    .ebms-about-shell {
+        min-height: 100vh;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+        background:
+            linear-gradient(rgba(13, 154, 230, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(13, 154, 230, 0.04) 1px, transparent 1px),
+            linear-gradient(180deg, #f5f9fc 0%, #edf5fb 100%);
+        background-size: 90px 90px, 90px 90px, 100% 100%;
+    }
+
+    .ebms-about-shell::before,
+    .ebms-about-shell::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(13, 154, 230, 0.05);
+        pointer-events: none;
+    }
+
+    .ebms-about-shell::before {
+        width: 900px;
+        height: 900px;
+        left: -280px;
+        top: 80px;
+    }
+
+    .ebms-about-shell::after {
+        width: 700px;
+        height: 700px;
+        right: -160px;
+        top: -100px;
+    }
+
+    .ebms-about-inner {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 32px 28px 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ebms-top-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 42px;
+        padding: 8px 18px 20px;
+    }
+
+    .ebms-brand {
+        margin: 0;
+        color: rgba(17, 31, 45, 0.96);
+        font-size: clamp(2rem, 3vw, 3rem);
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        text-transform: uppercase;
+    }
+
+    .ebms-nav {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        list-style: none;
+        margin: 0;
+        padding: 10px 18px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(13, 154, 230, 0.15);
+        border-radius: 16px;
+        box-shadow: 0 8px 22px rgba(18, 82, 130, 0.04);
+    }
+
+    .ebms-nav a {
+        text-decoration: none;
+        color: rgba(17, 31, 45, 0.8);
+        font-weight: 600;
+        font-size: 1.02rem;
+    }
+
+    .ebms-about-card {
+        width: 100%;
+        max-width: none;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid rgba(13, 154, 230, 0.12);
+        border-radius: 28px;
+        box-shadow: 0 26px 70px rgba(17, 69, 108, 0.08);
+        padding: 44px 42px;
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .eyebrow {
+        display: inline-block;
+        font-size: 0.8rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--ebms-blue-deep);
+        font-weight: 800;
+        margin-bottom: 12px;
+        opacity: 0;
+        animation: fadeInUp 0.7s ease 0.15s forwards;
+    }
+
+    h1 {
+        margin: 0 0 18px;
+        font-size: clamp(2.5rem, 5vw, 5rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+        color: rgba(17, 31, 45, 0.96);
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+    }
+
+    .lead {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.8;
+        color: rgba(17, 31, 45, 0.78);
+        max-width: none;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.9s ease 0.3s forwards;
+    }
+
+    .about-grid {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 28px;
+        margin-top: 32px;
+    }
+
+    .feature-list {
+        display: grid;
+        gap: 18px;
+        margin-top: 26px;
+    }
+
+    .feature-item {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 16px 18px;
+        background: rgba(255,255,255,0.5);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.75s ease forwards;
+    }
+
+    .feature-item:nth-child(1) { animation-delay: 0.35s; }
+    .feature-item:nth-child(2) { animation-delay: 0.45s; }
+    .feature-item:nth-child(3) { animation-delay: 0.55s; }
+
+    .feature-number {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(13, 154, 230, 0.08);
+        color: var(--ebms-blue-deep);
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .feature-item h3 {
+        margin: 0 0 4px;
+        font-size: 1.08rem;
+    }
+
+    .feature-item p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .info-panel {
+        display: grid;
+        gap: 18px;
+    }
+
+    .stat-box {
+        background: linear-gradient(180deg, rgba(13,154,230,0.08), rgba(255,255,255,0.9));
+        border: 1px solid rgba(13, 154, 230, 0.12);
+        border-radius: 20px;
+        padding: 22px 18px;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .stat-box:nth-child(1) { animation-delay: 0.4s; }
+    .stat-box:nth-child(2) { animation-delay: 0.5s; }
+    .stat-box:nth-child(3) { animation-delay: 0.6s; }
+
+    .stat-box strong {
+        display: block;
+        font-size: 2rem;
+        color: var(--ebms-blue-deep);
+        margin-bottom: 6px;
+    }
+
+    .stat-box span {
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .actions {
+        margin-top: 28px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeInUp 0.8s ease 0.7s forwards;
+    }
+
+    .ebms-primary-btn,
+    .ebms-ghost-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 50px;
+        padding: 0 22px;
+        border-radius: 40px;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .ebms-primary-btn {
+        background: linear-gradient(135deg, #1db0eb 0%, #0a9ae7 100%);
+        color: #fff;
+        box-shadow: 0 16px 30px rgba(13, 120, 186, 0.18);
+    }
+
+    .ebms-ghost-btn {
+        background: rgba(255,255,255,0.35);
+        color: var(--text-dark);
+        border: 1px solid rgba(13, 154, 230, 0.18);
+    }
+
+    @media (max-width: 820px) {
+        .ebms-top-nav {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ebms-nav {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .about-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="ebms-about-shell">
+    <div class="ebms-about-inner">
+        <nav class="ebms-top-nav" aria-label="Main navigation">
+            <h1 class="ebms-brand">EBMS</h1>
+
+            <div class="ebms-nav-wrap">
+                <ul class="ebms-nav">
+                    <li><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+                    <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
+                    <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
+                    <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="ebms-about-card">
+            <span class="eyebrow">About</span>
+            <h1>Transparent procurement that strengthens public trust.</h1>
+            <p class="lead">
+                The Electronic Bid Management System (EBMS) is a digital procurement platform designed to streamline how public entities publish opportunities, manage supplier participation, and coordinate evaluation and award processes. It brings together bidders, procurement teams, and approving officials in one secure environment to improve transparency, accountability, and efficiency.
+            </p>
+
+            <div class="about-grid">
+                <div>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <span class="feature-number">01</span>
+                            <div>
+                                <h3>Open access to tender opportunities</h3>
+                                <p>Public organisations can publish procurement notices and suppliers can discover current opportunities in a single, consistent portal.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <span class="feature-number">02</span>
+                            <div>
+                                <h3>Structured supplier participation</h3>
+                                <p>Bidders can register, upload required compliance documents, prepare submissions, and track procurement progress with clearer guidance.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <span class="feature-number">03</span>
+                            <div>
+                                <h3>Governed evaluation and award workflows</h3>
+                                <p>Procurement teams can manage reviews, approvals, requests for clarification, and award decisions in a more organised and auditable process.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <a href="{{ url_for('dashboard.public_tenders') }}" class="ebms-primary-btn">Explore tenders</a>
+                        <a href="{{ url_for('auth.register') }}" class="ebms-ghost-btn">Register as bidder</a>
+                    </div>
+                </div>
+
+                <aside class="info-panel">
+                    <div class="stat-box">
+                        <strong>Secure</strong>
+                        <span>Structured handling of bidder submissions and compliance review.</span>
+                    </div>
+                    <div class="stat-box">
+                        <strong>Efficient</strong>
+                        <span>Faster access to procurement plans, tenders, and updates.</span>
+                    </div>
+                    <div class="stat-box">
+                        <strong>Transparent</strong>
+                        <span>Clearer visibility across the procurement lifecycle from registration to award.</span>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
