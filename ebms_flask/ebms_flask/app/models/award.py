@@ -24,11 +24,18 @@ class Award(db.Model):
     # POU / AO workflow tracking: pre-decision packet, AO final decision, and publish step.
     pre_decision_at = db.Column(db.DateTime)
     pre_decision_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    pou_score_summary = db.Column(db.Text)
+    pou_score_reasons = db.Column(db.Text)
+    pou_decision_document_path = db.Column(db.String(500))
+    pou_decision_document_name = db.Column(db.String(255))
     evaluation_results_file_path = db.Column(db.String(500))
     evaluation_results_filename = db.Column(db.String(255))
     ao_decision_at = db.Column(db.DateTime)
     ao_decision_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     ao_decision_reason = db.Column(db.Text)
+    ao_final_choice_summary = db.Column(db.Text)
+    ao_decision_document_path = db.Column(db.String(500))
+    ao_decision_document_name = db.Column(db.String(255))
 
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
@@ -49,11 +56,18 @@ class Award(db.Model):
             'published_by_id': 'ALTER TABLE awards ADD published_by_id INTEGER',
             'pre_decision_at': 'ALTER TABLE awards ADD pre_decision_at DATETIME',
             'pre_decision_by_id': 'ALTER TABLE awards ADD pre_decision_by_id INTEGER',
+            'pou_score_summary': 'ALTER TABLE awards ADD pou_score_summary TEXT',
+            'pou_score_reasons': 'ALTER TABLE awards ADD pou_score_reasons TEXT',
+            'pou_decision_document_path': 'ALTER TABLE awards ADD pou_decision_document_path VARCHAR(500)',
+            'pou_decision_document_name': 'ALTER TABLE awards ADD pou_decision_document_name VARCHAR(255)',
             'evaluation_results_file_path': 'ALTER TABLE awards ADD evaluation_results_file_path VARCHAR(500)',
             'evaluation_results_filename': 'ALTER TABLE awards ADD evaluation_results_filename VARCHAR(255)',
             'ao_decision_at': 'ALTER TABLE awards ADD ao_decision_at DATETIME',
             'ao_decision_by_id': 'ALTER TABLE awards ADD ao_decision_by_id INTEGER',
             'ao_decision_reason': 'ALTER TABLE awards ADD ao_decision_reason TEXT',
+            'ao_final_choice_summary': 'ALTER TABLE awards ADD ao_final_choice_summary TEXT',
+            'ao_decision_document_path': 'ALTER TABLE awards ADD ao_decision_document_path VARCHAR(500)',
+            'ao_decision_document_name': 'ALTER TABLE awards ADD ao_decision_document_name VARCHAR(255)',
         }.items():
             try:
                 probe = f'SELECT TOP 1 {column_name} FROM awards' if db.engine.name != 'sqlite' else f'SELECT {column_name} FROM awards LIMIT 1'

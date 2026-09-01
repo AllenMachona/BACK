@@ -30,6 +30,9 @@
     <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.bidder_performance', procurement_id=procurement.id) }}"><i class="bi bi-graph-up-arrow me-1"></i>Bidder Performance</a></li>
     <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.payment_verification', procurement_id=procurement.id) }}"><i class="bi bi-credit-card-2-front me-1"></i>Bidder Payment Verification</a></li>
     <li class="nav-item"><a class="nav-link active" href="{{ url_for('procurements.sealed_bid_submissions', procurement_id=procurement.id) }}"><i class="bi bi-box-seam me-1"></i>Sealed Bid Submissions</a></li>
+    {% if current_user.has_permission('can_award') or current_user.has_role('procurement_unit') %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}"><i class="bi bi-trophy me-1"></i>Award Bidders</a></li>
+    {% endif %}
 </ul>
 
 <div class="card">

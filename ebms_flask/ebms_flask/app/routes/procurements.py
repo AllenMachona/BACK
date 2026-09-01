@@ -661,7 +661,7 @@ def award_workspace(procurement_id):
     if request.method == 'POST':
         action = request.form.get('action')
 
-        if is_pou and action == 'save_pre_decision':
+        if is_pou and action in {'save_pre_decision', 'forward_to_accounting_officer'}:
             winning_bidder_id = request.form.get('winning_bidder_id', type=int)
             winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
             if not winner or winner.id not in bidder_ids:
@@ -679,26 +679,58 @@ def award_workspace(procurement_id):
             award.award_value = award_value
             award.decision_reason = (request.form.get('decision_reason') or '').strip()
             award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
+            score_summary_lines = []
+            for bidder_id in bidder_ids:
+                bidder = Bidder.query.get(bidder_id)
+                if not bidder:
+                    continue
+                raw_score = request.form.get(f'score_values_{bidder_id}')
+                raw_reason = request.form.get(f'score_reasons_{bidder_id}')
+                if raw_score is None and raw_reason is None:
+                    continue
+                try:
+                    numeric_score = float(raw_score) if raw_score is not None else 0.0
+                except (TypeError, ValueError):
+                    numeric_score = 0.0
+                if numeric_score < 0 or numeric_score > 100:
+                    flash('Scores must be between 0 and 100 percent.', 'danger')
+                    return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision'))
+                score_label = f'{numeric_score:.0f}%'
+                reason_text = (raw_reason or '').strip()
+                if reason_text:
+                    score_summary_lines.append(f'{bidder.company_name}: {score_label} — {reason_text}')
+                else:
+                    score_summary_lines.append(f'{bidder.company_name}: {score_label}')
+            score_summary = '; '.join(score_summary_lines)
+            award.pou_score_summary = score_summary or (award.pou_score_summary or '')
+            award.pou_score_reasons = (request.form.get('score_reasons') or '').strip() or score_summary or award.pou_score_reasons
             award.pre_decision_at = datetime.utcnow()
             award.pre_decision_by_id = current_user.id
             award.ao_decision_at = None
             award.ao_decision_by_id = None
             award.ao_decision_reason = None
+            award.ao_final_choice_summary = None
             evaluation_results = request.files.get('evaluation_results_document')
             if evaluation_results and evaluation_results.filename:
                 path, name = _save_procurement_document(evaluation_results, procurement.tender_number, 'evaluation_results')
                 if path:
                     award.evaluation_results_file_path = path
                     award.evaluation_results_filename = name
+            pou_decision_document = request.files.get('pou_decision_document')
+            if pou_decision_document and pou_decision_document.filename:
+                path, name = _save_procurement_document(pou_decision_document, procurement.tender_number, 'pou_decision')
+                if path:
+                    award.pou_decision_document_path = path
+                    award.pou_decision_document_name = name
             award.cooling_off_expiry = datetime.utcnow() + timedelta(days=10)
             award.published_at = None
             award.published_by_id = None
             procurement.status = 'award_pending_approval'
             db.session.commit()
-            flash('Pre-decision sent to the Accounting Officer. The award is not yet final and remains pending AO approval.', 'success')
+            flash('Pre-decision forwarded to the Accounting Officer. Scores, reasons, and uploaded evidence remain visible to the POU.', 'success')
             return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish' if award.ao_decision_at else 'pre_decision'))
 
-        if is_pou and action == 'publish_final_decision':
+        if is_pou and action in {'publish_final_decision', 'publish_award'}:
             if not award or not award.ao_decision_at:
                 flash('The Accounting Officer must return a final decision before publication.', 'warning')
                 return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
@@ -721,7 +753,7 @@ def award_workspace(procurement_id):
             flash('Award result published to the procurement and the winning bidder has been notified.', 'success')
             return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
 
-        if is_ao and action == 'submit_final_decision':
+        if is_ao and action in {'submit_final_decision', 'finalise_award_choice'}:
             if not award or not award.pre_decision_at:
                 flash('No POU pre-decision is available for final decision-making yet.', 'warning')
                 return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_pre_decisions'))
@@ -742,12 +774,21 @@ def award_workspace(procurement_id):
             award.ao_decision_at = datetime.utcnow()
             award.ao_decision_by_id = current_user.id
             award.ao_decision_reason = (request.form.get('ao_decision_reason') or '').strip() or 'Final decision issued by Accounting Officer.'
+            award.ao_final_choice_summary = award.ao_decision_reason
+            if award.pou_score_summary:
+                award.ao_final_choice_summary = f'POU scores: {award.pou_score_summary}\nAO final choice: {award.ao_decision_reason}'
+            ao_document = request.files.get('ao_decision_document')
+            if ao_document and ao_document.filename:
+                path, name = _save_procurement_document(ao_document, procurement.tender_number, 'ao_decision')
+                if path:
+                    award.ao_decision_document_path = path
+                    award.ao_decision_document_name = name
             procurement.status = 'award_pending_approval'
             db.session.commit()
             flash('Final decision sent back to the Procurement Oversight Unit for publication.', 'success')
             return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_pre_decisions'))
 
-        if action == 'publish':
+        if action in {'publish', 'publish_award'}:
             if not award or not award.ao_decision_at:
                 flash('The Accounting Officer must return a final decision before the Procurement Oversight Unit can publish the award.', 'danger')
                 return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
@@ -1003,9 +1044,8 @@ def upload_documents(procurement_id):
     if current_user.has_role('accounting_officer') or current_user.has_role('pou'):
         abort(403)
 
-    is_submitting_evaluator = (
-        feedback.evaluator_id == current_user.id
-        and EvaluatorAssignment.active_for(procurement.id, current_user.id)
+    is_submitting_evaluator = bool(
+        EvaluatorAssignment.active_for(procurement.id, current_user.id)
     )
     if current_user.has_role('bidder') or (
         not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
@@ -1056,6 +1096,45 @@ def upload_documents(procurement_id):
         flash("No valid documents selected for upload.", 'info')
 
     return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+
+@procurements_bp.route('/<int:procurement_id>/award-docs/<string:doc_type>/download')
+@login_required
+def download_award_document(procurement_id, doc_type):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    award = procurement.award
+
+    if not award:
+        abort(404)
+
+    doc_type = doc_type.lower()
+    if doc_type == 'pou_decision':
+        filepath = award.pou_decision_document_path
+        filename = award.pou_decision_document_name
+    elif doc_type == 'ao_decision':
+        filepath = award.ao_decision_document_path
+        filename = award.ao_decision_document_name
+    elif doc_type == 'evaluation_results':
+        filepath = award.evaluation_results_file_path
+        filename = award.evaluation_results_filename
+    else:
+        abort(404)
+
+    if not filepath or not filename or not os.path.exists(filepath):
+        abort(404)
+
+    if not (
+        current_user.has_permission('can_award')
+        or current_user.has_role('procurement_unit')
+        or current_user.has_role('pou')
+        or current_user.has_role('accounting_officer')
+        or current_user.can_access_procurement(procurement)
+    ):
+        abort(403)
+
+    directory = os.path.dirname(filepath)
+    basename = os.path.basename(filepath)
+    return send_from_directory(directory, basename, as_attachment=True, download_name=filename)
 
 
 @procurements_bp.route('/<int:procurement_id>/tender-docs/<string:doc_type>/download')

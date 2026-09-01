@@ -54,9 +54,9 @@
 </div>
 
 {% if is_pou %}
-<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Pre-decision stage:</strong> Select the recommended bidder below and send the pre-decision to the Accounting Officer. The award is not final until the Accounting Officer issues the final decision.</div>
+<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Pre-decision stage:</strong> Score each bidder, record the reasons, select the recommended bidder, and forward the pre-decision packet to the Accounting Officer for final choice.</div>
 {% elif is_ao %}
-<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Final-decision stage:</strong> Review the POU recommendation, confirm the final award, and send the decision back for publication. Publication occurs only after the Accounting Officer forwards the final decision.</div>
+<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Final-decision stage:</strong> Review the POU score comparison and recommendation, confirm the final award choice, and return the decision for publication. Publication occurs only after the Accounting Officer makes the final decision.</div>
 {% else %}
 <div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>After evaluator feedback:</strong> Procurement reviews the submitted feedback and scores, records the award recommendation, and publishes only after the final decision is cleared.</div>
 {% endif %}
@@ -117,7 +117,8 @@
                     <tr>
                         <th>Rank</th>
                         <th>Bidder</th>
-                        <th>Evaluation signal</th>
+                        <th>Score</th>
+                        <th>Evaluation reasoning</th>
                         <th>Evidence coverage</th>
                         <th>Bid envelopes</th>
                         <th>Decision</th>
@@ -138,7 +139,10 @@
                             {% else %}
                             <span class="badge badge-warning">Score pending</span>
                             {% endif %}
-                            <small class="d-block text-muted">{{ row.written_feedback_count }} written assessment(s)</small>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ row.written_feedback_count }} written assessment(s)</small>
+                            <div class="small text-muted mt-1">{{ (award.pou_score_reasons or '') if award and award.pou_score_reasons else 'No score reason recorded yet.' }}</div>
                         </td>
                         <td>
                             <strong>{{ row.evaluation_count }}</strong>
@@ -155,7 +159,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted py-5">No submitted bids are available for award review.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-5">No submitted bids are available for award review.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -172,8 +176,82 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="post" class="row g-3">
-                <input type="hidden" name="action" value="{{ 'save_pre_decision' if is_pou else 'submit_final_decision' if is_ao else 'award_tender' }}">
+            <form method="post" enctype="multipart/form-data" class="row g-3">
+                <input type="hidden" name="action" value="{{ 'forward_to_accounting_officer' if is_pou else 'finalise_award_choice' if is_ao else 'award_tender' }}">
+
+                <div class="col-12">
+                    <label class="form-label">Bidder scoring matrix</label>
+                    <div class="table-responsive border rounded">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Bidder</th>
+                                    <th>Score</th>
+                                    <th>Reason for score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in bidders %}
+                                <tr>
+                                    <td>{{ row.bidder.company_name }}</td>
+                                    <td>
+                                        {% if is_ao and award and award.pre_decision_at %}
+                                        <input type="number" class="form-control form-control-sm" value="{{ row.score if row.score is not none else '' }}" readonly>
+                                        {% else %}
+                                        <input type="number" class="form-control form-control-sm" name="score_values_{{ row.bidder.id }}" min="0" max="100" step="1" value="{{ row.score if row.score is not none else '' }}" {% if award and award.published_at %}disabled{% endif %}>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if is_ao and award and award.pre_decision_at %}
+                                        <textarea class="form-control form-control-sm" rows="2" readonly>{{ award.pou_score_reasons if award and award.pou_score_reasons else 'No reason summary recorded.' }}</textarea>
+                                        {% else %}
+                                        <textarea class="form-control form-control-sm" name="score_reasons_{{ row.bidder.id }}" rows="2" placeholder="State the reason for this score..." {% if award and award.published_at %}disabled{% endif %}>{{ award.pou_score_reasons if award and award.pou_score_reasons else '' }}</textarea>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if is_pou %}
+                <div class="col-12">
+                    <label class="form-label">Upload POU decision support document</label>
+                    <input type="file" class="form-control" name="pou_decision_document" accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.csv" {% if award and award.published_at %}disabled{% endif %}>
+                    {% if award and award.pou_decision_document_name %}
+                    <div class="small text-muted mt-1">Current document: {{ award.pou_decision_document_name }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if is_ao and award and award.pre_decision_at %}
+                <div class="col-12 border rounded p-3 bg-light-subtle">
+                    <h5 class="mb-3">POU recommendation packet</h5>
+                    <div class="mb-3">
+                        <div class="fw-semibold small text-uppercase text-muted">Recommended bidder</div>
+                        <div>{{ award.winning_bidder.company_name if award and award.winning_bidder else 'Not set' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="fw-semibold small text-uppercase text-muted">Submitted recommendation</div>
+                        <div class="white-space-pre-wrap">{{ award.decision_reason or 'No rationale recorded.' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="fw-semibold small text-uppercase text-muted">Score reason summary</div>
+                        <div class="white-space-pre-wrap">{{ award.pou_score_reasons or 'No score summary recorded.' }}</div>
+                    </div>
+                    {% if award and award.pou_decision_document_name %}
+                    <div>
+                        <div class="fw-semibold small text-uppercase text-muted">Supporting document</div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span>{{ award.pou_decision_document_name }}</span>
+                            <a href="{{ url_for('procurements.download_award_document', procurement_id=procurement.id, doc_type='pou_decision') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
                 <div class="col-md-7">
                     <label class="form-label">Recommended bidder *</label>
                     <select name="winning_bidder_id" class="form-select" required {% if award and award.published_at %}disabled{% endif %}>
@@ -187,19 +265,46 @@
                     <label class="form-label">Award value (BWP) *</label>
                     <input name="award_value" type="number" min="0" step="0.01" class="form-control" value="{{ award.award_value if award else procurement.estimated_value }}" required {% if award and award.published_at %}disabled{% endif %}>
                 </div>
+
                 <div class="col-12">
-                    <label class="form-label">Decision rationale *</label>
+                    <label class="form-label">Pre-decision / final decision rationale *</label>
                     <textarea name="decision_reason" rows="4" class="form-control" required {% if award and award.published_at %}disabled{% endif %} placeholder="Summarize evaluation outcome, value for money, compliance, and approval basis.">{{ award.decision_reason if award else '' }}</textarea>
                 </div>
+                <div class="col-12">
+                    <label class="form-label">Score reason summary</label>
+                    <textarea name="score_reasons" rows="3" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="Give a brief reason summary for the selected bidder recommendation.">{{ award.pou_score_reasons if award else '' }}</textarea>
+                </div>
+                {% if award and award.pou_score_summary %}
+                <div class="col-12 border rounded p-3 bg-light-subtle">
+                    <div class="fw-semibold small text-uppercase text-muted">Saved bidder scoring summary</div>
+                    <div class="mt-2 white-space-pre-wrap">{{ award.pou_score_summary }}</div>
+                </div>
+                {% endif %}
                 <div class="col-12">
                     <label class="form-label">Internal decision note</label>
                     <textarea name="decision_notes" rows="2" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="Optional note for the award register">{{ award.decision_notes if award else '' }}</textarea>
                 </div>
+                {% if is_ao %}
+                <div class="col-12">
+                    <label class="form-label">Accounting Officer final choice</label>
+                    <textarea name="ao_decision_reason" rows="3" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="State why the accounting officer approves or rejects the recommended bidder.">{{ award.ao_decision_reason if award else '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Upload AO final decision document</label>
+                    <input type="file" class="form-control" name="ao_decision_document" accept=".pdf,.doc,.docx,.xlsx,.xls,.txt,.csv" {% if award and award.published_at %}disabled{% endif %}>
+                    {% if award and award.ao_decision_document_name %}
+                    <div class="small text-muted mt-1 d-flex align-items-center gap-2 flex-wrap">
+                        <span>Current document: {{ award.ao_decision_document_name }}</span>
+                        <a href="{{ url_for('procurements.download_award_document', procurement_id=procurement.id, doc_type='ao_decision') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
                 {% if not award or not award.published_at %}
                 <div class="col-12 d-flex gap-2">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-send me-1"></i>
-                        {% if is_pou %}Send pre-decision{% elif is_ao %}Forward final decision{% else %}Save recommendation{% endif %}
+                        {% if is_pou %}Forward to the Accounting Officer{% elif is_ao %}Confirm final choice{% else %}Save recommendation{% endif %}
                     </button>
                 </div>
                 {% endif %}

@@ -35,22 +35,7 @@
         <div class="dashboard-metric-bars">{% for metric in dashboard_metrics %}<a class="dashboard-metric-column dashboard-metric-{{ metric.tone }} dashboard-reveal dashboard-reveal-{{ loop.index + 1 }}" href="{{ metric.url }}" title="Open {{ metric.label }} report"><span class="dashboard-metric-value">{{ metric.value }}</span><span class="dashboard-metric-track"><span class="dashboard-metric-fill" style="--metric-height: {{ (metric.value / metric_max * 100) if metric_max else 0 }}%;"></span></span><span class="dashboard-metric-icon"><i class="bi {{ metric.icon }}"></i></span><strong>{{ metric.label }}</strong><small>{{ metric.note }}</small></a>{% endfor %}</div>
     </section>
 
-    <div class="dashboard-section-heading dashboard-reveal dashboard-reveal-5">
-        <div><span class="panel-kicker">Decision centre</span><h2>Procurement control room</h2></div>
-        <a href="{{ url_for('reports.operational') }}" class="text-link">Open full operational report <i class="bi bi-arrow-up-right"></i></a>
-    </div>
-
-    <div class="dashboard-alert-grid mb-4 dashboard-reveal dashboard-reveal-6">
-        {% for alert in dashboard_alerts %}
-        <a class="dashboard-alert dashboard-alert-{{ alert.tone }}" href="{{ alert.url }}">
-            <span class="dashboard-alert-icon"><i class="bi {{ alert.icon }}"></i></span>
-            <span><strong>{{ alert.count }}</strong><small>{{ alert.label }}</small></span>
-            <i class="bi bi-arrow-up-right alert-arrow"></i>
-        </a>
-        {% endfor %}
-    </div>
-
-    <div class="dashboard-chart-grid mb-4 dashboard-reveal dashboard-reveal-7">
+    <div class="dashboard-chart-grid mb-4 dashboard-reveal dashboard-reveal-5">
         <section class="card dashboard-chart-card dashboard-chart-card-primary">
             <div class="card-header"><div><span class="panel-kicker">Portfolio mix</span><h5>Procurement by status</h5></div><a href="{{ url_for('reports.operational') }}" class="icon-link" title="Open operational report"><i class="bi bi-arrow-up-right"></i></a></div>
             <div class="card-body dashboard-status-chart">
@@ -62,6 +47,21 @@
             <div class="card-header"><div><span class="panel-kicker">Spend exposure</span><h5>Records by category</h5></div><a href="{{ url_for('reports.operational') }}" class="icon-link" title="Open operational report"><i class="bi bi-arrow-up-right"></i></a></div>
             <div class="card-body category-bars">{% for category, count in category_rows %}<a class="category-bar-row" href="{{ url_for('procurements.list_procurements', category=category) }}"><span>{{ category.replace('_', ' ').title() }}</span><span class="category-bar-track"><span class="category-bar-fill category-bar-{{ loop.index0 % 5 }}" style="width: {{ (count / category_total * 100) }}%;"></span></span><strong>{{ count }}</strong><i class="bi bi-chevron-right"></i></a>{% else %}<p class="text-muted">No procurement records yet.</p>{% endfor %}</div>
         </section>
+    </div>
+
+    <div class="dashboard-section-heading dashboard-reveal dashboard-reveal-6">
+        <div><span class="panel-kicker">Decision centre</span><h2>Procurement control room</h2></div>
+        <a href="{{ url_for('reports.operational') }}" class="text-link">Open full operational report <i class="bi bi-arrow-up-right"></i></a>
+    </div>
+
+    <div class="dashboard-alert-grid mb-4 dashboard-reveal dashboard-reveal-7">
+        {% for alert in dashboard_alerts %}
+        <a class="dashboard-alert dashboard-alert-{{ alert.tone }}" href="{{ alert.url }}">
+            <span class="dashboard-alert-icon"><i class="bi {{ alert.icon }}"></i></span>
+            <span><strong>{{ alert.count }}</strong><small>{{ alert.label }}</small></span>
+            <i class="bi bi-arrow-up-right alert-arrow"></i>
+        </a>
+        {% endfor %}
     </div>
 
     <div class="card dashboard-reveal dashboard-reveal-8">
