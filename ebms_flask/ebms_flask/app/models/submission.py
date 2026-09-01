@@ -18,6 +18,14 @@ class Submission(db.Model):
     sha256_hash = db.Column(db.String(64))
     file_size_bytes = db.Column(db.Integer)
 
+    compliance_document_path = db.Column(db.String(500))
+    compliance_document_filename = db.Column(db.String(300))
+    compliance_document_hash = db.Column(db.String(64))
+
+    returnable_document_path = db.Column(db.String(500))
+    returnable_document_filename = db.Column(db.String(300))
+    returnable_document_hash = db.Column(db.String(64))
+
     version = db.Column(db.Integer, default=1)
     status = db.Column(db.String(20), default='submitted')  # submitted, replaced, withdrawn, late_rejected
 

@@ -222,15 +222,10 @@ class User(UserMixin, db.Model):
 
         if self.has_role('system_admin'):
             return True
-        if self.has_role('procurement_oversight') or self.has_role('procurement_unit'):
+        if self.has_role('procurement_oversight') or self.has_role('pou') or self.has_role('procurement_unit'):
             return True
         if self.has_role('accounting_officer'):
-            try:
-                estimated_value = float(procurement.estimated_value or 0)
-            except (TypeError, ValueError):
-                estimated_value = 0
-            limit = float(self.delegation_limit or 0)
-            return estimated_value <= limit
+            return True
         if self.has_role('user_department'):
             procurement_entity = getattr(procurement, 'procurement_entity', None) or getattr(procurement, 'user_department', None)
             return procurement_entity == self.department

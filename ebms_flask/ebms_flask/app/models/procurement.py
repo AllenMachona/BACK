@@ -309,6 +309,26 @@ class Procurement(db.Model):
                 db.session.execute(text(column_sql))
         db.session.commit()
 
+    @classmethod
+    def ensure_submission_columns(cls):
+        from sqlalchemy import text
+        for column_name, column_sql in {
+            'compliance_document_path': 'ALTER TABLE submissions ADD COLUMN compliance_document_path VARCHAR(500)',
+            'compliance_document_filename': 'ALTER TABLE submissions ADD COLUMN compliance_document_filename VARCHAR(300)',
+            'compliance_document_hash': 'ALTER TABLE submissions ADD COLUMN compliance_document_hash VARCHAR(64)',
+            'returnable_document_path': 'ALTER TABLE submissions ADD COLUMN returnable_document_path VARCHAR(500)',
+            'returnable_document_filename': 'ALTER TABLE submissions ADD COLUMN returnable_document_filename VARCHAR(300)',
+            'returnable_document_hash': 'ALTER TABLE submissions ADD COLUMN returnable_document_hash VARCHAR(64)',
+        }.items():
+            try:
+                probe = f'SELECT {column_name} FROM submissions LIMIT 1' if db.engine.name == 'sqlite' else f'SELECT TOP 1 {column_name} FROM submissions'
+                db.session.execute(text(probe))
+            except Exception:
+                if db.engine.name != 'sqlite':
+                    column_sql = column_sql.replace(' ADD COLUMN ', ' ADD ')
+                db.session.execute(text(column_sql))
+        db.session.commit()
+
     def __repr__(self):
         return f'<Procurement {self.tender_number}>'
 

@@ -37,6 +37,21 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link active" href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}"><i class="bi bi-file-earmark-text me-1"></i>Overview</a>
     </li>
+    {% if current_user.has_role('pou') %}
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision') }}"><i class="bi bi-clipboard-check me-1"></i>Pre Decision</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish') }}"><i class="bi bi-megaphone me-1"></i>Publish</a>
+    </li>
+    {% elif current_user.has_role('accounting_officer') %}
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_pre_decisions') }}"><i class="bi bi-inboxes me-1"></i>POU Pre Decisions</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_final_decision') }}"><i class="bi bi-file-earmark-check me-1"></i>Final Decision</a>
+    </li>
+    {% else %}
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.budget_spend', procurement_id=procurement.id) }}"><i class="bi bi-wallet2 me-1"></i>Budget &amp; Spend</a>
     </li>
@@ -53,6 +68,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}"><i class="bi bi-trophy me-1"></i>Award Bidders</a>
     </li>
+    {% endif %}
     {% endif %}
 </ul>
 {% endif %}
@@ -141,11 +157,14 @@
                     <h5 class="mb-0"><i class="bi bi-folder-check me-2 text-primary"></i>Tender Documents &amp; Internal Forms</h5>
                     <small class="text-muted">Manage internal requisition forms and payment-gated bidder documents.</small>
                 </div>
+                {% if not (current_user.has_role('accounting_officer') or current_user.has_role('pou')) %}
                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#uploadDocsCollapse">
                     <i class="bi bi-cloud-arrow-up me-1"></i>Upload / Replace Documents
                 </button>
+                {% endif %}
             </div>
             <div class="card-body">
+                {% if not (current_user.has_role('accounting_officer') or current_user.has_role('pou')) %}
                 <!-- Collapsible Upload Form -->
                 <div class="collapse mb-4 p-3 border rounded bg-light" id="uploadDocsCollapse">
                     <h6 class="fw-bold text-dark mb-3"><i class="bi bi-upload me-1 text-primary"></i>Upload or Replace Tender Documents</h6>
@@ -177,6 +196,7 @@
                         </div>
                     </form>
                 </div>
+                {% endif %}
 
                 <div class="row g-3">
                     <!-- Internal Request Forms -->

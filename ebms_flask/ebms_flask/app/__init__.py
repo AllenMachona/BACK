@@ -98,6 +98,8 @@ def create_app(config_class=Config):
         Role.ensure_default_roles()
 
         def ensure_default_login_users():
+            from app.models.bidder import Bidder
+
             default_password = 'ChangeMe123!'
             role_map = {role.code: role for role in Role.query.all()}
             default_users = [
@@ -135,6 +137,18 @@ def create_app(config_class=Config):
                 user.locked_until = None
                 user.set_password(default_password)
                 if role_code == 'bidder':
+                    if not user.bidder_id:
+                        bidder = Bidder.query.filter_by(contact_email=user.email).first()
+                        if not bidder:
+                            bidder = Bidder(
+                                company_name=department,
+                                contact_email=user.email,
+                                active=True,
+                                verified=True,
+                            )
+                            db.session.add(bidder)
+                            db.session.flush()
+                        user.bidder_id = bidder.id
                     user.email_confirmed_at = datetime.utcnow()
                     user.email_confirmation_token = None
                     user.email_confirmation_expires_at = None
@@ -169,16 +183,19 @@ def create_app(config_class=Config):
 
     @app.before_request
     def restrict_admin_procurement_access():
-        """Keep system administrators out of operational procurement workflows."""
+        """Keep system administrators out of operational procurement workflows, except the global search."""
         if not current_user.is_authenticated or not current_user.has_role('system_admin'):
             return None
         endpoint = request.endpoint or ''
+        allowed_endpoints = {'procurements.search'}
         blocked_prefixes = ('procurements.', 'requests.', 'bidders.', 'evaluations.')
         blocked_endpoints = {
             'dashboard.dashboard', 'dashboard.public_tenders',
             'dashboard.public_tender_detail', 'dashboard.public_procurement_plans',
             'dashboard.manage_procurement_plans', 'dashboard.edit_procurement_plan',
         }
+        if endpoint in allowed_endpoints:
+            return None
         if endpoint.startswith(blocked_prefixes) or endpoint in blocked_endpoints:
             return redirect(url_for('reports.index'))
         return None

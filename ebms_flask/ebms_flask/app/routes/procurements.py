@@ -601,9 +601,13 @@ def detail(procurement_id):
 @procurements_bp.route('/<int:procurement_id>/award', methods=['GET', 'POST'])
 @login_required
 def award_workspace(procurement_id):
+    is_pou = current_user.has_role('pou')
+    is_ao = current_user.has_role('accounting_officer')
     if not (
         current_user.has_permission('can_award')
         or current_user.has_role('procurement_unit')
+        or is_pou
+        or is_ao
     ):
         abort(403)
     procurement = Procurement.query.get_or_404(procurement_id)
@@ -646,31 +650,61 @@ def award_workspace(procurement_id):
     evaluator_feedback = procurement.evaluator_feedback.order_by(
         EvaluatorFeedback.submitted_at.desc()
     ).all()
+    view_mode = request.args.get('view') or (
+        'publish' if is_pou and award and award.ao_decision_at and not award.published_at else
+        'pre_decision' if is_pou else
+        'ao_final_decision' if is_ao and award and award.pre_decision_at and not award.ao_decision_at else
+        'ao_pre_decisions' if is_ao else
+        'pre_decision'
+    )
+
     if request.method == 'POST':
         action = request.form.get('action')
-        if action in ('publish', 'award_tender'):
-            if action == 'publish' and (not award or procurement.status != 'award_pending_approval'):
-                flash('Save an award recommendation before publishing it.', 'danger')
-                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
-            if action == 'award_tender':
-                winning_bidder_id = request.form.get('winning_bidder_id', type=int)
-                winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
-                if not winner or winner.id not in bidder_ids:
-                    flash('Select a bidder with a submitted bid before awarding the tender.', 'danger')
-                    return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
-                try:
-                    award_value = float(request.form.get('award_value') or procurement.estimated_value or 0)
-                except ValueError:
-                    flash('Enter a valid award value.', 'danger')
-                    return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
-                if not award:
-                    award = Award(procurement_id=procurement.id, created_by_id=current_user.id)
-                    db.session.add(award)
-                award.winning_bidder_id = winner.id
-                award.award_value = award_value
-                award.decision_reason = (request.form.get('decision_reason') or '').strip()
-                award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
-                award.cooling_off_expiry = datetime.utcnow() + timedelta(days=10)
+
+        if is_pou and action == 'save_pre_decision':
+            winning_bidder_id = request.form.get('winning_bidder_id', type=int)
+            winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
+            if not winner or winner.id not in bidder_ids:
+                flash('Select a bidder that participated in this procurement.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision'))
+            try:
+                award_value = float(request.form.get('award_value') or procurement.estimated_value or 0)
+            except ValueError:
+                flash('Enter a valid award value.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision'))
+            if not award:
+                award = Award(procurement_id=procurement.id, created_by_id=current_user.id)
+                db.session.add(award)
+            award.winning_bidder_id = winner.id
+            award.award_value = award_value
+            award.decision_reason = (request.form.get('decision_reason') or '').strip()
+            award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
+            award.pre_decision_at = datetime.utcnow()
+            award.pre_decision_by_id = current_user.id
+            award.ao_decision_at = None
+            award.ao_decision_by_id = None
+            award.ao_decision_reason = None
+            evaluation_results = request.files.get('evaluation_results_document')
+            if evaluation_results and evaluation_results.filename:
+                path, name = _save_procurement_document(evaluation_results, procurement.tender_number, 'evaluation_results')
+                if path:
+                    award.evaluation_results_file_path = path
+                    award.evaluation_results_filename = name
+            award.cooling_off_expiry = datetime.utcnow() + timedelta(days=10)
+            award.published_at = None
+            award.published_by_id = None
+            procurement.status = 'award_pending_approval'
+            db.session.commit()
+            flash('Pre-decision sent to the Accounting Officer. The award is not yet final and remains pending AO approval.', 'success')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish' if award.ao_decision_at else 'pre_decision'))
+
+        if is_pou and action == 'publish_final_decision':
+            if not award or not award.ao_decision_at:
+                flash('The Accounting Officer must return a final decision before publication.', 'warning')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
+            if award.published_at:
+                flash('This award has already been published.', 'info')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
             award.published_at = datetime.utcnow()
             award.published_by_id = current_user.id
             procurement.status = 'award_published'
@@ -684,8 +718,57 @@ def award_workspace(procurement_id):
                     procurement_id=procurement.id,
                     email=False,
                 )
-            flash('Tender awarded successfully. The winning bidder was notified and the cooling-off period is now active.', 'success')
-            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id))
+            flash('Award result published to the procurement and the winning bidder has been notified.', 'success')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
+
+        if is_ao and action == 'submit_final_decision':
+            if not award or not award.pre_decision_at:
+                flash('No POU pre-decision is available for final decision-making yet.', 'warning')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_pre_decisions'))
+            winning_bidder_id = request.form.get('winning_bidder_id', type=int)
+            winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
+            if not winner or winner.id not in bidder_ids:
+                flash('Select a real participated bidder for the final award decision.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_final_decision'))
+            try:
+                award_value = float(request.form.get('award_value') or procurement.estimated_value or 0)
+            except ValueError:
+                flash('Enter a valid award value.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_final_decision'))
+            award.winning_bidder_id = winner.id
+            award.award_value = award_value
+            award.decision_reason = (request.form.get('decision_reason') or '').strip() or award.decision_reason
+            award.decision_notes = (request.form.get('decision_notes') or '').strip() or award.decision_notes
+            award.ao_decision_at = datetime.utcnow()
+            award.ao_decision_by_id = current_user.id
+            award.ao_decision_reason = (request.form.get('ao_decision_reason') or '').strip() or 'Final decision issued by Accounting Officer.'
+            procurement.status = 'award_pending_approval'
+            db.session.commit()
+            flash('Final decision sent back to the Procurement Oversight Unit for publication.', 'success')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='ao_pre_decisions'))
+
+        if action == 'publish':
+            if not award or not award.ao_decision_at:
+                flash('The Accounting Officer must return a final decision before the Procurement Oversight Unit can publish the award.', 'danger')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
+            if award.published_at:
+                flash('This award has already been published.', 'info')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
+            award.published_at = datetime.utcnow()
+            award.published_by_id = current_user.id
+            procurement.status = 'award_published'
+            db.session.commit()
+            for bidder_user in User.query.filter_by(bidder_id=award.winning_bidder_id).all():
+                notify_user(
+                    bidder_user,
+                    'award_published',
+                    f'Award Published: {procurement.tender_number}',
+                    f'Your bid for {procurement.title} has been selected. The cooling-off period ends on {award.cooling_off_expiry:%d %b %Y}.',
+                    procurement_id=procurement.id,
+                    email=False,
+                )
+            flash('Award published successfully after the Accounting Officer final decision.', 'success')
+            return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='publish'))
 
         winning_bidder_id = request.form.get('winning_bidder_id', type=int)
         winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
@@ -716,6 +799,9 @@ def award_workspace(procurement_id):
         bidders=bidders,
         award=award,
         evaluator_feedback=evaluator_feedback,
+        view_mode=view_mode,
+        is_pou=is_pou,
+        is_ao=is_ao,
     )
 
 
@@ -802,11 +888,28 @@ def sealed_bid_submissions(procurement_id):
     submissions = procurement.submissions.options(
         selectinload(Submission.bidder)
     ).filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
+
+    grouped = {}
+    for submission in submissions:
+        bidder_id = submission.bidder_id or 0
+        company_name = submission.bidder.company_name if submission.bidder else f'Bidder {bidder_id}'
+        grouped.setdefault(bidder_id, {
+            'bidder_id': bidder_id,
+            'company_name': company_name,
+            'entries': [],
+        })['entries'].append(submission)
+
+    grouped_submissions = sorted(
+        grouped.values(),
+        key=lambda item: (item['company_name'].lower(), item['entries'][0].submitted_at)
+    )
+
     return render_template(
         'procurement_sealed_bids.html',
         procurement=procurement,
         submissions=submissions,
-        submission_count=len(submissions),
+        grouped_submissions=grouped_submissions,
+        submission_count=len(grouped_submissions),
     )
 
 
@@ -896,6 +999,9 @@ def add_performance_review(procurement_id):
 @login_required
 def upload_documents(procurement_id):
     procurement = Procurement.query.get_or_404(procurement_id)
+
+    if current_user.has_role('accounting_officer') or current_user.has_role('pou'):
+        abort(403)
 
     is_submitting_evaluator = (
         feedback.evaluator_id == current_user.id
@@ -1348,11 +1454,12 @@ def download_document(procurement_id, communication_id):
         if document.type == 'clarification':
             if not ClarificationAccessService.can_bidder_view_clarification(document.id, current_user.bidder_id):
                 abort(403)
-        elif document.type not in ('advertisement', 'addendum'):
-            abort(403)
-        if not current_user.bidder or not current_user.bidder.has_approved_payment_for_procurement(procurement.id):
-            log_action('UNAUTHORIZED_COMMUNICATION_DOWNLOAD_BLOCKED', entity_type='Communication', entity_id=document.id,
-                       reason=f"Bidder {current_user.bidder_id} attempted access before payment approval")
+        elif document.type == 'itt':
+            if not current_user.bidder or not current_user.bidder.has_approved_payment_for_procurement(procurement.id):
+                log_action('UNAUTHORIZED_COMMUNICATION_DOWNLOAD_BLOCKED', entity_type='Communication', entity_id=document.id,
+                           reason=f"Bidder {current_user.bidder_id} attempted access before payment approval")
+                abort(403)
+        elif document.type not in ('advertisement', 'addendum', 'notice'):
             abort(403)
 
     if not document.file_path or not document.original_filename:
@@ -1413,6 +1520,41 @@ def download_submission(procurement_id, submission_id):
         as_attachment=True,
         download_name=download_name,
         mimetype='application/octet-stream',
+    )
+
+
+@procurements_bp.route('/<int:procurement_id>/submission/<int:submission_id>/<document_type>')
+@login_required
+def download_submission_document(procurement_id, submission_id, document_type):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    submission = Submission.query.filter_by(id=submission_id, procurement_id=procurement.id).first_or_404()
+
+    if current_user.has_role('bidder'):
+        if submission.bidder_id != current_user.bidder_id:
+            abort(403)
+    elif current_user.role and current_user.role.can_evaluate and not current_user.role.can_view_all_records:
+        if not EvaluatorAssignmentService.can_view_envelope(
+            procurement.id, current_user.id, submission.envelope_type
+        ):
+            abort(403)
+
+    if document_type == 'compliance':
+        file_path = submission.compliance_document_path
+        filename = submission.compliance_document_filename or 'compliance_document.pdf'
+    elif document_type == 'returnable':
+        file_path = submission.returnable_document_path
+        filename = submission.returnable_document_filename or 'returnable_document.pdf'
+    else:
+        abort(404)
+
+    if not file_path or not os.path.isfile(file_path):
+        abort(404)
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=filename,
+        mimetype=mimetypes.guess_type(filename)[0] or 'application/octet-stream',
     )
 
 

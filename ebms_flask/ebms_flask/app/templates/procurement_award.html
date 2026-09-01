@@ -1,30 +1,219 @@
 {% extends "base.html" %}
 {% block title %}Award Decision - {{ procurement.tender_number }}{% endblock %}
-{% block breadcrumbs %}<nav class="ebms-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('dashboard.dashboard') }}">Home</a><span class="crumb-divider">/</span><a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}">{{ procurement.tender_number }}</a><span class="crumb-divider">/</span><span>Award Decision</span></nav>{% endblock %}
-{% block page_header %}<div class="ebms-page-head award-page-head"><div><span class="award-kicker">Decision workspace</span><h1 class="ebms-page-title"><i class="bi bi-trophy me-2"></i>Award Decision</h1><p class="ebms-page-subtitle">{{ procurement.tender_number }} · {{ procurement.title }}</p></div><div class="ebms-page-actions"><span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span><a href="{{ url_for('reports.awards') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart-line me-1"></i>Awards report</a></div></div>{% endblock %}
-{% block content %}
-<div class="award-hero"><div><span class="award-kicker">Controlled award process</span><h2>Make the decision traceable.</h2><p>Compare submitted bids and evaluation evidence, record the rationale, then publish only after the recommendation is ready.</p></div><div class="award-hero-status"><span class="award-hero-status-dot"></span>{% if award and award.published_at %}Published{% elif award %}Recommendation saved{% else %}Awaiting recommendation{% endif %}</div></div>
-<div class="award-stat-grid"><div><small>Submitted bids</small><strong>{{ bidders|length }}</strong><span>Eligible bidders in this view</span></div><div><small>Recommended value</small><strong>BWP {{ '{:,.2f}'.format(award.award_value if award else procurement.estimated_value or 0) }}</strong><span>Current award basis</span></div><div><small>Decision state</small><strong>{{ 'Published' if award and award.published_at else ('Pending publication' if award else 'Not started') }}</strong><span>{{ 'Cooling-off is active' if award and award.published_at else 'Keep the audit trail complete' }}</span></div></div>
-<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>After evaluator feedback:</strong> Procurement reviews the submitted feedback and scores, selects a bidder below, saves the award recommendation, then publishes it. The selected bidder is notified and the cooling-off period begins. Feedback submission alone does not select a winner.</div>
-<section class="card mb-4"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h2 class="h5 mb-0"><i class="bi bi-file-earmark-check me-2 text-primary"></i>Evaluator Feedback Evidence</h2><span class="badge badge-primary">{{ evaluator_feedback|length }} Document(s)</span></div><div class="card-body">{% if evaluator_feedback %}<div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead class="table-light"><tr><th>Evaluator</th><th>Document</th><th>Summary</th><th>Submitted At</th><th class="text-end">Action</th></tr></thead><tbody>{% for feedback in evaluator_feedback %}<tr><td>{{ feedback.evaluator.full_name() }}</td><td>{{ feedback.original_filename }}</td><td class="text-muted">{{ feedback.feedback_text or 'No summary provided' }}</td><td class="text-muted">{{ feedback.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td><td class="text-end"><a href="{{ url_for('procurements.view_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="View feedback"><i class="bi bi-eye"></i></a><a href="{{ url_for('procurements.download_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" class="btn btn-sm btn-outline-primary" title="Download feedback"><i class="bi bi-download"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="text-muted small mb-0">No evaluator feedback has been submitted yet. Procurement should request or wait for evaluation evidence before recording the award recommendation.</p>{% endif %}</div></section>
-<section class="card award-comparison-card mb-4"><div class="card-header"><div><span class="award-kicker">Evidence-led comparison</span><h2>Bidder comparison</h2><p>Evaluation signal combines the evaluator score with written evidence and submitted feedback-document coverage.</p></div><span class="badge badge-info">{{ bidders|length }} submitted</span></div><div class="card-body"><div class="award-table-wrap"><table class="table align-middle award-table"><thead><tr><th>Rank</th><th>Bidder</th><th>Evaluation signal</th><th>Evidence coverage</th><th>Bid envelopes</th><th>Decision</th></tr></thead><tbody>{% for row in bidders %}<tr class="{{ 'award-selected-row' if award and award.winning_bidder_id == row.bidder.id else '' }}"><td><span class="award-rank">{{ loop.index }}</span></td><td><strong>{{ row.bidder.company_name }}</strong><small class="d-block text-muted">{{ row.bidder.ppra_registration_number or 'PPRA registration not recorded' }}</small></td><td>{% if row.score is not none %}<strong class="award-score">{{ row.score }}<small>/100</small></strong><div class="award-score-track"><span style="width: {{ [row.score, 100]|min }}%;"></span></div>{% else %}<span class="badge badge-warning">Score pending</span>{% endif %}<small class="d-block text-muted">{{ row.written_feedback_count }} written assessment(s)</small></td><td><strong>{{ row.evaluation_count }}</strong><small class="d-block text-muted">score record(s)</small><small class="d-block text-muted">{{ row.feedback_document_count }} feedback document(s)</small></td><td>{{ row.submission_count }} submitted</td><td>{% if award and award.winning_bidder_id == row.bidder.id %}<span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Selected</span>{% else %}<span class="text-muted small">Available</span>{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="text-center text-muted py-5">No submitted bids are available for award review.</td></tr>{% endfor %}</tbody></table></div></div></section>
-<div class="award-decision-layout"><section class="card award-form-card"><div class="card-header"><div><span class="award-kicker">Decision record</span><h2>{{ 'Update award recommendation' if award else 'Record award recommendation' }}</h2></div></div><div class="card-body"><form method="post" class="row g-3"><div class="col-md-7"><label class="form-label">Winning bidder *</label><select name="winning_bidder_id" class="form-select" required {% if award and award.published_at %}disabled{% endif %}><option value="">Select winning bidder</option>{% for row in bidders %}<option value="{{ row.bidder.id }}" {% if award and award.winning_bidder_id == row.bidder.id %}selected{% endif %}>{{ row.bidder.company_name }}{% if row.score is not none %} · {{ row.score }}/100{% endif %}</option>{% endfor %}</select></div><div class="col-md-5"><label class="form-label">Award value (BWP) *</label><input name="award_value" type="number" min="0" step="0.01" class="form-control" value="{{ award.award_value if award else procurement.estimated_value }}" required {% if award and award.published_at %}disabled{% endif %}></div><div class="col-12"><label class="form-label">Decision rationale *</label><textarea name="decision_reason" rows="4" class="form-control" required {% if award and award.published_at %}disabled{% endif %} placeholder="Summarize evaluation outcome, value for money, compliance, and approval basis.">{{ award.decision_reason if award else '' }}</textarea></div><div class="col-12"><label class="form-label">Internal decision note</label><textarea name="decision_notes" rows="2" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="Optional note for the award register">{{ award.decision_notes if award else '' }}</textarea></div>{% if not award or not award.published_at %}<div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>Save recommendation</button>{% if award %}<button class="btn btn-success" type="submit" name="action" value="publish"><i class="bi bi-megaphone me-1"></i>Publish award</button>{% endif %}</div>{% endif %}</form></div></section><aside class="award-guidance"><div class="award-guidance-icon"><i class="bi bi-shield-check"></i></div><h2>Publication controls</h2><p>Saving creates a pending award record. Publishing changes the tender state to Award Published and starts the configured 10-day cooling-off period.</p>{% if award and award.published_at %}<div class="award-published-stamp"><i class="bi bi-check2-circle"></i><span>Published {{ award.published_at.strftime('%d %b %Y, %H:%M') }}</span></div>{% endif %}</aside></div>
-{% if not award or not award.published_at %}
-<div class="text-end mt-3 mb-4">
-	<button class="btn btn-success" type="button" id="award-tender-button">
-		<i class="bi bi-trophy me-1"></i>Award Tender
-	</button>
+{% block breadcrumbs %}
+<nav class="ebms-breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('dashboard.dashboard') }}">Home</a>
+    <span class="crumb-divider">/</span>
+    <a href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}">{{ procurement.tender_number }}</a>
+    <span class="crumb-divider">/</span>
+    <span>Award Decision</span>
+</nav>
+{% endblock %}
+{% block page_header %}
+<div class="ebms-page-head award-page-head">
+    <div>
+        <span class="award-kicker">Decision workspace</span>
+        <h1 class="ebms-page-title"><i class="bi bi-trophy me-2"></i>Award Decision</h1>
+        <p class="ebms-page-subtitle">{{ procurement.tender_number }} · {{ procurement.title }}</p>
+    </div>
+    <div class="ebms-page-actions">
+        <span class="status-badge status-{{ procurement.status }}">{{ procurement.status_label() }}</span>
+        <a href="{{ url_for('reports.awards') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart-line me-1"></i>Awards report</a>
+    </div>
 </div>
-<script>
-	document.getElementById('award-tender-button').addEventListener('click', function () {
-		const form = document.querySelector('form[method="post"]');
-		const action = document.createElement('input');
-		action.type = 'hidden';
-		action.name = 'action';
-		action.value = 'award_tender';
-		form.appendChild(action);
-		form.requestSubmit();
-	});
-</script>
+{% endblock %}
+{% block content %}
+<div class="award-hero">
+    <div>
+        <span class="award-kicker">Controlled award process</span>
+        <h2>Make the decision traceable.</h2>
+        <p>Compare submitted bids and evaluation evidence, record the rationale, and publish only after the final award decision is ready.</p>
+    </div>
+    <div class="award-hero-status">
+        <span class="award-hero-status-dot"></span>
+        {% if award and award.published_at %}Published{% elif award %}Recommendation saved{% else %}Awaiting recommendation{% endif %}
+    </div>
+</div>
+
+<div class="award-stat-grid">
+    <div>
+        <small>Submitted bids</small>
+        <strong>{{ bidders|length }}</strong>
+        <span>Eligible bidders in this view</span>
+    </div>
+    <div>
+        <small>Recommended value</small>
+        <strong>BWP {{ '{:,.2f}'.format(award.award_value if award else procurement.estimated_value or 0) }}</strong>
+        <span>Current award basis</span>
+    </div>
+    <div>
+        <small>Decision state</small>
+        <strong>{{ 'Published' if award and award.published_at else ('Pending publication' if award else 'Not started') }}</strong>
+        <span>{{ 'Cooling-off is active' if award and award.published_at else 'Keep the audit trail complete' }}</span>
+    </div>
+</div>
+
+{% if is_pou %}
+<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Pre-decision stage:</strong> Select the recommended bidder below and send the pre-decision to the Accounting Officer. The award is not final until the Accounting Officer issues the final decision.</div>
+{% elif is_ao %}
+<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Final-decision stage:</strong> Review the POU recommendation, confirm the final award, and send the decision back for publication. Publication occurs only after the Accounting Officer forwards the final decision.</div>
+{% else %}
+<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>After evaluator feedback:</strong> Procurement reviews the submitted feedback and scores, records the award recommendation, and publishes only after the final decision is cleared.</div>
+{% endif %}
+
+<section class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0"><i class="bi bi-file-earmark-check me-2 text-primary"></i>Evaluator Feedback Evidence</h2>
+        <span class="badge badge-primary">{{ evaluator_feedback|length }} Document(s)</span>
+    </div>
+    <div class="card-body">
+        {% if evaluator_feedback %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Evaluator</th>
+                        <th>Document</th>
+                        <th>Summary</th>
+                        <th>Submitted At</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in evaluator_feedback %}
+                    <tr>
+                        <td>{{ feedback.evaluator.full_name() }}</td>
+                        <td>{{ feedback.original_filename }}</td>
+                        <td class="text-muted">{{ feedback.feedback_text or 'No summary provided' }}</td>
+                        <td class="text-muted">{{ feedback.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('procurements.view_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="View feedback"><i class="bi bi-eye"></i></a>
+                            <a href="{{ url_for('procurements.download_evaluator_feedback', procurement_id=procurement.id, feedback_id=feedback.id) }}" class="btn btn-sm btn-outline-primary" title="Download feedback"><i class="bi bi-download"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No evaluator feedback has been submitted yet. Procurement should request or wait for evaluation evidence before recording the award recommendation.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card award-comparison-card mb-4">
+    <div class="card-header">
+        <div>
+            <span class="award-kicker">Evidence-led comparison</span>
+            <h2>Bidder comparison</h2>
+            <p>Evaluation signal combines the evaluator score with written evidence and submitted feedback-document coverage.</p>
+        </div>
+        <span class="badge badge-info">{{ bidders|length }} submitted</span>
+    </div>
+    <div class="card-body">
+        <div class="award-table-wrap">
+            <table class="table align-middle award-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Bidder</th>
+                        <th>Evaluation signal</th>
+                        <th>Evidence coverage</th>
+                        <th>Bid envelopes</th>
+                        <th>Decision</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in bidders %}
+                    <tr class="{{ 'award-selected-row' if award and award.winning_bidder_id == row.bidder.id else '' }}">
+                        <td><span class="award-rank">{{ loop.index }}</span></td>
+                        <td>
+                            <strong>{{ row.bidder.company_name }}</strong>
+                            <small class="d-block text-muted">{{ row.bidder.ppra_registration_number or 'PPRA registration not recorded' }}</small>
+                        </td>
+                        <td>
+                            {% if row.score is not none %}
+                            <strong class="award-score">{{ row.score }}<small>/100</small></strong>
+                            <div class="award-score-track"><span style="width: {{ [row.score, 100]|min }}%;"></span></div>
+                            {% else %}
+                            <span class="badge badge-warning">Score pending</span>
+                            {% endif %}
+                            <small class="d-block text-muted">{{ row.written_feedback_count }} written assessment(s)</small>
+                        </td>
+                        <td>
+                            <strong>{{ row.evaluation_count }}</strong>
+                            <small class="d-block text-muted">score record(s)</small>
+                            <small class="d-block text-muted">{{ row.feedback_document_count }} feedback document(s)</small>
+                        </td>
+                        <td>{{ row.submission_count }} submitted</td>
+                        <td>
+                            {% if award and award.winning_bidder_id == row.bidder.id %}
+                            <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Selected</span>
+                            {% else %}
+                            <span class="text-muted small">Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-5">No submitted bids are available for award review.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<div class="award-decision-layout">
+    <section class="card award-form-card">
+        <div class="card-header">
+            <div>
+                <span class="award-kicker">Decision record</span>
+                <h2>{% if is_pou %}Send pre-decision{% elif is_ao %}Issue final decision{% else %}{{ 'Update award recommendation' if award else 'Record award recommendation' }}{% endif %}</h2>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                <input type="hidden" name="action" value="{{ 'save_pre_decision' if is_pou else 'submit_final_decision' if is_ao else 'award_tender' }}">
+                <div class="col-md-7">
+                    <label class="form-label">Recommended bidder *</label>
+                    <select name="winning_bidder_id" class="form-select" required {% if award and award.published_at %}disabled{% endif %}>
+                        <option value="">Select bidder</option>
+                        {% for row in bidders %}
+                        <option value="{{ row.bidder.id }}" {% if award and award.winning_bidder_id == row.bidder.id %}selected{% endif %}>{{ row.bidder.company_name }}{% if row.score is not none %} · {{ row.score }}/100{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Award value (BWP) *</label>
+                    <input name="award_value" type="number" min="0" step="0.01" class="form-control" value="{{ award.award_value if award else procurement.estimated_value }}" required {% if award and award.published_at %}disabled{% endif %}>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Decision rationale *</label>
+                    <textarea name="decision_reason" rows="4" class="form-control" required {% if award and award.published_at %}disabled{% endif %} placeholder="Summarize evaluation outcome, value for money, compliance, and approval basis.">{{ award.decision_reason if award else '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Internal decision note</label>
+                    <textarea name="decision_notes" rows="2" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="Optional note for the award register">{{ award.decision_notes if award else '' }}</textarea>
+                </div>
+                {% if not award or not award.published_at %}
+                <div class="col-12 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-send me-1"></i>
+                        {% if is_pou %}Send pre-decision{% elif is_ao %}Forward final decision{% else %}Save recommendation{% endif %}
+                    </button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </section>
+</div>
+
+{% if is_pou and award and award.ao_decision_at and not award.published_at %}
+<div class="text-end mt-3 mb-4">
+    <form method="post" class="d-inline-block">
+        <input type="hidden" name="action" value="publish_final_decision">
+        <button class="btn btn-success" type="submit"><i class="bi bi-megaphone me-1"></i>Publish final award</button>
+    </form>
+</div>
 {% endif %}
 {% endblock %}

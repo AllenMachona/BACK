@@ -12,11 +12,11 @@ class Phase2SecurityTests(unittest.TestCase):
         self.assertTrue(user.has_role('procurement_unit'))
         self.assertFalse(user.has_role('bidder'))
 
-    def test_accounting_officer_can_access_procurement_within_delegation(self):
+    def test_accounting_officer_can_access_procurement_without_limit_restriction(self):
         user = User(
             role=Role(code='accounting_officer'),
             department='Finance',
-            delegation_limit=5000,
+            delegation_limit=0,
         )
         procurement = SimpleNamespace(user_department='Finance', estimated_value=4000)
         self.assertTrue(user.can_access_procurement(procurement))

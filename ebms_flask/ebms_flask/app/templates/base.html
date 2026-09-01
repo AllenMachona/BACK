@@ -35,12 +35,10 @@
         </a>
 
         <!-- Global search -->
-        {% if not is_admin %}
         <form class="ebms-search" method="GET" action="{{ url_for('procurements.search') }}" role="search" aria-label="Global search">
             <i class="bi bi-search search-icon" aria-hidden="true"></i>
             <input type="text" name="q" class="search-input" placeholder="Search procurements, users…" aria-label="Search">
         </form>
-        {% endif %}
 
         <div class="ebms-top-actions">
             <!-- Notifications -->
@@ -183,7 +181,7 @@
                 <i class="bi bi-calendar3" aria-hidden="true"></i><span>Procurement Plans</span>
             </a>
             {% endif %}
-            {% if can_reports and not is_admin %}
+            {% if can_reports and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('requests.') else '' }}"
                href="{{ url_for('requests.queue') }}" data-title="Incoming Requests">
                 <i class="bi bi-inbox" aria-hidden="true"></i><span>Incoming Requests</span>
@@ -201,7 +199,7 @@
                 <i class="bi bi-list-check" aria-hidden="true"></i><span>My Requests</span>
             </a>
             {% endif %}
-            {% if can_payverify and not is_admin %}
+            {% if can_payverify and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.payment_verifications') }}" data-title="Payment Verifications">
                 <i class="bi bi-credit-card-2-front" aria-hidden="true"></i><span>Payment Verifications</span>
@@ -281,6 +279,10 @@
 
             {% if is_admin %}
             <div class="ebms-nav-section">Administration</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.search' else '' }}"
+               href="{{ url_for('procurements.search') }}" data-title="Global Search">
+                <i class="bi bi-search" aria-hidden="true"></i><span>Global Search</span>
+            </a>
             <a class="ebms-nav-item {{ 'active' if endpoint == 'admin.users' else '' }}"
                href="{{ url_for('admin.users') }}" data-title="Users">
                 <i class="bi bi-person-badge" aria-hidden="true"></i><span>Users</span>

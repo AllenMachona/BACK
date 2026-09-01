@@ -115,6 +115,62 @@ class BidderComplianceRegistrationTests(unittest.TestCase):
             self.assertIsNotNone(payment.supporting_document_path)
             self.assertEqual(payment.supporting_document_filename, 'youth_support.pdf')
 
+    def test_bid_submission_requires_compliance_and_returnable_documents(self):
+        with self.app.app_context():
+            role = Role.query.filter_by(code='bidder').first()
+            bidder = Bidder(company_name='Submission Works', contact_email='submit@example.com', active=True, verified=True)
+            db.session.add(bidder)
+            db.session.flush()
+            user = User(
+                username='submissionbidder', email='submit@example.com', first_name='Submission', last_name='Bidder',
+                role_id=role.id, bidder_id=bidder.id, is_active=True
+            )
+            user.set_password('StrongPass123!')
+            db.session.add(user)
+            procurement = Procurement(
+                tender_number='TB-2026-1000', title='Bid Submission Tender', category='works', method='open_domestic',
+                estimated_value=300000, procurement_entity='MOG', user_department='MOG', status='submission_open',
+                created_by_id=1, tender_fee=0.0
+            )
+            db.session.add(procurement)
+            db.session.commit()
+
+            payment = BidderPayment(
+                procurement_id=procurement.id,
+                bidder_id=bidder.id,
+                submitted_by_id=user.id,
+                payment_reference='PAY-100',
+                amount=0.0,
+                proof_file_path='proof.pdf',
+                proof_filename='proof.pdf',
+                status='approved'
+            )
+            db.session.add(payment)
+            db.session.commit()
+
+            with self.client.session_transaction() as sess:
+                sess['_user_id'] = str(user.id)
+                sess['_fresh'] = True
+
+            response = self.client.post(
+                f'/bidders/workspace/{procurement.id}',
+                data={
+                    'action': 'submit_bid',
+                    'single_file': (io.BytesIO(b'bid-content'), 'bid.pdf'),
+                    'compliance_document': (io.BytesIO(b'compliance-content'), 'compliance.pdf'),
+                    'returnable_document': (io.BytesIO(b'returnable-content'), 'returnable.pdf'),
+                    'declare': 'on',
+                },
+                content_type='multipart/form-data',
+                follow_redirects=True,
+            )
+
+            self.assertEqual(response.status_code, 200)
+            submission = Submission.query.filter_by(procurement_id=procurement.id, bidder_id=bidder.id).first()
+            self.assertIsNotNone(submission)
+            self.assertEqual(submission.compliance_document_filename, 'compliance.pdf')
+            self.assertEqual(submission.returnable_document_filename, 'returnable.pdf')
+
 
 if __name__ == '__main__':
     unittest.main()

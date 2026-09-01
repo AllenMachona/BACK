@@ -50,6 +50,7 @@
                         <th>Payment Ref</th>
                         <th>Amount</th>
                         <th>Proof</th>
+                        <th>Youth-Owned Supporting</th>
                         <th>Submitted</th>
                         <th>Status</th>
                         <th class="text-end">Action</th>
@@ -64,6 +65,13 @@
                         <td>
                             {% if p.proof_file_path %}
                             <a href="{{ url_for('procurements.download_payment_proof', payment_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download</a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.supporting_document_path %}
+                            <a href="{{ url_for('procurements.download_payment_supporting_document', payment_id=p.id) }}" class="btn btn-sm btn-outline-info"><i class="bi bi-award me-1"></i>{{ p.supporting_document_filename[:16] if p.supporting_document_filename else 'View' }}</a>
                             {% else %}
                             <span class="text-muted">—</span>
                             {% endif %}

@@ -38,7 +38,7 @@
         <span class="badge badge-primary">{{ submission_count }} Sealed Bid(s)</span>
     </div>
     <div class="card-body">
-        {% if submissions %}
+        {% if grouped_submissions %}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
@@ -48,22 +48,59 @@
                         <th>Receipt Code</th>
                         <th>Submitted At</th>
                         <th>Status</th>
-                        <th class="text-end">Document</th>
+                        <th>Bid Files</th>
+                        <th class="text-end">Compliance/returnable doc</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for s in submissions %}
+                    {% for group in grouped_submissions %}
+                    {% set company_doc = group.entries[0].compliance_document_path or group.entries[0].returnable_document_path %}
                     <tr>
-                        <td class="fw-bold text-dark">{{ s.bidder.company_name }}</td>
-                        <td><span class="badge badge-secondary">{{ s.envelope_type.title() }}</span></td>
-                        <td><code>{{ s.receipt_code }}</code></td>
-                        <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td><span class="badge badge-{{ 'success' if s.status == 'submitted' else 'secondary' }}">{{ s.status.replace('_', ' ').title() }}</span></td>
+                        <td class="fw-bold text-dark">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="bi bi-folder2-open text-primary"></span>
+                                <span>{{ group.company_name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% for s in group.entries %}
+                            <div class="mb-1"><span class="badge badge-secondary">{{ s.envelope_type.title() }}</span></div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for s in group.entries %}
+                            <div class="mb-1"><code>{{ s.receipt_code }}</code></div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for s in group.entries %}
+                            <div class="mb-1">{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for s in group.entries %}
+                            <div class="mb-1"><span class="badge badge-{{ 'success' if s.status == 'submitted' else 'secondary' }}">{{ s.status.replace('_', ' ').title() }}</span></div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                {% for s in group.entries %}
+                                {% if s.file_path %}
+                                <a href="{{ url_for('procurements.download_submission', procurement_id=procurement.id, submission_id=s.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download me-1"></i>{{ s.envelope_type.title() }} bid
+                                </a>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </td>
                         <td class="text-end">
-                            {% if s.file_path %}
-                            <a href="{{ url_for('procurements.download_submission', procurement_id=procurement.id, submission_id=s.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download me-1"></i>Decrypt &amp; View
+                            {% if company_doc %}
+                            {% set receiving = group.entries[0] %}
+                            <a href="{{ url_for('procurements.download_submission_document', procurement_id=procurement.id, submission_id=receiving.id, document_type='compliance') if receiving.compliance_document_path else url_for('procurements.download_submission_document', procurement_id=procurement.id, submission_id=receiving.id, document_type='returnable') }}" class="small text-primary">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i>{{ receiving.compliance_document_filename or receiving.returnable_document_filename or 'Compliance/returnable doc' }}
                             </a>
+                            {% else %}
+                            <span class="text-muted small">Not attached</span>
                             {% endif %}
                         </td>
                     </tr>

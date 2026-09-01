@@ -21,6 +21,15 @@ class Award(db.Model):
     published_at = db.Column(db.DateTime)
     published_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
+    # POU / AO workflow tracking: pre-decision packet, AO final decision, and publish step.
+    pre_decision_at = db.Column(db.DateTime)
+    pre_decision_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    evaluation_results_file_path = db.Column(db.String(500))
+    evaluation_results_filename = db.Column(db.String(255))
+    ao_decision_at = db.Column(db.DateTime)
+    ao_decision_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    ao_decision_reason = db.Column(db.Text)
+
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     winning_bidder = db.relationship('Bidder', foreign_keys=[winning_bidder_id])
@@ -38,6 +47,13 @@ class Award(db.Model):
             'decision_notes': 'ALTER TABLE awards ADD decision_notes TEXT',
             'published_at': 'ALTER TABLE awards ADD published_at DATETIME',
             'published_by_id': 'ALTER TABLE awards ADD published_by_id INTEGER',
+            'pre_decision_at': 'ALTER TABLE awards ADD pre_decision_at DATETIME',
+            'pre_decision_by_id': 'ALTER TABLE awards ADD pre_decision_by_id INTEGER',
+            'evaluation_results_file_path': 'ALTER TABLE awards ADD evaluation_results_file_path VARCHAR(500)',
+            'evaluation_results_filename': 'ALTER TABLE awards ADD evaluation_results_filename VARCHAR(255)',
+            'ao_decision_at': 'ALTER TABLE awards ADD ao_decision_at DATETIME',
+            'ao_decision_by_id': 'ALTER TABLE awards ADD ao_decision_by_id INTEGER',
+            'ao_decision_reason': 'ALTER TABLE awards ADD ao_decision_reason TEXT',
         }.items():
             try:
                 probe = f'SELECT TOP 1 {column_name} FROM awards' if db.engine.name != 'sqlite' else f'SELECT {column_name} FROM awards LIMIT 1'

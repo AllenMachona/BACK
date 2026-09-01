@@ -341,6 +341,16 @@ def workspace(procurement_id):
                 flash('You must confirm the declaration before submitting.', 'danger')
                 return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
 
+            combined_file = request.files.get('compliance_returnable_document')
+            if not combined_file or not combined_file.filename:
+                flash('You must upload the compliance and returnable document bundle before submitting the bid.', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
+            combined_bytes = combined_file.read()
+            if not combined_bytes:
+                flash('The compliance and returnable document bundle must not be empty.', 'danger')
+                return redirect(url_for('bidders.workspace', procurement_id=procurement_id))
+
             envelope_map = (
                 {'technical': 'technical_file', 'financial': 'financial_file'}
                 if procurement.envelope_type == 'dual' else {'single': 'single_file'}
@@ -378,10 +388,20 @@ def workspace(procurement_id):
                     procurement_id=procurement.id, bidder_id=current_user.bidder_id, envelope_type=envelope_type
                 ).count()
 
+                combined_path = os.path.join(submission_dir, secure_filename(f'{procurement.tender_number}_{current_user.bidder_id}_{envelope_type}_compliance_returnable_{secrets.token_hex(4)}_{combined_file.filename}'))
+                with open(combined_path, 'wb') as combined_handle:
+                    combined_handle.write(combined_bytes)
+
                 submission = Submission(
                     procurement_id=procurement.id, bidder_id=current_user.bidder_id, envelope_type=envelope_type,
                     file_path=filepath, original_filename=file.filename, sha256_hash=file_hash,
                     file_size_bytes=len(plaintext), version=prior_count + 1,
+                    compliance_document_path=combined_path,
+                    compliance_document_filename=combined_file.filename,
+                    compliance_document_hash=sha256_hex(combined_bytes),
+                    returnable_document_path=combined_path,
+                    returnable_document_filename=combined_file.filename,
+                    returnable_document_hash=sha256_hex(combined_bytes),
                     submitted_by_id=current_user.id, declaration_accepted=True,
                     receipt_code=f"SUB-{datetime.utcnow():%Y%m%d}-{secrets.token_hex(4).upper()}",
                 )
@@ -393,7 +413,7 @@ def workspace(procurement_id):
                 submitted_any = True
 
             if submitted_any:
-                flash('Your sealed bid has been submitted and encrypted. Check "My Submissions" for your receipt.', 'success')
+                flash('Your sealed bid, compliance document, and returnable document were submitted successfully. Check "My Submissions" for your receipt.', 'success')
             else:
                 flash('No file was selected to upload.', 'warning')
             return redirect(url_for('bidders.portal'))
@@ -429,7 +449,8 @@ def workspace(procurement_id):
     if not has_approved_payment:
         documents = []
         clarifications = []
-        advertisement = None
+        # Keep the public advertisement visible before payment. ITT and formal
+        # addenda/notices remain restricted until the bidder's payment is approved.
 
     return render_template(
         'bidder_workspace.html',
