@@ -54,7 +54,7 @@
 </div>
 
 {% if is_pou %}
-<div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Pre-decision stage:</strong> Score each bidder, record the reasons, select the recommended bidder, and forward the pre-decision packet to the Accounting Officer for final choice.</div>
+<div class="alert {{ 'alert-secondary' if award and award.pre_decision_at else 'alert-info' }} mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>{% if award and award.pre_decision_at %}Pre-decision forwarded:{% else %}Pre-decision stage:{% endif %}</strong> {% if award and award.pre_decision_at %}Scores and the recommendation are locked while the Accounting Officer reviews the packet.{% else %}Score each bidder, record the reasons, select the recommended bidder, and forward the pre-decision packet to the Accounting Officer for final choice.{% endif %}</div>
 {% elif is_ao %}
 <div class="alert alert-info mb-4"><i class="bi bi-arrow-right-circle me-2"></i><strong>Final-decision stage:</strong> Review the POU score comparison and recommendation, confirm the final award choice, and return the decision for publication. Publication occurs only after the Accounting Officer makes the final decision.</div>
 {% else %}
@@ -134,10 +134,10 @@
                         </td>
                         <td>
                             {% if row.score is not none %}
-                            <strong class="award-score">{{ row.score }}<small>/100</small></strong>
+                            <strong class="award-score award-score-{{ row.score_tone }}">{{ row.score }}<small>/100</small></strong>
                             <div class="award-score-track"><span style="width: {{ [row.score, 100]|min }}%;"></span></div>
                             {% else %}
-                            <span class="badge badge-warning">Score pending</span>
+                            <span class="badge badge-warning">Score not recorded</span>
                             {% endif %}
                         </td>
                         <td>
@@ -198,14 +198,14 @@
                                         {% if is_ao and award and award.pre_decision_at %}
                                         <input type="number" class="form-control form-control-sm" value="{{ row.score if row.score is not none else '' }}" readonly>
                                         {% else %}
-                                        <input type="number" class="form-control form-control-sm" name="score_values_{{ row.bidder.id }}" min="0" max="100" step="1" value="{{ row.score if row.score is not none else '' }}" {% if award and award.published_at %}disabled{% endif %}>
+                                        <input type="number" class="form-control form-control-sm" name="score_values_{{ row.bidder.id }}" min="0" max="100" step="1" value="{{ row.score if row.score is not none else '' }}" {% if award and (award.pre_decision_at or award.published_at) %}disabled{% endif %}>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if is_ao and award and award.pre_decision_at %}
                                         <textarea class="form-control form-control-sm" rows="2" readonly>{{ award.pou_score_reasons if award and award.pou_score_reasons else 'No reason summary recorded.' }}</textarea>
                                         {% else %}
-                                        <textarea class="form-control form-control-sm" name="score_reasons_{{ row.bidder.id }}" rows="2" placeholder="State the reason for this score..." {% if award and award.published_at %}disabled{% endif %}>{{ award.pou_score_reasons if award and award.pou_score_reasons else '' }}</textarea>
+                                        <textarea class="form-control form-control-sm" name="score_reasons_{{ row.bidder.id }}" rows="2" placeholder="State the reason for this score..." {% if award and (award.pre_decision_at or award.published_at) %}disabled{% endif %}>{{ award.pou_score_reasons if award and award.pou_score_reasons else '' }}</textarea>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -274,11 +274,32 @@
                     <label class="form-label">Score reason summary</label>
                     <textarea name="score_reasons" rows="3" class="form-control" {% if award and award.published_at %}disabled{% endif %} placeholder="Give a brief reason summary for the selected bidder recommendation.">{{ award.pou_score_reasons if award else '' }}</textarea>
                 </div>
-                {% if award and award.pou_score_summary %}
+                {% if award and award.pou_score_entries %}
                 <div class="col-12 border rounded p-3 bg-light-subtle">
-                    <div class="fw-semibold small text-uppercase text-muted">Saved bidder scoring summary</div>
-                    <div class="mt-2 white-space-pre-wrap">{{ award.pou_score_summary }}</div>
+                                    <div class="fw-semibold small text-uppercase text-muted mb-2">Bidder scoring summary</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr><th>Rank</th><th>Bidder</th><th>Score</th><th>Reason</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for row in bidders if row.score is not none %}
+                                                <tr>
+                                                    <td>{{ loop.index }}</td>
+                                                    <td class="fw-semibold">{{ row.bidder.company_name }}</td>
+                                                    <td><span class="award-summary-score award-score-{{ row.score_tone }}">{{ row.score }}/100</span></td>
+                                                    <td class="text-muted">{{ row.score_reason or 'No reason recorded.' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                 </div>
+                {% elif award and award.pou_score_summary %}
+                                <div class="col-12 border rounded p-3 bg-light-subtle">
+                                    <div class="fw-semibold small text-uppercase text-muted">Bidder scoring summary</div>
+                                    <div class="mt-2 white-space-pre-wrap">{{ award.pou_score_summary }}</div>
+                                </div>
                 {% endif %}
                 <div class="col-12">
                     <label class="form-label">Internal decision note</label>
@@ -300,7 +321,7 @@
                     {% endif %}
                 </div>
                 {% endif %}
-                {% if not award or not award.published_at %}
+                {% if not award or (not award.published_at and not (is_pou and award.pre_decision_at)) %}
                 <div class="col-12 d-flex gap-2">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-send me-1"></i>

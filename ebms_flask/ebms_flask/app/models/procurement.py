@@ -22,6 +22,8 @@ class Procurement(db.Model):
     submission_deadline = db.Column(db.DateTime)
     clarification_deadline = db.Column(db.DateTime)
     opening_scheduled_at = db.Column(db.DateTime)
+    evaluator_feedback_released_at = db.Column(db.DateTime)
+    evaluator_feedback_released_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     # Status follows SOAR Appendix C's bid status lifecyle.
     status = db.Column(db.String(30), default='draft', index=True)
@@ -290,6 +292,8 @@ class Procurement(db.Model):
             'procurement_entity': 'ALTER TABLE procurements ADD COLUMN procurement_entity VARCHAR(200)',
             'ppra_sub_code': 'ALTER TABLE procurements ADD COLUMN ppra_sub_code VARCHAR(20)',
             'clarification_deadline': 'ALTER TABLE procurements ADD COLUMN clarification_deadline DATETIME',
+            'evaluator_feedback_released_at': 'ALTER TABLE procurements ADD COLUMN evaluator_feedback_released_at DATETIME',
+            'evaluator_feedback_released_by_id': 'ALTER TABLE procurements ADD COLUMN evaluator_feedback_released_by_id INTEGER',
             'tender_fee': 'ALTER TABLE procurements ADD COLUMN tender_fee NUMERIC(15, 2) DEFAULT 0.00',
             'form_d_file_path': 'ALTER TABLE procurements ADD COLUMN form_d_file_path VARCHAR(500)',
             'form_d_filename': 'ALTER TABLE procurements ADD COLUMN form_d_filename VARCHAR(300)',

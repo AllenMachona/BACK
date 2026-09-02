@@ -34,9 +34,11 @@
 {% block content %}
 {% if can_view_procurement_workspace %}
 <ul class="procurement-workspace-nav" id="procurementWorkspaceTabs" role="tablist">
+    {% if not current_user.has_role('finance_planning') %}
     <li class="nav-item" role="presentation">
         <a class="nav-link active" href="{{ url_for('procurements.detail', procurement_id=procurement.id) }}"><i class="bi bi-file-earmark-text me-1"></i>Overview</a>
     </li>
+    {% endif %}
     {% if current_user.has_role('pou') %}
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision') }}"><i class="bi bi-clipboard-check me-1"></i>Pre Decision</a>
@@ -61,9 +63,11 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.payment_verification', procurement_id=procurement.id) }}"><i class="bi bi-credit-card-2-front me-1"></i>Bidder Payment Verification</a>
     </li>
+    {% if not current_user.has_role('finance_planning') %}
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.sealed_bid_submissions', procurement_id=procurement.id) }}"><i class="bi bi-box-seam me-1"></i>Sealed Bid Submissions</a>
     </li>
+    {% endif %}
     {% if current_user.has_permission('can_award') or current_user.has_role('procurement_unit') %}
     <li class="nav-item" role="presentation">
         <a class="nav-link" href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}"><i class="bi bi-trophy me-1"></i>Award Bidders</a>
@@ -390,12 +394,12 @@
                     <input type="datetime-local" name="clarification_deadline" class="form-control mb-2" required>
                     {% endif %}
                     <button type="submit" class="btn btn-success w-100 py-2">
-                        <i class="bi bi-{{ 'megaphone' if next_status == 'published' else ('unlock' if next_status == 'submission_open' else ('lock' if next_status == 'closed' else 'clipboard-check')) }} me-1"></i>{{ 'Publish procurement' if next_status == 'published' else ('Open for bidding' if next_status == 'submission_open' else ('Close submissions' if next_status == 'closed' else 'Under evaluation')) }}
+                        <i class="bi bi-{{ 'megaphone' if next_status == 'published' else ('unlock' if next_status == 'submission_open' else ('lock' if next_status == 'closed' else 'clipboard-check')) }} me-1"></i>{{ 'Publish procurement' if next_status == 'published' else ('Open for bidding' if next_status == 'submission_open' else ('Close tender' if next_status == 'closed' else 'Under evaluation')) }}
                     </button>
                 </form>
                 {% endif %}
 
-                {% if procurement.status in ('under_evaluation', 'closed') %}
+                {% if procurement.status in ('under_evaluation', 'closed', 'submission_closed') %}
                 <form method="POST" action="{{ url_for('procurements.transition', procurement_id=procurement.id) }}" class="mb-3 p-3 border rounded bg-light">
                     <input type="hidden" name="to_status" value="submission_open">
                     <label class="form-label small fw-bold">New deadline to reopen bidding</label>
@@ -482,7 +486,16 @@
         <div class="card mb-3">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-clipboard2-check me-2 text-primary"></i>Evaluator Results</h5>
-                <span class="badge badge-primary">{{ evaluator_feedback|length }} Document(s)</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-primary">{{ evaluator_feedback|length }} Document(s)</span>
+                    {% if feedback_can_be_released and evaluator_feedback and not procurement.evaluator_feedback_released_at %}
+                    <form method="POST" action="{{ url_for('procurements.release_evaluator_feedback', procurement_id=procurement.id) }}" class="mb-0">
+                        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-unlock me-1"></i>Enable for POU &amp; AO</button>
+                    </form>
+                    {% elif procurement.evaluator_feedback_released_at %}
+                    <span class="badge badge-success"><i class="bi bi-unlock me-1"></i>Enabled for POU &amp; AO</span>
+                    {% endif %}
+                </div>
             </div>
             <div class="card-body">
                 {% if not evaluator_feedback %}

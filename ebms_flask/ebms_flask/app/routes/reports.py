@@ -20,7 +20,7 @@ from app.models.history import ProcurementHistory
 from app.models.request import FormDRequest, FormERequest, FormDERequest
 from app.models.role import Role
 from app.models.user import User
-from app.utils.decorators import permission_required
+from app.utils.decorators import permission_required, role_required
 from app.utils.reports import ReportsService, ExcelExportService
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
@@ -147,12 +147,37 @@ def operational():
 
 @reports_bp.route('/finance')
 @login_required
-@permission_required('can_view_all_records')
+@role_required('finance_planning')
 def finance():
-    procurements = Procurement.query.order_by(Procurement.created_at.desc()).all()
-    payments = BidderPayment.query.all()
-    awards = Award.query.all()
-    entries = BudgetEntry.query.all()
+    selected_year = request.args.get('year', type=int)
+    selected_month = request.args.get('month', type=int)
+    cost_band = request.args.get('cost_band', 'all').strip().lower()
+    if cost_band not in ('all', 'low', 'medium', 'high'):
+        cost_band = 'all'
+
+    procurement_query = Procurement.query
+    if selected_year:
+        procurement_query = procurement_query.filter(
+            db.func.extract('year', Procurement.created_at) == selected_year
+        )
+    if selected_month and 1 <= selected_month <= 12:
+        procurement_query = procurement_query.filter(
+            db.func.extract('month', Procurement.created_at) == selected_month
+        )
+    if cost_band == 'low':
+        procurement_query = procurement_query.filter(Procurement.estimated_value < 100000)
+    elif cost_band == 'medium':
+        procurement_query = procurement_query.filter(
+            Procurement.estimated_value >= 100000,
+            Procurement.estimated_value < 1000000,
+        )
+    elif cost_band == 'high':
+        procurement_query = procurement_query.filter(Procurement.estimated_value >= 1000000)
+    procurements = procurement_query.order_by(Procurement.created_at.desc()).all()
+    procurement_ids = [procurement.id for procurement in procurements]
+    payments = BidderPayment.query.filter(BidderPayment.procurement_id.in_(procurement_ids)).all() if procurement_ids else []
+    awards = Award.query.filter(Award.procurement_id.in_(procurement_ids)).all() if procurement_ids else []
+    entries = BudgetEntry.query.filter(BudgetEntry.procurement_id.in_(procurement_ids)).all() if procurement_ids else []
     estimated_budget = sum(float(p.estimated_value or 0) for p in procurements)
     awarded_value = sum(float(a.award_value or 0) for a in awards)
     posted_spend = sum(float(e.signed_amount or 0) for e in entries)
@@ -180,7 +205,15 @@ def finance():
     for offset in range(11, -1, -1):
         number = today.month - offset
         month_keys.append((today.year + (number - 1) // 12, (number - 1) % 12 + 1))
-    monthly = {key: {'payments': 0.0, 'spend': 0.0, 'awards': 0.0} for key in month_keys}
+    monthly = {key: {'payments': 0.0, 'spend': 0.0, 'awards': 0.0,
+                     'commitments': 0.0, 'invoices': 0.0, 'budget': 0.0,
+                     'procurements': 0} for key in month_keys}
+    for procurement in procurements:
+        if procurement.created_at:
+            key = (procurement.created_at.year, procurement.created_at.month)
+            if key in monthly:
+                monthly[key]['budget'] += float(procurement.estimated_value or 0)
+                monthly[key]['procurements'] += 1
     for p in payments:
         if p.status == 'approved' and p.submitted_at:
             key = (p.submitted_at.year, p.submitted_at.month)
@@ -188,7 +221,12 @@ def finance():
     for e in entries:
         if e.entry_date:
             key = (e.entry_date.year, e.entry_date.month)
-            if key in monthly: monthly[key]['spend'] += float(e.signed_amount or 0)
+            if key in monthly:
+                monthly[key]['spend'] += float(e.signed_amount or 0)
+                if e.entry_type == 'commitment':
+                    monthly[key]['commitments'] += float(e.amount or 0)
+                elif e.entry_type == 'invoice':
+                    monthly[key]['invoices'] += float(e.amount or 0)
     for a in awards:
         if a.decision_date:
             key = (a.decision_date.year, a.decision_date.month)
@@ -200,7 +238,55 @@ def finance():
     category_mix = sorted(categories.items(), key=lambda item: item[1], reverse=True)
     category_total = sum(value for _, value in category_mix) or 1
     category_mix = [(name, value, round(value / category_total * 100, 1)) for name, value in category_mix]
+    cost_bands = {'Low': 0.0, 'Medium': 0.0, 'High': 0.0}
+    for procurement in procurements:
+        value = float(procurement.estimated_value or 0)
+        band = 'Low' if value < 100000 else ('Medium' if value < 1000000 else 'High')
+        cost_bands[band] += value
+    cost_band_total = sum(cost_bands.values()) or 1
+    cost_band_mix = [
+        (name, value, color, round(value / cost_band_total * 100, 1))
+        for (name, value), color in zip(cost_bands.items(), ('#16805c', '#c4871d', '#c44444'))
+    ]
+    ledger_mix = [
+        ('Commitments', breakdown['commitments'], '#2878bd'),
+        ('Invoices', breakdown['invoices'], '#875c9e'),
+        ('Payments', breakdown['payments'], '#16805c'),
+        ('Adjustments', abs(breakdown['adjustments']), '#c4871d'),
+    ]
+    ledger_total = sum(value for _, value, _ in ledger_mix) or 1
+    ledger_mix = [
+        (name, value, color, round(value / ledger_total * 100, 1))
+        for name, value, color in ledger_mix
+    ]
     over_budget = sum(1 for p in procurements if sum(float(e.signed_amount or 0) for e in p.budget_entries.all()) > float(p.estimated_value or 0))
+    over_budget_value = 0.0
+    saved_budget_value = 0.0
+    on_budget_count = 0
+    budget_register = []
+    for procurement in procurements:
+        spend = sum(float(entry.signed_amount or 0) for entry in procurement.budget_entries.all())
+        approved_budget = float(procurement.estimated_value or 0)
+        awarded_amount = float(procurement.award.award_value or 0) if procurement.award else 0.0
+        variance = approved_budget - spend
+        if variance < 0:
+            over_budget_value += abs(variance)
+        elif variance > 0:
+            saved_budget_value += variance
+        else:
+            on_budget_count += 1
+        budget_register.append({
+            'tender_number': procurement.tender_number,
+            'title': procurement.title,
+            'approved_budget': approved_budget,
+            'awarded_amount': awarded_amount,
+            'award_variance': approved_budget - awarded_amount,
+            'posted_spend': spend,
+            'remaining_budget': variance,
+            'utilization': (spend / approved_budget * 100) if approved_budget else 0.0,
+            'status': procurement.status_label(),
+        })
+    budget_register.sort(key=lambda item: item['approved_budget'], reverse=True)
     attention_items = [
         {'label': 'Payments awaiting verification', 'count': len(pending_payments), 'value': sum(float(p.amount or 0) for p in pending_payments), 'tone': 'warning', 'url': url_for('procurements.payment_verifications', status='pending')},
         {'label': 'Rejected or correction payments', 'count': len(rejected_payments), 'value': sum(float(p.amount or 0) for p in rejected_payments), 'tone': 'danger', 'url': url_for('procurements.payment_verifications', status='rejected')},
@@ -210,12 +296,28 @@ def finance():
     return render_template('reports/finance.html', procurements=procurements,
         estimated_budget=estimated_budget, awarded_value=awarded_value, posted_spend=posted_spend,
         approved_payments=approved_payments, pending_payments=sum(float(p.amount or 0) for p in pending_payments),
+        pending_payment_count=len(pending_payments),
         breakdown=breakdown, category_mix=category_mix, payment_mix=payment_mix,
         attention_items=attention_items,
+        over_budget=over_budget,
+        over_budget_value=over_budget_value,
+        saved_budget_value=saved_budget_value,
+        on_budget_count=on_budget_count,
         month_labels=[datetime(y, m, 1).strftime('%b %y') for y, m in month_keys],
         monthly_payments=[monthly[k]['payments'] for k in month_keys],
         monthly_spend=[monthly[k]['spend'] for k in month_keys],
-        monthly_awards=[monthly[k]['awards'] for k in month_keys])
+        monthly_awards=[monthly[k]['awards'] for k in month_keys],
+        monthly_commitments=[monthly[k]['commitments'] for k in month_keys],
+        monthly_invoices=[monthly[k]['invoices'] for k in month_keys],
+        monthly_budgets=[monthly[k]['budget'] for k in month_keys],
+        monthly_procurements=[monthly[k]['procurements'] for k in month_keys],
+        ledger_mix=ledger_mix, ledger_total=ledger_total,
+        budget_register=budget_register,
+        cost_band_mix=cost_band_mix,
+        selected_year=selected_year,
+        selected_month=selected_month,
+        cost_band=cost_band,
+        filter_years=sorted({p.created_at.year for p in Procurement.query if p.created_at}, reverse=True))
 
 
 @reports_bp.route('/bidder-participation')

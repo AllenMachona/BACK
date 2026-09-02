@@ -3368,6 +3368,12 @@ code {
   color: #17232d;
 }
 
+.award-score-low, .award-summary-score.award-score-low { color: #b42318; }
+.award-score-middle, .award-summary-score.award-score-middle { color: #b54708; }
+.award-score-high, .award-summary-score.award-score-high { color: #067647; }
+.award-score-neutral, .award-summary-score.award-score-neutral { color: #344054; }
+.award-summary-score { font-weight: 700; white-space: nowrap; }
+
 .award-score small {
   color: #87959d;
   font-size: 0.68rem;

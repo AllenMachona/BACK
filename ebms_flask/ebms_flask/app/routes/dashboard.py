@@ -300,7 +300,7 @@ def public_procurement_plans():
 
 @dashboard_bp.route('/procurement-plans/manage', methods=['GET', 'POST'])
 @login_required
-@role_required('procurement_unit')
+@role_required('procurement_unit', 'finance_planning')
 def manage_procurement_plans():
     ppra_codes = ProcurementPlanItem.ppra_code_options()
     ppra_sub_codes = ProcurementPlanItem.ppra_sub_code_options()
@@ -370,7 +370,7 @@ def manage_procurement_plans():
 
 @dashboard_bp.route('/procurement-plans/<int:plan_id>/edit', methods=['GET'])
 @login_required
-@role_required('procurement_unit')
+@role_required('procurement_unit', 'finance_planning')
 def edit_procurement_plan(plan_id):
     plan = ProcurementPlanItem.query.get_or_404(plan_id)
     plans = ProcurementPlanItem.query.order_by(

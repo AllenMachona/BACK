@@ -222,7 +222,7 @@ class User(UserMixin, db.Model):
 
         if self.has_role('system_admin'):
             return True
-        if self.has_role('procurement_oversight') or self.has_role('pou') or self.has_role('procurement_unit'):
+        if self.has_role('procurement_oversight') or self.has_role('pou') or self.has_role('procurement_unit') or self.has_role('finance_planning'):
             return True
         if self.has_role('accounting_officer'):
             return True

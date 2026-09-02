@@ -13,6 +13,7 @@ from app.models.clarification import ClarificationVisibility
 from app.utils.crypto import encrypt_bytes, sha256_hex
 from app.utils.audit import log_action
 from app.utils.decorators import role_required
+from app.utils.procurement_storage import procurement_folder_name
 
 from app.models.user import User
 from app.models.role import Role
@@ -366,9 +367,7 @@ def workspace(procurement_id):
                 file_hash = sha256_hex(plaintext)
                 sealed = encrypt_bytes(plaintext)
 
-                procurement_folder = secure_filename(
-                    f'{procurement.tender_number}_{procurement.title}'
-                ) or f'procurement_{procurement.id}'
+                procurement_folder = procurement_folder_name(procurement)
                 submission_dir = os.path.join(
                     current_app.config['UPLOAD_FOLDER'], procurement_folder
                 )

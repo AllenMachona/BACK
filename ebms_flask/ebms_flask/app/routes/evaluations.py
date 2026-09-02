@@ -13,6 +13,7 @@ from app.models.evaluator_feedback import EvaluatorFeedback
 from app.utils.decorators import permission_required
 from app.utils.audit import log_action
 from app.utils.evaluator_assignment import EvaluatorAssignmentService
+from app.utils.procurement_storage import procurement_folder_name
 
 evaluations_bp = Blueprint('evaluations', __name__, url_prefix='/evaluations')
 
@@ -144,9 +145,7 @@ def submit_feedback(procurement_id):
         flash('The feedback document is empty.', 'danger')
         return redirect(url_for('evaluations.detail', procurement_id=procurement.id))
 
-    procurement_folder = secure_filename(
-        f'{procurement.tender_number}_{procurement.title}'
-    ) or f'procurement_{procurement.id}'
+    procurement_folder = procurement_folder_name(procurement)
     feedback_dir = os.path.join(
         current_app.config['UPLOAD_FOLDER'], procurement_folder, 'evaluation_feedback'
     )

@@ -53,7 +53,7 @@
                 <span class="count-badge" id="messagesCount" style="display:none;">0</span>
             </button>
 
-            {% if not is_admin and not is_bidder and not current_user.has_role('accounting_officer') and not current_user.has_role('pou') and (can_reports or current_user.role.can_create_procurement or current_user.role.can_approve_procurement) %}
+            {% if not is_admin and not is_bidder and not current_user.has_role('accounting_officer') and not current_user.has_role('pou') and not current_user.has_role('finance_planning') and (can_reports or current_user.role.can_create_procurement or current_user.role.can_approve_procurement) %}
             <a class="topbar-icon-btn" href="{{ url_for('requests.queue') }}" aria-label="{{ incoming_requests_count }} pending requests" title="Incoming Requests">
                 <i class="bi bi-inbox" aria-hidden="true"></i>
                 {% if incoming_requests_count %}<span class="count-badge">{{ incoming_requests_count }}</span>{% endif %}
@@ -169,19 +169,19 @@
 
             {% if not is_bidder and not is_admin %}
             <div class="ebms-nav-section">Procurement</div>
-            {% if not is_admin and not current_user.has_permission('can_evaluate') %}
+            {% if not is_admin and not current_user.has_permission('can_evaluate') and not current_user.has_role('finance_planning') %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('procurements.') and endpoint != 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.list_procurements') }}" data-title="Procurements">
                 <i class="bi bi-folder2-open" aria-hidden="true"></i><span>Procurements</span>
             </a>
             {% endif %}
-            {% if current_user.has_role('procurement_unit') %}
+            {% if current_user.has_role('procurement_unit') or current_user.has_role('finance_planning') %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'dashboard.manage_procurement_plans' else '' }}"
                href="{{ url_for('dashboard.manage_procurement_plans') }}" data-title="Procurement Plans">
                 <i class="bi bi-calendar3" aria-hidden="true"></i><span>Procurement Plans</span>
             </a>
             {% endif %}
-            {% if can_reports and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') and not current_user.has_role('procurement_unit') %}
+            {% if can_reports and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') and not current_user.has_role('procurement_unit') and not current_user.has_role('finance_planning') %}
             <a class="ebms-nav-item {{ 'active' if endpoint.startswith('requests.') else '' }}"
                href="{{ url_for('requests.queue') }}" data-title="Incoming Requests">
                 <i class="bi bi-inbox" aria-hidden="true"></i><span>Incoming Requests</span>
@@ -199,7 +199,7 @@
                 <i class="bi bi-list-check" aria-hidden="true"></i><span>My Requests</span>
             </a>
             {% endif %}
-            {% if can_payverify and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') %}
+            {% if can_payverify and not is_admin and not current_user.has_role('pou') and not current_user.has_role('accounting_officer') and not current_user.has_role('finance_planning') %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'procurements.payment_verifications' else '' }}"
                href="{{ url_for('procurements.payment_verifications') }}" data-title="Payment Verifications">
                 <i class="bi bi-credit-card-2-front" aria-hidden="true"></i><span>Payment Verifications</span>
@@ -228,10 +228,12 @@
                     href="{{ url_for('reports.operational') }}" data-title="Operational Reports">
                      <i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Operational Reports</span>
             </a>
-            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.finance' else '' }}"
+                {% if current_user.has_role('finance_planning') %}
+                <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.finance' else '' }}"
                href="{{ url_for('reports.finance') }}" data-title="Finance Overview">
                 <i class="bi bi-wallet2" aria-hidden="true"></i><span>Finance Overview</span>
             </a>
+                {% endif %}
             <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.audit_trail' else '' }}"
                href="{{ url_for('reports.audit_trail') }}" data-title="Audit Trail">
                 <i class="bi bi-shield-check" aria-hidden="true"></i><span>Audit Trail</span>
@@ -240,14 +242,12 @@
                href="{{ url_for('reports.bidder_participation') }}" data-title="Bidder Participation">
                 <i class="bi bi-people" aria-hidden="true"></i><span>Bidder Participation</span>
             </a>
-            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.complaints' else '' }}"
+                {% if not current_user.has_role('finance_planning') %}
+                <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.complaints' else '' }}"
                href="{{ url_for('reports.complaints') }}" data-title="Complaints">
                 <i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>Complaints</span>
             </a>
-            <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.finance' else '' }}"
-               href="{{ url_for('reports.finance') }}" data-title="Finance Overview">
-                <i class="bi bi-wallet2" aria-hidden="true"></i><span>Finance Overview</span>
-            </a>
+                {% endif %}
             {% endif %}
 
             <div class="ebms-nav-section">Communication</div>

@@ -1,4 +1,5 @@
 import io
+import json
 import mimetypes
 import os
 import random
@@ -75,6 +76,7 @@ TRANSITIONS = {
     'clarification_period': ['submission_open', 'cancelled'],
     'submission_open': ['closed', 'cancelled'],
     'closed': ['under_evaluation', 'submission_open', 'cancelled'],
+    'submission_closed': ['submission_open', 'cancelled'],
     'under_evaluation': ['submission_open', 'cancelled'],
     'technical_opening': ['compliance_evaluation'],
     'compliance_evaluation': ['technical_evaluation', 'cancelled'],
@@ -540,10 +542,17 @@ def detail(procurement_id):
     ).filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
     submission_count = len(submissions)
     next_status = TRANSITIONS.get(procurement.status, [None])[0] if TRANSITIONS.get(procurement.status) else None
+    can_close_open_tender = (
+        procurement.status == 'submission_open'
+        and submission_count > 0
+    )
     if procurement.status not in ('draft', 'published') and not (
         procurement.status == 'submission_open'
         and procurement.submission_deadline
-        and datetime.utcnow() >= procurement.submission_deadline
+        and (
+            datetime.utcnow() >= procurement.submission_deadline
+            or can_close_open_tender
+        )
     ) and not procurement.status == 'closed':
         next_status = None
 
@@ -564,6 +573,10 @@ def detail(procurement_id):
         EvaluatorAssignmentService.eligible_evaluators()
         if can_create_assignment else []
     )
+    feedback_can_be_released = _can_release_evaluator_feedback(current_user)
+    evaluator_feedback = procurement.evaluator_feedback.order_by(
+        EvaluatorFeedback.submitted_at.desc()
+    ).all()
     budget_entries = procurement.budget_entries.order_by(BudgetEntry.entry_date.desc(), BudgetEntry.id.desc()).all()
     budget_spend = sum((entry.signed_amount for entry in budget_entries), Decimal('0'))
     budget_value = Decimal(str(procurement.estimated_value or 0))
@@ -587,9 +600,8 @@ def detail(procurement_id):
         can_create_assignment=can_create_assignment,
         evaluator_assignments=evaluator_assignments,
         evaluator_candidates=evaluator_candidates,
-        evaluator_feedback=procurement.evaluator_feedback.order_by(
-            EvaluatorFeedback.submitted_at.desc()
-        ).all(),
+        evaluator_feedback=evaluator_feedback,
+        feedback_can_be_released=feedback_can_be_released,
         can_view_procurement_workspace=_procurement_management_access(procurement),
         budget_entries=budget_entries,
         budget_spend=budget_spend,
@@ -622,6 +634,13 @@ def award_workspace(procurement_id):
 
     submitted = procurement.submissions.filter_by(status='submitted').all()
     bidder_ids = {submission.bidder_id for submission in submitted}
+    award = procurement.award
+    pou_score_entries = {}
+    if award and award.pou_score_entries:
+        try:
+            pou_score_entries = json.loads(award.pou_score_entries)
+        except (TypeError, ValueError):
+            pou_score_entries = {}
     evaluations = procurement.evaluations.all()
     scores = {}
     for evaluation in evaluations:
@@ -629,15 +648,27 @@ def award_workspace(procurement_id):
         if score is not None:
             scores.setdefault(evaluation.bidder_id, []).append(float(score))
     bidders = []
-    feedback_document_count = procurement.evaluator_feedback.count()
+    feedback_is_released = bool(procurement.evaluator_feedback_released_at)
+    if (is_pou or is_ao) and not feedback_is_released:
+        evaluator_feedback = []
+    else:
+        evaluator_feedback = procurement.evaluator_feedback.order_by(
+            EvaluatorFeedback.submitted_at.desc()
+        ).all()
+    feedback_document_count = len(evaluator_feedback)
     for bidder_id in bidder_ids:
         bidder = Bidder.query.get(bidder_id)
         bidder_scores = scores.get(bidder_id, [])
+        saved_score = pou_score_entries.get(str(bidder_id), {})
+        display_score = saved_score.get('score') if saved_score else None
+        if display_score is None and bidder_scores:
+            display_score = round(sum(bidder_scores) / len(bidder_scores), 2)
         bidder_evaluations = [e for e in evaluations if e.bidder_id == bidder_id]
         bidders.append({
             'bidder': bidder,
             'submission_count': sum(1 for submission in submitted if submission.bidder_id == bidder_id),
-            'score': round(sum(bidder_scores) / len(bidder_scores), 2) if bidder_scores else None,
+            'score': display_score,
+            'score_reason': saved_score.get('reason', '') if saved_score else '',
             'evaluation_count': len(bidder_scores),
             'written_feedback_count': sum(
                 1 for e in bidder_evaluations if e.comments or e.evidence_references
@@ -645,11 +676,22 @@ def award_workspace(procurement_id):
             'feedback_document_count': feedback_document_count,
         })
     bidders.sort(key=lambda row: (row['score'] is not None, row['score'] or 0), reverse=True)
-
-    award = procurement.award
-    evaluator_feedback = procurement.evaluator_feedback.order_by(
-        EvaluatorFeedback.submitted_at.desc()
-    ).all()
+    scored_bidders = [row for row in bidders if row['score'] is not None]
+    if scored_bidders:
+        lowest_score = min(row['score'] for row in scored_bidders)
+        highest_score = max(row['score'] for row in scored_bidders)
+        for row in bidders:
+            if row['score'] is None or lowest_score == highest_score:
+                row['score_tone'] = 'neutral'
+            elif row['score'] == lowest_score:
+                row['score_tone'] = 'low'
+            elif row['score'] == highest_score:
+                row['score_tone'] = 'high'
+            else:
+                row['score_tone'] = 'middle'
+    else:
+        for row in bidders:
+            row['score_tone'] = 'neutral'
     view_mode = request.args.get('view') or (
         'publish' if is_pou and award and award.ao_decision_at and not award.published_at else
         'pre_decision' if is_pou else
@@ -662,6 +704,9 @@ def award_workspace(procurement_id):
         action = request.form.get('action')
 
         if is_pou and action in {'save_pre_decision', 'forward_to_accounting_officer'}:
+            if award and award.pre_decision_at:
+                flash('The POU pre-decision has already been forwarded to the Accounting Officer and cannot be rescored.', 'warning')
+                return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision'))
             winning_bidder_id = request.form.get('winning_bidder_id', type=int)
             winner = Bidder.query.get(winning_bidder_id) if winning_bidder_id else None
             if not winner or winner.id not in bidder_ids:
@@ -680,6 +725,7 @@ def award_workspace(procurement_id):
             award.decision_reason = (request.form.get('decision_reason') or '').strip()
             award.decision_notes = (request.form.get('decision_notes') or '').strip() or None
             score_summary_lines = []
+            score_entries = {}
             for bidder_id in bidder_ids:
                 bidder = Bidder.query.get(bidder_id)
                 if not bidder:
@@ -697,12 +743,14 @@ def award_workspace(procurement_id):
                     return redirect(url_for('procurements.award_workspace', procurement_id=procurement.id, view='pre_decision'))
                 score_label = f'{numeric_score:.0f}%'
                 reason_text = (raw_reason or '').strip()
+                score_entries[str(bidder_id)] = {'score': numeric_score, 'reason': reason_text}
                 if reason_text:
                     score_summary_lines.append(f'{bidder.company_name}: {score_label} — {reason_text}')
                 else:
                     score_summary_lines.append(f'{bidder.company_name}: {score_label}')
             score_summary = '; '.join(score_summary_lines)
             award.pou_score_summary = score_summary or (award.pou_score_summary or '')
+            award.pou_score_entries = json.dumps(score_entries)
             award.pou_score_reasons = (request.form.get('score_reasons') or '').strip() or score_summary or award.pou_score_reasons
             award.pre_decision_at = datetime.utcnow()
             award.pre_decision_by_id = current_user.id
@@ -857,6 +905,14 @@ def _procurement_management_access(procurement):
             or current_user.has_permission('can_approve_procurement')
             or current_user.has_permission('can_award')
         )
+    )
+
+
+def _can_release_evaluator_feedback(user):
+    return bool(
+        user
+        and user.role
+        and user.role.code in ('procurement_unit', 'procurement_oversight', 'system_admin')
     )
 
 
@@ -1265,7 +1321,8 @@ def download_payment_proof(payment_id):
     else:
         # Check that user is internal staff
         if not (current_user.has_role('system_admin') or current_user.has_role('procurement_unit') or
-                current_user.has_role('procurement_oversight') or current_user.has_role('accounting_officer')):
+                current_user.has_role('procurement_oversight') or current_user.has_role('accounting_officer') or
+                current_user.has_role('finance_planning')):
             abort(403)
 
         log_action('PAYMENT_PROOF_VIEWED', entity_type='BidderPayment', entity_id=payment.id,
@@ -1290,7 +1347,8 @@ def download_payment_supporting_document(payment_id):
             abort(403)
     else:
         if not (current_user.has_role('system_admin') or current_user.has_role('procurement_unit') or
-                current_user.has_role('procurement_oversight') or current_user.has_role('accounting_officer')):
+                current_user.has_role('procurement_oversight') or current_user.has_role('accounting_officer') or
+                current_user.has_role('finance_planning')):
             abort(403)
 
     if not payment.supporting_document_path or not os.path.exists(payment.supporting_document_path):
@@ -1311,7 +1369,8 @@ def verify_payment(payment_id):
     if current_user.has_role('bidder'):
         abort(403)
     if not (current_user.has_role('system_admin') or current_user.has_role('procurement_unit') or
-            current_user.has_role('procurement_oversight') or (current_user.role and current_user.role.can_approve_procurement)):
+            current_user.has_role('procurement_oversight') or current_user.has_role('finance_planning') or
+            (current_user.role and current_user.role.can_approve_procurement)):
         abort(403)
 
     action = request.form.get('action')  # approve, reject, request_resubmission, revoke
@@ -1653,6 +1712,8 @@ def download_evaluator_feedback(procurement_id, feedback_id):
         not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
     ):
         abort(403)
+    if not procurement.evaluator_feedback_released_at and not is_submitting_evaluator:
+        abort(403)
     if not feedback.file_path or not os.path.isfile(feedback.file_path):
         abort(404)
 
@@ -1687,6 +1748,8 @@ def view_evaluator_feedback(procurement_id, feedback_id):
         not current_user.can_access_procurement(procurement) and not is_submitting_evaluator
     ):
         abort(403)
+    if not procurement.evaluator_feedback_released_at and not is_submitting_evaluator:
+        abort(403)
     if not feedback.file_path or not os.path.isfile(feedback.file_path):
         abort(404)
     with open(feedback.file_path, 'rb') as encrypted_file:
@@ -1703,6 +1766,29 @@ def view_evaluator_feedback(procurement_id, feedback_id):
         download_name=feedback.original_filename,
         mimetype=mimetypes.guess_type(feedback.original_filename)[0] or 'application/octet-stream',
     )
+
+
+@procurements_bp.route('/<int:procurement_id>/evaluator-feedback/release', methods=['POST'])
+@login_required
+def release_evaluator_feedback(procurement_id):
+    procurement = Procurement.query.get_or_404(procurement_id)
+    if not _can_release_evaluator_feedback(current_user) or not current_user.can_access_procurement(procurement):
+        abort(403)
+    if not procurement.evaluator_feedback.count():
+        flash('Evaluator feedback cannot be enabled until feedback has been submitted.', 'warning')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    procurement.evaluator_feedback_released_at = datetime.utcnow()
+    procurement.evaluator_feedback_released_by_id = current_user.id
+    db.session.commit()
+    log_action(
+        'EVALUATOR_FEEDBACK_RELEASED',
+        entity_type='Procurement',
+        entity_id=procurement.id,
+        reason=f'Feedback enabled by Procurement user {current_user.id}',
+    )
+    flash('Evaluator feedback is now available to the POU and Accounting Officer.', 'success')
+    return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
 
 @procurements_bp.route('/<int:procurement_id>/transition', methods=['POST'])
@@ -1740,7 +1826,11 @@ def transition(procurement_id):
             return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
     if to_status == 'closed' and (
-        not procurement.submission_deadline or datetime.utcnow() < procurement.submission_deadline
+        not procurement.submission_deadline
+        or (
+            datetime.utcnow() < procurement.submission_deadline
+            and submission_count == 0
+        )
     ):
         flash('Submissions can be closed only after the tender deadline has passed.', 'warning')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
@@ -1749,7 +1839,9 @@ def transition(procurement_id):
         flash('At least one bidder submission is required before evaluation can begin.', 'danger')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
-    if to_status == 'submission_open' and procurement.status in ('under_evaluation', 'closed'):
+    if to_status == 'submission_open' and procurement.status in (
+        'under_evaluation', 'closed', 'submission_closed'
+    ):
         deadline_raw = request.form.get('submission_deadline', '').strip()
         try:
             reopened_deadline = datetime.fromisoformat(deadline_raw)

@@ -25,6 +25,7 @@ class Award(db.Model):
     pre_decision_at = db.Column(db.DateTime)
     pre_decision_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     pou_score_summary = db.Column(db.Text)
+    pou_score_entries = db.Column(db.Text)
     pou_score_reasons = db.Column(db.Text)
     pou_decision_document_path = db.Column(db.String(500))
     pou_decision_document_name = db.Column(db.String(255))
@@ -57,6 +58,7 @@ class Award(db.Model):
             'pre_decision_at': 'ALTER TABLE awards ADD pre_decision_at DATETIME',
             'pre_decision_by_id': 'ALTER TABLE awards ADD pre_decision_by_id INTEGER',
             'pou_score_summary': 'ALTER TABLE awards ADD pou_score_summary TEXT',
+            'pou_score_entries': 'ALTER TABLE awards ADD pou_score_entries TEXT',
             'pou_score_reasons': 'ALTER TABLE awards ADD pou_score_reasons TEXT',
             'pou_decision_document_path': 'ALTER TABLE awards ADD pou_decision_document_path VARCHAR(500)',
             'pou_decision_document_name': 'ALTER TABLE awards ADD pou_decision_document_name VARCHAR(255)',
