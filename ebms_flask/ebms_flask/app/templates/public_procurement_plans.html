@@ -22,7 +22,7 @@
   </nav>
 
   <div class="public-list-shell procurement-plan-public-shell" style="padding-top: 7rem;">
-    <div class="public-list-header"><div><span class="eyebrow">Open planning register</span><h1>Procurement Plans</h1><p>See what public entities expect to buy next, before tenders are published.</p></div><div class="public-list-actions"><a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Sign In</a><a href="{{ url_for('auth.register') }}" class="btn btn-success">Register as Supplier</a></div></div>
+    <div class="public-list-header"><div><span class="eyebrow">Open planning register</span><h1>Procurement Plans</h1><p>See what public entities expect to buy next, before tenders are published.</p></div></div>
     <div class="plan-toolbar"><div><strong>Plan outlook</strong><span>Published intentions from procuring entities</span></div><form method="get" class="row g-2 align-items-end">
         <div class="col-auto"><label for="plan-year">Financial year</label><select id="plan-year" name="year" class="form-select form-select-sm" onchange="this.form.submit()"><option value="">All years</option>{% for year in years %}<option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>{% endfor %}</select></div>
         <div class="col-auto"><label for="plan-quarter">Quarter</label><select id="plan-quarter" name="quarter" class="form-select form-select-sm" onchange="this.form.submit()"><option value="">All quarters</option>{% for quarter in ['Q1','Q2','Q3','Q4'] %}<option value="{{ quarter }}" {% if selected_quarter == quarter %}selected{% endif %}>{{ quarter }}</option>{% endfor %}</select></div>
