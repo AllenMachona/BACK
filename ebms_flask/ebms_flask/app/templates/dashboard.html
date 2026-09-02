@@ -10,17 +10,17 @@
 {% block page_header %}
 <div class="ebms-page-head dashboard-page-head">
     <div>
-        <h1 class="ebms-page-title">Procurement Dashboard</h1>
-        <p class="ebms-page-subtitle">Operational overview of the e-procurement lifecycle</p>
+        <h1 class="ebms-page-title">{% if evaluator_dashboard %}Evaluator Workspace{% else %}Procurement Dashboard{% endif %}</h1>
+        <p class="ebms-page-subtitle">{% if evaluator_dashboard %}Review assigned bids and complete your evaluation work{% else %}Operational overview of the e-procurement lifecycle{% endif %}</p>
     </div>
     <div class="ebms-page-actions">
         <span class="dashboard-live-status"><span class="dashboard-live-dot"></span>Live data</span>
-        {% if current_user.role.can_create_procurement %}
+        {% if current_user.role.can_create_procurement and not evaluator_dashboard %}
         <a href="{{ url_for('procurements.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i>New Procurement
         </a>
         {% endif %}
-        {% if current_user.role.can_view_all_records %}
+        {% if current_user.role.can_view_all_records and not evaluator_dashboard %}
         <a href="{{ url_for('reports.operational') }}" class="btn btn-outline-primary">
             <i class="bi bi-graph-up-arrow"></i>Reports
         </a>
@@ -30,6 +30,28 @@
 {% endblock %}
 {% block content %}
 <div class="dashboard-shell" aria-busy="false">
+    {% if evaluator_dashboard %}
+    <section class="dashboard-metric-chart dashboard-reveal dashboard-reveal-1" aria-label="Evaluator workload metrics">
+        <div class="dashboard-metric-chart-head"><div><span class="panel-kicker">My evaluation workload</span><h2>Assigned work at a glance</h2><p>Open an assignment below to review its in-scope submissions.</p></div><span class="dashboard-chart-badge"><i class="bi bi-shield-check"></i>Assignment scoped</span></div>
+        <div class="dashboard-metric-bars">{% for metric in evaluator_metrics %}<div class="dashboard-metric-column dashboard-metric-{{ metric.tone }} dashboard-reveal dashboard-reveal-{{ loop.index + 1 }}"><span class="dashboard-metric-value">{{ metric.value }}</span><span class="dashboard-metric-track"><span class="dashboard-metric-fill" style="--metric-height: {{ (metric.value / evaluator_metric_max * 100) if evaluator_metric_max else 0 }}%;"></span></span><span class="dashboard-metric-icon"><i class="bi {{ metric.icon }}"></i></span><strong>{{ metric.label }}</strong><small>{{ metric.note }}</small></div>{% endfor %}</div>
+    </section>
+
+    <div class="dashboard-section-heading dashboard-reveal dashboard-reveal-6">
+        <div><span class="panel-kicker">Evaluation queue</span><h2>My assigned tenders</h2></div>
+        <a href="{{ url_for('evaluations.index') }}" class="text-link">Open evaluation centre <i class="bi bi-arrow-up-right"></i></a>
+    </div>
+
+    <div class="card dashboard-reveal dashboard-reveal-7">
+        <div class="card-header"><div><span class="panel-kicker">Scoped submissions</span><h5>Evaluation assignments</h5></div><span class="status-badge status-submission_open"><i class="bi bi-lock me-1"></i>Private work queue</span></div>
+        <div class="card-body">
+            {% if evaluator_rows %}
+            <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Tender</th><th>Document scope</th><th>In-scope bids</th><th>Progress</th><th>Stage</th><th class="text-end">Action</th></tr></thead><tbody>
+                {% for row in evaluator_rows %}<tr><td><strong class="text-primary">{{ row.procurement.tender_number }}</strong><div class="small text-muted">{{ row.procurement.title }}</div></td><td>{{ row.assignment.scope_label() }}</td><td>{{ row.submitted_bids }}</td><td><span class="status-badge {% if row.remaining_bids %}status-technical_evaluation{% else %}status-award_published{% endif %}">{{ row.evaluated_bids }}/{{ row.submitted_bids }} evaluated</span></td><td><span class="status-badge status-{{ row.procurement.status }}">{{ row.procurement.status_label() }}</span></td><td class="text-end"><a href="{{ url_for('evaluations.detail', procurement_id=row.procurement.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-clipboard2-check"></i>{% if row.remaining_bids %}Continue{% else %}Review{% endif %}</a></td></tr>{% endfor %}
+            </tbody></table></div>
+            {% else %}<div class="empty-state"><i class="bi bi-clipboard2-x empty-state-icon"></i><div class="empty-state-title">No active evaluation assignments</div><p class="empty-state-text">Assigned tenders will appear here when the Procurement team gives you access.</p></div>{% endif %}
+        </div>
+    </div>
+    {% else %}
     <section class="dashboard-metric-chart dashboard-reveal dashboard-reveal-1" aria-label="Key procurement metrics">
         <div class="dashboard-metric-chart-head"><div><span class="panel-kicker">Live performance snapshot</span><h2>Procurement activity at a glance</h2><p>Click a metric to open its detailed report.</p></div><span class="dashboard-chart-badge"><i class="bi bi-activity"></i> Updating live</span></div>
         <div class="dashboard-metric-bars">{% for metric in dashboard_metrics %}<a class="dashboard-metric-column dashboard-metric-{{ metric.tone }} dashboard-reveal dashboard-reveal-{{ loop.index + 1 }}" href="{{ metric.url }}" title="Open {{ metric.label }} report"><span class="dashboard-metric-value">{{ metric.value }}</span><span class="dashboard-metric-track"><span class="dashboard-metric-fill" style="--metric-height: {{ (metric.value / metric_max * 100) if metric_max else 0 }}%;"></span></span><span class="dashboard-metric-icon"><i class="bi {{ metric.icon }}"></i></span><strong>{{ metric.label }}</strong><small>{{ metric.note }}</small></a>{% endfor %}</div>
@@ -116,6 +138,7 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}

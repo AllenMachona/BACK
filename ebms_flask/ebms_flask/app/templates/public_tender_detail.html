@@ -2,7 +2,7 @@
 {% block title %}{{ procurement.title }}{% endblock %}
 {% block styles %}
 <style>
-  .public-detail-shell { width: min(100%, 1320px); min-height: 100vh; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 3rem) 3rem; }
+  .public-detail-shell { width: min(100%, 1320px); min-height: 100vh; margin: 0 auto; padding: 7rem clamp(1rem, 4vw, 3rem) 3rem; }
   .public-detail-topbar, .public-detail-header, .public-detail-actions, .detail-item, .detail-cta { animation: fadeUp 0.55s ease-out both; }
   .public-detail-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .public-detail-brand { display: flex; align-items: center; gap: .75rem; color: var(--text-main); font-weight: 800; letter-spacing: .01em; }
@@ -33,18 +33,8 @@
 </style>
 {% endblock %}
 {% block guest_content %}
+{% include '_public_nav.html' %}
 <div class="public-detail-shell">
-  <div class="public-detail-topbar">
-    <a class="public-detail-brand" href="{{ url_for('dashboard.public_tenders') }}">
-      <span class="public-detail-brand-mark">EB</span>
-      <span>EBMS Botswana</span>
-    </a>
-    <nav class="public-detail-nav" aria-label="Public portal navigation">
-      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('dashboard.public_tenders') }}"><i class="bi bi-search me-1"></i>Browse tenders</a>
-      <a class="btn btn-success btn-sm" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</a>
-    </nav>
-  </div>
-
   <header class="public-detail-header">
     <div>
       <div class="eyebrow">Public procurement opportunity</div>

@@ -11,7 +11,10 @@ from app.models.submission import Submission
 from app.models.complaint import Complaint
 from app.models.payment import BidderPayment
 from app.models.procurement_plan import ProcurementPlanItem, PROCUREMENT_PLAN_STATUSES
+from app.models.evaluation import Evaluation
+from app.models.evaluator_assignment import EvaluatorAssignment
 from app.utils.decorators import role_required
+from app.utils.evaluator_assignment import EvaluatorAssignmentService
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -400,6 +403,59 @@ def public_tender_detail(procurement_id):
 def dashboard():
     if current_user.has_role('bidder') or current_user.bidder_id:
         return redirect(url_for('bidders.portal'))
+
+    if current_user.has_role('evaluator'):
+        assignments = EvaluatorAssignmentService.for_user(current_user.id)
+        evaluator_rows = []
+        submitted_bid_total = 0
+        evaluated_bid_total = 0
+        needs_attention = 0
+        for assignment in assignments:
+            procurement = assignment.procurement
+            allowed_envelopes = EvaluatorAssignment.SCOPE_ENVELOPES.get(assignment.document_scope, ())
+            submitted_bids = {
+                submission.bidder_id
+                for submission in procurement.submissions.filter_by(status='submitted').all()
+                if submission.envelope_type in allowed_envelopes
+            }
+            evaluations = Evaluation.query.filter_by(
+                procurement_id=procurement.id,
+                evaluator_id=current_user.id,
+            ).all()
+            evaluated_bids = {
+                evaluation.bidder_id for evaluation in evaluations
+                if evaluation.bidder_id in submitted_bids
+            }
+            submitted_bid_total += len(submitted_bids)
+            evaluated_bid_total += len(evaluated_bids)
+            remaining_bids = len(submitted_bids - evaluated_bids)
+            if remaining_bids:
+                needs_attention += 1
+            evaluator_rows.append({
+                'assignment': assignment,
+                'procurement': procurement,
+                'submitted_bids': len(submitted_bids),
+                'evaluated_bids': len(evaluated_bids),
+                'remaining_bids': remaining_bids,
+            })
+
+        evaluator_rows.sort(key=lambda row: (
+            row['remaining_bids'] == 0,
+            -(row['procurement'].updated_at.timestamp() if row['procurement'].updated_at else 0),
+        ))
+        evaluator_metrics = [
+            {'label': 'Assigned tenders', 'value': len(assignments), 'note': 'Active evaluation assignments', 'icon': 'bi-clipboard2-check', 'tone': 'blue'},
+            {'label': 'Bids in scope', 'value': submitted_bid_total, 'note': 'Submitted bidder records you can review', 'icon': 'bi-files', 'tone': 'gold'},
+            {'label': 'Bidders evaluated', 'value': evaluated_bid_total, 'note': 'Bidders with your evaluation record', 'icon': 'bi-person-check', 'tone': 'green'},
+            {'label': 'Needs attention', 'value': needs_attention, 'note': 'Assignments with remaining bidders', 'icon': 'bi-hourglass-split', 'tone': 'blue'},
+        ]
+        return render_template(
+            'dashboard.html',
+            evaluator_dashboard=True,
+            evaluator_rows=evaluator_rows,
+            evaluator_metrics=evaluator_metrics,
+            evaluator_metric_max=max((metric['value'] for metric in evaluator_metrics), default=1) or 1,
+        )
 
     active_tenders = Procurement.query.filter(
         Procurement.status.in_(['published', 'submission_open'])

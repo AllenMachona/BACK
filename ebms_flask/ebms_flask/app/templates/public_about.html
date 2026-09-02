@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}About EBMS{% endblock %}
 {% block guest_content %}
+{% include '_public_nav.html' %}
 <style>
     :root {
         --ebms-blue: #0d9ae6;
@@ -298,19 +299,6 @@
 
 <div class="ebms-about-shell">
     <div class="ebms-about-inner">
-        <nav class="ebms-top-nav" aria-label="Main navigation">
-            <h1 class="ebms-brand">EBMS</h1>
-
-            <div class="ebms-nav-wrap">
-                <ul class="ebms-nav">
-                    <li><a href="{{ url_for('dashboard.index') }}">Home</a></li>
-                    <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
-                    <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
-                    <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
-                </ul>
-            </div>
-        </nav>
-
         <main class="ebms-about-card">
             <span class="eyebrow">About</span>
             <h1>Transparent procurement that strengthens public trust.</h1>

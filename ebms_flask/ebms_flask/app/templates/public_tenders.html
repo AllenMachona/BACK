@@ -1,15 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Current Tenders{% endblock %}
 {% block guest_content %}
+{% include '_public_nav.html' %}
 <div class="public-list-shell">
   <div class="public-list-header">
     <div>
       <span class="eyebrow">Supplier portal</span>
       <h1>Current Tenders</h1>
-    </div>
-    <div class="public-list-actions">
-      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Sign In</a>
-      <a href="{{ url_for('auth.register') }}" class="btn btn-success">Register as Supplier</a>
     </div>
   </div>
 

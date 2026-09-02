@@ -29,77 +29,8 @@
         height: 100vh;
         min-height: 100vh;
         overflow: hidden;
-        background:
-            linear-gradient(180deg, #f7fafd 0%, #edf5fb 100%);
-    }
-
-    .ebms-auth-shell::before,
-    .ebms-auth-shell::after {
-        content: "";
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(13, 154, 230, 0.05);
-        pointer-events: none;
-    }
-
-    .ebms-auth-shell::before {
-        width: 1200px;
-        height: 1200px;
-        left: -420px;
-        top: 60px;
-    }
-
-    .ebms-auth-shell::after {
-        width: 720px;
-        height: 720px;
-        right: -150px;
-        top: -120px;
-    }
-
-    .ebms-network {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.95;
-        background:
-            radial-gradient(circle at 15% 28%, rgba(13,154,230,0.22) 0, rgba(13,154,230,0.04) 16%, transparent 28%),
-            radial-gradient(circle at 60% 50%, rgba(13,154,230,0.18) 0, rgba(13,154,230,0.03) 18%, transparent 28%),
-            linear-gradient(rgba(13, 154, 230, 0.16) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(13, 154, 230, 0.16) 1px, transparent 1px),
-            linear-gradient(180deg, rgba(7, 20, 30, 0.90) 0%, rgba(15, 29, 40, 0.92) 100%);
-        background-size: 100% 100%, 100% 100%, 68px 68px, 68px 68px, 100% 100%;
-        mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
-        -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
-        animation: networkDrift 18s linear infinite alternate;
-    }
-
-    .ebms-network::before,
-    .ebms-network::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-    }
-
-    .ebms-network::before {
-        background:
-            linear-gradient(120deg, transparent 0 22%, rgba(255,255,255,0.45) 22.6%, transparent 23.8%),
-            linear-gradient(140deg, transparent 0 46%, rgba(255,255,255,0.4) 46.8%, transparent 47.6%),
-            linear-gradient(80deg, transparent 0 63%, rgba(255,255,255,0.38) 63.8%, transparent 64.8%);
-        opacity: 0.85;
-    }
-
-    .ebms-network::after {
-        background:
-            radial-gradient(circle at 30% 22%, rgba(255,255,255,0.9) 0 1.2%, transparent 1.8%),
-            radial-gradient(circle at 52% 42%, rgba(255,255,255,0.85) 0 1.2%, transparent 1.8%),
-            radial-gradient(circle at 72% 66%, rgba(255,255,255,0.85) 0 1.2%, transparent 1.8%);
-        opacity: 0.9;
-    }
-
-    @keyframes networkDrift {
-        0% { transform: translate3d(-10px, 0, 0) scale(1); opacity: 0.75; }
-        50% { transform: translate3d(18px, -12px, 0) scale(1.08); opacity: 0.96; }
-        100% { transform: translate3d(8px, 12px, 0) scale(1.04); opacity: 0.8; }
+        padding-top: 72px;
+        background: #f8f8f4;
     }
 
     .ebms-auth-inner {
@@ -485,20 +416,9 @@
 </style>
 
 <div class="ebms-auth-shell">
-    <div class="ebms-network" aria-hidden="true"></div>
+    {% include '_guest_network.html' %}
     <div class="ebms-auth-inner">
-        <nav class="ebms-top-nav" aria-label="Main navigation">
-            <h1 class="ebms-brand">EBMS</h1>
-
-            <div class="ebms-nav-wrap">
-                <ul class="ebms-nav">
-                    <li><a href="{{ url_for('dashboard.index') }}">Home</a></li>
-                    <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
-                    <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
-                    <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
-                </ul>
-            </div>
-        </nav>
+        {% include '_public_nav.html' %}
 
         <div class="ebms-hero">
             <div class="ebms-hero-copy">

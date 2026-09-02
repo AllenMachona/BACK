@@ -93,6 +93,31 @@ TRANSITIONS = {
     'archived': [],
 }
 
+# Keep the register filter aligned with the statuses used by the lifecycle.
+PROCUREMENT_STATUS_FILTERS = [
+    ('draft', 'Draft'),
+    ('internal_review', 'Internal Review'),
+    ('approved_for_publication', 'Approved for Publication'),
+    ('published', 'Published'),
+    ('clarification_period', 'Clarification Period'),
+    ('submission_open', 'Submission Open'),
+    ('closed', 'Closed'),
+    ('under_evaluation', 'Under Evaluation'),
+    ('technical_opening', 'Technical Opening'),
+    ('compliance_evaluation', 'Compliance Evaluation'),
+    ('technical_evaluation', 'Technical Evaluation'),
+    ('technical_outcome_approved', 'Technical Outcome Approved'),
+    ('financial_opening', 'Financial Opening'),
+    ('financial_evaluation', 'Financial Evaluation'),
+    ('award_pending_approval', 'Award Pending Approval'),
+    ('award_published', 'Award Published'),
+    ('cooling_off', 'Cooling Off'),
+    ('complaint_hold', 'Complaint Hold'),
+    ('ready_for_contract', 'Ready for Contract'),
+    ('archived', 'Archived'),
+    ('cancelled', 'Cancelled'),
+]
+
 NOTIFIABLE = {
     'published': lambda p: (
         f'Tender published: {p.tender_number}',
@@ -160,7 +185,11 @@ def list_procurements():
             (Procurement.ppra_code.ilike(like_term))
         )
     if status_filter != 'all':
-        query = query.filter(Procurement.status == status_filter)
+        valid_statuses = {value for value, _ in PROCUREMENT_STATUS_FILTERS}
+        if status_filter not in valid_statuses:
+            status_filter = 'all'
+        else:
+            query = query.filter(Procurement.status == status_filter)
     if category_filter != 'all':
         query = query.filter(Procurement.category == category_filter)
     if method_filter != 'all':
@@ -212,6 +241,7 @@ def list_procurements():
         max_value=request.args.get('max_value', ''),
         deadline_from=deadline_from,
         deadline_to=deadline_to,
+        status_options=PROCUREMENT_STATUS_FILTERS,
         page=procurement_page.page,
         total_pages=procurement_page.pages,
         total_results=procurement_page.total,
@@ -542,6 +572,8 @@ def detail(procurement_id):
     ).filter_by(status='submitted').order_by(Submission.submitted_at.desc()).all()
     submission_count = len(submissions)
     next_status = TRANSITIONS.get(procurement.status, [None])[0] if TRANSITIONS.get(procurement.status) else None
+    if procurement.status == 'cooling_off':
+        next_status = 'ready_for_contract'
     can_close_open_tender = (
         procurement.status == 'submission_open'
         and submission_count > 0
@@ -553,7 +585,7 @@ def detail(procurement_id):
             datetime.utcnow() >= procurement.submission_deadline
             or can_close_open_tender
         )
-    ) and not procurement.status == 'closed':
+    ) and procurement.status not in ('closed', 'award_published', 'cooling_off'):
         next_status = None
 
     # Payments for Procurement verification
@@ -1837,6 +1869,17 @@ def transition(procurement_id):
 
     if to_status == 'under_evaluation' and submission_count == 0:
         flash('At least one bidder submission is required before evaluation can begin.', 'danger')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    if to_status == 'cooling_off' and not procurement.award:
+        flash('An award must be recorded before Cooling Off can be opened.', 'danger')
+        return redirect(url_for('procurements.detail', procurement_id=procurement.id))
+
+    if to_status == 'ready_for_contract' and not procurement.can_transition_to_contract():
+        if procurement.award and procurement.award.cooling_off_active():
+            flash('Cooling Off cannot be closed before its expiry date.', 'warning')
+        else:
+            flash('Resolve all active complaints before closing Cooling Off.', 'warning')
         return redirect(url_for('procurements.detail', procurement_id=procurement.id))
 
     if to_status == 'submission_open' and procurement.status in (

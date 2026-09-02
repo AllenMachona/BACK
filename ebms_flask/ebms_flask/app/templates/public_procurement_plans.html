@@ -2,24 +2,7 @@
 {% block title %}Procurement Plans - EBMS Botswana{% endblock %}
 {% block guest_content %}
 <div id="public-home-page">
-  <nav class="public-nav">
-    <div class="logo-wrap">
-      <div class="logo-mark">EBMS</div>
-      <span class="logo-text">Procurement<span>.</span></span>
-    </div>
-
-    <ul class="nav-links">
-      <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
-      <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
-      <li><a href="{{ url_for('dashboard.public_tenders') }}#procuring-entities">Procuring Entities</a></li>
-      <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
-    </ul>
-
-    <div class="nav-right">
-      <a href="{{ url_for('auth.login') }}" class="nav-signin">Sign In</a>
-      <a href="{{ url_for('auth.register') }}" class="nav-cta">Register as bidder</a>
-    </div>
-  </nav>
+  {% include '_public_nav.html' %}
 
   <div class="public-list-shell procurement-plan-public-shell" style="padding-top: 7rem;">
     <div class="public-list-header"><div><span class="eyebrow">Open planning register</span><h1>Procurement Plans</h1><p>See what public entities expect to buy next, before tenders are published.</p></div></div>

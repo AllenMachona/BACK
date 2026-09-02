@@ -1,0 +1,18 @@
+<nav class="public-nav" aria-label="Public navigation">
+  <a class="logo-wrap" href="{{ url_for('dashboard.index') }}" aria-label="EBMS Botswana home">
+    <span class="logo-mark">EBMS</span>
+    <span class="logo-text">Procurement<span>.</span></span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
+    <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
+    <li><a href="{{ url_for('dashboard.index') }}#procuring-entities">Procuring Entities</a></li>
+    <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
+  </ul>
+
+  <div class="nav-right">
+    <a href="{{ url_for('auth.login') }}" class="nav-signin">Sign In</a>
+    <a href="{{ url_for('auth.register') }}" class="nav-cta">Register as bidder</a>
+  </div>
+</nav>

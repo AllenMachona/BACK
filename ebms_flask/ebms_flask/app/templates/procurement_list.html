@@ -41,7 +41,7 @@
                 <label class="form-label small fw-bold" for="procurement-status">Status</label>
                 <select class="form-select" id="procurement-status" name="status">
                     <option value="all">All statuses</option>
-                    {% for value, label in [('draft', 'Draft'), ('internal_review', 'Internal Review'), ('approved_for_publication', 'Approved'), ('published', 'Published'), ('clarification_period', 'Clarification'), ('submission_open', 'Submission Open'), ('closed', 'Closed'), ('technical_opening', 'Technical Opening'), ('compliance_evaluation', 'Compliance Evaluation'), ('technical_evaluation', 'Technical Evaluation'), ('financial_opening', 'Financial Opening'), ('financial_evaluation', 'Financial Evaluation'), ('award_pending_approval', 'Award Pending'), ('award_published', 'Award Published'), ('cooling_off', 'Cooling Off'), ('complaint_hold', 'Complaint Hold'), ('ready_for_contract', 'Ready for Contract'), ('archived', 'Archived'), ('cancelled', 'Cancelled')] %}
+                    {% for value, label in status_options %}
                     <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>

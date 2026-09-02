@@ -394,7 +394,7 @@
                     <input type="datetime-local" name="clarification_deadline" class="form-control mb-2" required>
                     {% endif %}
                     <button type="submit" class="btn btn-success w-100 py-2">
-                        <i class="bi bi-{{ 'megaphone' if next_status == 'published' else ('unlock' if next_status == 'submission_open' else ('lock' if next_status == 'closed' else 'clipboard-check')) }} me-1"></i>{{ 'Publish procurement' if next_status == 'published' else ('Open for bidding' if next_status == 'submission_open' else ('Close tender' if next_status == 'closed' else 'Under evaluation')) }}
+                        <i class="bi bi-{{ 'megaphone' if next_status == 'published' else ('unlock' if next_status == 'submission_open' else ('lock' if next_status == 'closed' else ('shield-check' if next_status == 'cooling_off' else ('briefcase' if next_status == 'ready_for_contract' else 'clipboard-check')))) }} me-1"></i>{{ 'Publish procurement' if next_status == 'published' else ('Open for bidding' if next_status == 'submission_open' else ('Close tender' if next_status == 'closed' else ('Open Cooling Off' if next_status == 'cooling_off' else ('Close Cooling Off' if next_status == 'ready_for_contract' else 'Under evaluation')))) }}
                     </button>
                 </form>
                 {% endif %}
