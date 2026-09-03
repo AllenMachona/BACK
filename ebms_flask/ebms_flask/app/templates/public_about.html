@@ -22,15 +22,21 @@
     }
 
     .ebms-about-shell {
-        min-height: 100vh;
-        height: 100vh;
+        min-height: calc(100vh - 72px);
+        height: auto;
         position: relative;
         overflow: hidden;
-        background:
-            linear-gradient(rgba(13, 154, 230, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(13, 154, 230, 0.04) 1px, transparent 1px),
-            linear-gradient(180deg, #f5f9fc 0%, #edf5fb 100%);
-        background-size: 90px 90px, 90px 90px, 100% 100%;
+        background: linear-gradient(180deg, #f5f9fc 0%, #edf5fb 100%);
+    }
+
+    .about-map-background {
+        position: absolute;
+        inset: 0;
+        background-position: center;
+        background-size: cover;
+        opacity: 0.48;
+        filter: saturate(0.7) contrast(0.85);
+        pointer-events: none;
     }
 
     .ebms-about-shell::before,
@@ -62,8 +68,7 @@
         width: 100%;
         max-width: none;
         margin: 0;
-        padding: 32px 28px 0;
-        height: 100%;
+        padding: 7rem 5% 4rem;
         display: flex;
         flex-direction: column;
     }
@@ -107,14 +112,17 @@
     }
 
     .ebms-about-card {
+        position: relative;
+        z-index: 1;
         width: 100%;
-        max-width: none;
-        background: rgba(255,255,255,0.78);
-        border: 1px solid rgba(13, 154, 230, 0.12);
-        border-radius: 28px;
+        max-width: 1280px;
+        margin: 0 auto;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255, 255, 255, 0.58);
+        border-radius: 8px;
         box-shadow: 0 26px 70px rgba(17, 69, 108, 0.08);
-        padding: 44px 42px;
-        backdrop-filter: blur(8px);
+        padding: clamp(2rem, 5vw, 4.5rem);
+        backdrop-filter: blur(3px);
         opacity: 0;
         transform: translateY(18px);
         animation: fadeInUp 0.8s ease forwards;
@@ -179,9 +187,9 @@
         gap: 16px;
         align-items: flex-start;
         padding: 16px 18px;
-        background: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.28);
         border: 1px solid var(--line);
-        border-radius: 18px;
+        border-radius: 6px;
         opacity: 0;
         transform: translateY(18px);
         animation: fadeInUp 0.75s ease forwards;
@@ -197,7 +205,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
+        border-radius: 4px;
         background: rgba(13, 154, 230, 0.08);
         color: var(--ebms-blue-deep);
         font-weight: 800;
@@ -221,9 +229,10 @@
     }
 
     .stat-box {
-        background: linear-gradient(180deg, rgba(13,154,230,0.08), rgba(255,255,255,0.9));
-        border: 1px solid rgba(13, 154, 230, 0.12);
-        border-radius: 20px;
+        background: rgba(238, 248, 253, 0.92);
+        border: 1px solid rgba(13, 154, 230, 0.22);
+        border-left: 5px solid var(--ebms-blue);
+        border-radius: 4px;
         padding: 22px 18px;
         opacity: 0;
         transform: translateY(18px);
@@ -298,6 +307,7 @@
 </style>
 
 <div class="ebms-about-shell">
+    <div class="about-map-background" style="background-image: url('{{ url_for('static', filename='images/login.jpg') }}');" aria-hidden="true"></div>
     <div class="ebms-about-inner">
         <main class="ebms-about-card">
             <span class="eyebrow">About</span>

@@ -7,17 +7,21 @@
   <section class="hero" aria-label="Procurement hero section">
     <div class="hero-bg">
       <div class="carousel" aria-live="polite">
-        <div class="carousel-slide active"><img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80" alt="Government procurement team meeting"></div>
-        <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1600&q=80" alt="Public procurement planning"></div>
-        <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80" alt="Office workspace"></div>
-        <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80" alt="Public infrastructure project"></div>
+        <div class="carousel-slide active"><img src="{{ url_for('static', filename='images/CBD.jpg') }}" alt="CBD procurement network"></div>
+        <div class="carousel-slide"><img src="{{ url_for('static', filename='images/CDB.jpg') }}" alt="CDB procurement network"></div>
+        <div class="carousel-slide"><img src="{{ url_for('static', filename='images/DBC.jpg') }}" alt="DBC procurement network"></div>
+      </div>
+
+      <div class="hero-intro">
+        <span class="hero-intro-kicker">Electronic Bid Management System</span>
+        <h1>Transparent procurement for a stronger Botswana.</h1>
+        <p>Discover opportunities and manage every tender response in one secure digital platform.</p>
       </div>
 
       <div class="carousel-dots" aria-label="Carousel navigation">
         <span class="dot active" data-slide="0" aria-label="Go to slide 1"></span>
         <span class="dot" data-slide="1" aria-label="Go to slide 2"></span>
         <span class="dot" data-slide="2" aria-label="Go to slide 3"></span>
-        <span class="dot" data-slide="3" aria-label="Go to slide 4"></span>
       </div>
     </div>
 
@@ -160,18 +164,7 @@
     </div>
   </section>
 
-  <section class="contact-section" id="contact">
-    <div class="section-shell contact-box">
-      <div>
-        <span class="eyebrow">Contact</span>
-        <h2>Need help with procurement opportunities?</h2>
-      </div>
-      <div class="contact-actions">
-        <a href="{{ url_for('auth.register') }}" class="nav-cta small-cta">Register as bidder</a>
-        <a href="{{ url_for('auth.login') }}" class="nav-signin small-cta">Sign In</a>
-      </div>
-    </div>
-  </section>
+ 
 </div>
 
 <script>

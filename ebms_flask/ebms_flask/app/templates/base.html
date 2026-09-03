@@ -329,6 +329,9 @@
 
     {% else %}
     {% block guest_content %}{% endblock %}
+    {% if request.endpoint in ('dashboard.index', 'dashboard.about', 'dashboard.public_tenders', 'dashboard.public_procurement_plans', 'dashboard.public_tender_detail') %}
+    {% include '_public_footer.html' %}
+    {% endif %}
     {% endif %}
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>

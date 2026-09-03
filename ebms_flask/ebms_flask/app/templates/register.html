@@ -315,9 +315,9 @@
 
     .ebms-login-btn {
         width: 100%;
-        border: none;
-        background: linear-gradient(135deg, #1db0eb 0%, #0a9ae7 100%);
-        color: #fff;
+        border: 2px solid #0a0a0a;
+        background: #fff;
+        color: #0a0a0a;
         min-height: 52px;
         border-radius: 12px;
         font-size: 1.05rem;
@@ -325,8 +325,13 @@
         letter-spacing: 0.12em;
         text-transform: uppercase;
         cursor: pointer;
-        box-shadow: 0 18px 30px rgba(13, 120, 186, 0.24);
-        transition: transform 0.2s ease;
+        box-shadow: none;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .ebms-login-btn:hover {
+        background: #0a0a0a;
+        color: #fff;
     }
 
     .ebms-dots {
@@ -416,7 +421,7 @@
 </style>
 
 <div class="ebms-auth-shell">
-    {% include '_guest_network.html' %}
+    <div class="ebms-auth-photo" style="background-image: url('{{ url_for('static', filename='images/LOG.jpg') }}');" aria-hidden="true"></div>
     <div class="ebms-auth-inner">
         {% include '_public_nav.html' %}
 
@@ -508,6 +513,7 @@
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
                                     </span>
                                     <input type="password" name="password" placeholder="Create password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                                 </div>
                             </div>
                             <div class="ebms-card-field" style="grid-column: 1 / -1;">
@@ -516,6 +522,7 @@
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
                                     </span>
                                     <input type="password" name="confirm_password" placeholder="Confirm password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button>
                                 </div>
                             </div>
                             <div class="ebms-card-field" style="grid-column: 1 / -1;">
@@ -551,4 +558,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const input = toggle.closest('.ebms-form-row').querySelector('input');
+            const visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            toggle.setAttribute('aria-pressed', String(!visible));
+            toggle.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+            toggle.querySelector('i').className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+        });
+    });
+</script>
 {% endblock %}
