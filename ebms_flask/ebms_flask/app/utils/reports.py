@@ -341,9 +341,9 @@ class ReportsService:
         if filters.get('procurement_id'):
             query = query.filter(Award.procurement_id == filters['procurement_id'])
         if filters.get('contract_status') == 'concluded':
-            query = query.filter(Award.contract_concluded.is_(True))
+            query = query.filter(Award.contract_concluded == True)
         elif filters.get('contract_status') == 'cooling_off':
-            query = query.filter(Award.contract_concluded.is_(False))
+            query = query.filter(Award.contract_concluded == False)
         if filters.get('start_date'):
             query = query.filter(Award.decision_date >= filters['start_date'])
         if filters.get('end_date'):

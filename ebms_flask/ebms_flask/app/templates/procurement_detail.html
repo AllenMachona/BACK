@@ -16,6 +16,9 @@
         <p class="ebms-page-subtitle">{{ procurement.title }}</p>
     </div>
     <div class="ebms-page-actions">
+        {% if current_user.has_role('procurement_unit') %}
+        <a href="{{ url_for('smartshare.manage', procurement_id=procurement.id) }}" class="btn btn-outline-primary"><i class="bi bi-share me-1"></i>SmartShare</a>
+        {% endif %}
         {% if current_user.has_permission('can_award') and procurement.status in ('under_evaluation', 'technical_opening', 'compliance_evaluation', 'technical_evaluation', 'technical_outcome_approved', 'financial_opening', 'financial_evaluation', 'award_pending_approval', 'award_published', 'cooling_off', 'complaint_hold', 'ready_for_contract', 'archived') %}
         <a href="{{ url_for('procurements.award_workspace', procurement_id=procurement.id) }}" class="btn btn-outline-success"><i class="bi bi-trophy me-1"></i>View Award Bidders</a>
         {% endif %}

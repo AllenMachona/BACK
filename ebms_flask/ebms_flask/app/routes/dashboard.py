@@ -10,6 +10,8 @@ from app.models.bidder import Bidder
 from app.models.submission import Submission
 from app.models.complaint import Complaint
 from app.models.payment import BidderPayment
+from app.models.award import Award
+from app.models.budget_entry import BudgetEntry
 from app.models.procurement_plan import ProcurementPlanItem, PROCUREMENT_PLAN_STATUSES
 from app.models.evaluation import Evaluation
 from app.models.evaluator_assignment import EvaluatorAssignment
@@ -403,6 +405,69 @@ def public_tender_detail(procurement_id):
 def dashboard():
     if current_user.has_role('bidder') or current_user.bidder_id:
         return redirect(url_for('bidders.portal'))
+
+    if current_user.has_role('finance_planning'):
+        procurements = Procurement.query.order_by(Procurement.updated_at.desc()).all()
+        awards = Award.query.all()
+        entries = BudgetEntry.query.all()
+        payments = BidderPayment.query.all()
+        award_by_procurement = {award.procurement_id: award for award in awards}
+        entries_by_procurement = {}
+        for entry in entries:
+            entries_by_procurement.setdefault(entry.procurement_id, []).append(entry)
+
+        approved_budget = sum(float(procurement.estimated_value or 0) for procurement in procurements)
+        awarded_value = sum(float(award.award_value or 0) for award in awards)
+        posted_spend = sum(float(entry.signed_amount or 0) for entry in entries)
+        pending_payments = [payment for payment in payments if payment.status == 'pending']
+        rejected_payments = [payment for payment in payments if payment.status in ('rejected', 'resubmission_required')]
+        remaining_budget = approved_budget - posted_spend
+        utilization = (posted_spend / approved_budget * 100) if approved_budget else 0
+
+        category_totals = {}
+        exposure_rows = []
+        for procurement in procurements:
+            budget = float(procurement.estimated_value or 0)
+            spend = sum(float(entry.signed_amount or 0) for entry in entries_by_procurement.get(procurement.id, []))
+            category = (procurement.category or 'unclassified').replace('_', ' ').title()
+            category_totals[category] = category_totals.get(category, 0) + budget
+            exposure_rows.append({
+                'procurement': procurement,
+                'budget': budget,
+                'spend': spend,
+                'remaining': budget - spend,
+                'utilization': (spend / budget * 100) if budget else 0,
+                'award': award_by_procurement.get(procurement.id),
+            })
+        exposure_rows.sort(key=lambda row: row['remaining'])
+        category_total = sum(category_totals.values()) or 1
+        category_mix = [
+            {'name': name, 'value': value, 'percent': round(value / category_total * 100, 1),
+             'color': ['#2878bd', '#16805c', '#c4871d', '#875c9e'][index % 4]}
+            for index, (name, value) in enumerate(sorted(category_totals.items(), key=lambda item: item[1], reverse=True))
+        ]
+        month_labels = []
+        monthly_spend = []
+        monthly_awards = []
+        today = datetime.utcnow()
+        for offset in range(5, -1, -1):
+            month_number = today.month - offset
+            year = today.year + (month_number - 1) // 12
+            month = (month_number - 1) % 12 + 1
+            month_labels.append(datetime(year, month, 1).strftime('%b'))
+            monthly_spend.append(sum(float(entry.signed_amount or 0) for entry in entries if entry.entry_date and entry.entry_date.year == year and entry.entry_date.month == month))
+            monthly_awards.append(sum(float(award.award_value or 0) for award in awards if award.decision_date and award.decision_date.year == year and award.decision_date.month == month))
+        finance_warnings = [
+            {'label': 'Payments awaiting verification', 'count': len(pending_payments), 'value': sum(float(payment.amount or 0) for payment in pending_payments), 'tone': 'warning', 'url': url_for('procurements.payment_verifications', status='pending')},
+            {'label': 'Rejected or correction payments', 'count': len(rejected_payments), 'value': sum(float(payment.amount or 0) for payment in rejected_payments), 'tone': 'danger', 'url': url_for('procurements.payment_verifications', status='rejected')},
+            {'label': 'Procurements over budget', 'count': sum(1 for row in exposure_rows if row['remaining'] < 0), 'value': sum(abs(row['remaining']) for row in exposure_rows if row['remaining'] < 0), 'tone': 'danger', 'url': url_for('reports.finance')},
+            {'label': 'Awards without recorded value', 'count': sum(1 for award in awards if not award.award_value), 'value': 0, 'tone': 'warning', 'url': url_for('reports.awards')},
+        ]
+        return render_template('finance_dashboard.html', approved_budget=approved_budget, awarded_value=awarded_value,
+            posted_spend=posted_spend, remaining_budget=remaining_budget, utilization=utilization,
+            pending_payments=pending_payments, exposure_rows=exposure_rows[:8], category_mix=category_mix,
+            month_labels=month_labels, monthly_spend=monthly_spend, monthly_awards=monthly_awards,
+            finance_warnings=finance_warnings, max_finance_trend=max(monthly_spend + monthly_awards + [1]))
 
     if current_user.has_role('evaluator'):
         assignments = EvaluatorAssignmentService.for_user(current_user.id)

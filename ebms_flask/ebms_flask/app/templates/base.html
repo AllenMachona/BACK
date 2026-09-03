@@ -218,6 +218,13 @@
             </a>
             {% endif %}
             {% endif %}
+            {% if not is_bidder %}
+            <div class="ebms-nav-section">Internal access</div>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('smartshare.') else '' }}"
+               href="{{ url_for('smartshare.portal') }}" data-title="SmartShare">
+                <i class="bi bi-share" aria-hidden="true"></i><span>SmartShare</span>
+            </a>
+            {% endif %}
 {% if can_reports %}
             <div class="ebms-nav-section">Reports</div>
                 <a class="ebms-nav-item {{ 'active' if endpoint == 'reports.index' else '' }}"

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}SmartShare Portal - EBMS Botswana{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><span class="eyebrow">Internal access portal</span><h2 class="mb-0"><i class="bi bi-share me-2 text-primary"></i>SmartShare</h2><p class="text-muted mb-0 mt-2">Procurements shared with you for internal review.</p></div>
+  {% if current_user.has_role('procurement_unit') %}<a class="btn btn-primary" href="{{ url_for('smartshare.manage') }}"><i class="bi bi-gear me-1"></i>Manage sharing</a>{% endif %}
+</div>
+{% if folders %}
+<div class="smartshare-folders">
+  {% for folder_name, grants in folders.items() %}
+  <section class="card mb-4 smartshare-folder">
+    <div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>{{ folder_name }}</h5><span class="badge badge-primary">{{ grants|length }} procurement{{ '' if grants|length == 1 else 's' }}</span></div>
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Tender</th><th>Title</th><th>Status</th><th>Shared by</th><th class="text-end">Action</th></tr></thead><tbody>
+    {% for grant in grants %}<tr><td><strong class="text-primary">{{ grant.procurement.tender_number }}</strong></td><td>{{ grant.procurement.title }}</td><td><span class="status-badge status-{{ grant.procurement.status }}">{{ grant.procurement.status_label() }}</span></td><td>{{ grant.shared_by.full_name() }}</td><td class="text-end"><a href="{{ url_for('procurements.detail', procurement_id=grant.procurement_id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-in-right me-1"></i>Open procurement</a></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}<div class="empty-state"><i class="bi bi-folder-x empty-state-icon"></i><div class="empty-state-title">No procurements shared with you</div><p class="empty-state-text">Procurements shared by your internal team will appear here in folders.</p></div>{% endif %}
+{% endblock %}

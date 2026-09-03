@@ -24,10 +24,11 @@
                             <strong class="d-block text-dark">Theme Mode</strong>
                             <small class="text-muted">Select your visual background style</small>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex align-items-center gap-2">
                             <button type="button" class="theme-option light {% if user.get_preference('theme', 'light') == 'light' %}active{% endif %}" title="Light Theme" data-theme="light"><i class="bi bi-sun"></i></button>
                             <button type="button" class="theme-option dark {% if user.get_preference('theme', 'light') == 'dark' %}active{% endif %}" title="Dark Theme" data-theme="dark"><i class="bi bi-moon-stars"></i></button>
                             <button type="button" class="theme-option blue {% if user.get_preference('theme', 'light') == 'blue' %}active{% endif %}" title="Blue Theme" data-theme="blue"><i class="bi bi-droplet-half"></i></button>
+                            <span class="theme-selection-status" id="theme-selection-status" aria-live="polite">Selected: {{ user.get_preference('theme', 'light')|title }}</span>
                         </div>
                         <input type="hidden" name="theme" id="theme-input" value="{{ user.get_preference('theme', 'light') }}">
                     </div>
@@ -111,14 +112,54 @@
     </div>
 </div>
 
+<style>
+        .theme-option {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                border: 2px solid #d5dee8;
+                border-radius: 6px;
+                background: #fff;
+                color: #64748b;
+                cursor: pointer;
+                transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .theme-option:hover { transform: translateY(-1px); border-color: #2563eb; }
+        .theme-option.active { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); color: #2563eb; }
+        .theme-option.active::after {
+                content: "\\2713";
+                position: absolute;
+                right: -7px;
+                top: -8px;
+                display: grid;
+                width: 18px;
+                height: 18px;
+                place-items: center;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                background: #2563eb;
+                color: #fff;
+                font-size: .7rem;
+                font-weight: 800;
+        }
+
+        .theme-selection-status { color: #475569; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+</style>
+
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const themeInput = document.getElementById('theme-input');
+        const themeStatus = document.getElementById('theme-selection-status');
     document.querySelectorAll('.theme-option').forEach(function (button) {
       button.addEventListener('click', function () {
         document.querySelectorAll('.theme-option').forEach((b) => b.classList.remove('active'));
         button.classList.add('active');
         themeInput.value = button.dataset.theme;
+                themeStatus.textContent = 'Selected: ' + button.dataset.theme.charAt(0).toUpperCase() + button.dataset.theme.slice(1);
       });
     });
   });

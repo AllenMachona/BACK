@@ -220,6 +220,8 @@ class User(UserMixin, db.Model):
         if not procurement:
             return False
 
+        if self.has_role('bidder') or self.bidder_id:
+            return False
         if self.has_role('system_admin'):
             return True
         if self.has_role('procurement_oversight') or self.has_role('pou') or self.has_role('procurement_unit') or self.has_role('finance_planning'):
@@ -228,8 +230,10 @@ class User(UserMixin, db.Model):
             return True
         if self.has_role('user_department'):
             procurement_entity = getattr(procurement, 'procurement_entity', None) or getattr(procurement, 'user_department', None)
-            return procurement_entity == self.department
-        return False
+            if procurement_entity == self.department:
+                return True
+        from app.models.procurement_share import ProcurementShare
+        return ProcurementShare.has_access(procurement.id, self.id)
 
     def _totp_code(self):
         if not self.mfa_secret:

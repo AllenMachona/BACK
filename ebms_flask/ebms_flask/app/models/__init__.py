@@ -27,6 +27,7 @@ from app.models.evaluator_feedback import EvaluatorFeedback
 from app.models.budget_entry import BudgetEntry
 from app.models.bidder_performance import BidderPerformance
 from app.models.procurement_plan import ProcurementPlanItem
+from app.models.procurement_share import ProcurementShare
 
 __all__ = [
     'Role', 'User', 'Procurement', 'Lot', 'Bidder', 'Submission',
@@ -40,5 +41,5 @@ __all__ = [
     'ProcurementHistory', 'SubmissionHistory',
     'EvaluatorAssignment',
     'EvaluatorFeedback',
-    'BudgetEntry', 'BidderPerformance', 'ProcurementPlanItem',
+    'BudgetEntry', 'BidderPerformance', 'ProcurementPlanItem', 'ProcurementShare',
 ]
