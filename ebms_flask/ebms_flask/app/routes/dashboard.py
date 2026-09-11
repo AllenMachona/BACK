@@ -546,6 +546,40 @@ def dashboard():
          'icon': 'bi-inbox', 'tone': 'blue', 'url': url_for('reports.bidder_participation')},
     ]
 
+    today = datetime.utcnow().date()
+    month_keys = []
+    for offset in range(11, -1, -1):
+        month_number = today.month - offset
+        month_year = today.year + (month_number - 1) // 12
+        month_value = (month_number - 1) % 12 + 1
+        month_keys.append((month_year, month_value))
+    month_labels = [datetime(year, month, 1).strftime('%b %y') for year, month in month_keys]
+    procurement_trend = {key: {'count': 0, 'value': 0.0} for key in month_keys}
+    submission_trend = {key: 0 for key in month_keys}
+    award_trend = {key: 0 for key in month_keys}
+    for procurement in Procurement.query.all():
+        if procurement.created_at:
+            key = (procurement.created_at.year, procurement.created_at.month)
+            if key in procurement_trend:
+                procurement_trend[key]['count'] += 1
+                procurement_trend[key]['value'] += float(procurement.estimated_value or 0)
+    for submission in Submission.query.all():
+        if submission.submitted_at:
+            key = (submission.submitted_at.year, submission.submitted_at.month)
+            if key in submission_trend:
+                submission_trend[key] += 1
+    for award in Award.query.all():
+        if award.decision_date:
+            key = (award.decision_date.year, award.decision_date.month)
+            if key in award_trend:
+                award_trend[key] += 1
+    procurement_counts = [procurement_trend[key]['count'] for key in month_keys]
+    procurement_values = [procurement_trend[key]['value'] for key in month_keys]
+    submission_counts = [submission_trend[key] for key in month_keys]
+    award_counts = [award_trend[key] for key in month_keys]
+    trend_max = max(procurement_counts + submission_counts + award_counts + [1])
+    value_max = max(procurement_values + [1])
+
     recent_procurements = Procurement.query.order_by(Procurement.updated_at.desc()).limit(6).all()
 
     status_rows = db.session.query(
@@ -598,6 +632,13 @@ def dashboard():
         recent_submissions=recent_submissions,
         dashboard_metrics=dashboard_metrics,
         metric_max=metric_max,
+        month_labels=month_labels,
+        procurement_counts=procurement_counts,
+        procurement_values=procurement_values,
+        submission_counts=submission_counts,
+        award_counts=award_counts,
+        trend_max=trend_max,
+        value_max=value_max,
         recent_procurements=recent_procurements,
         status_rows=status_rows,
         status_total=status_total,

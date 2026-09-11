@@ -2707,66 +2707,50 @@ code {
   text-transform: uppercase;
 }
 
-.dashboard-metric-bars {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: end;
-  gap: 1rem;
-  min-height: 290px;
-  margin-top: 1.2rem;
-  padding: 0.75rem 0.5rem 0;
+.dashboard-trendline {
+  position: relative;
+  height: 178px;
+  margin: 1.2rem 0 0;
   border-top: 1px solid #e6edf0;
-}
-
-.dashboard-metric-column {
-  display: grid;
-  grid-template-rows: 1.5rem 170px 2.5rem auto auto;
-  align-items: end;
-  min-width: 0;
-  color: #26343e;
-  text-align: center;
-  text-decoration: none;
-}
-
-.dashboard-metric-column:hover {
-  color: #17232d;
-}
-
-.dashboard-metric-value {
-  color: #17232d;
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-
-.dashboard-metric-track {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  width: 100%;
-  height: 170px;
   border-bottom: 1px solid #cad6dc;
-  background: repeating-linear-gradient(to top, transparent 0, transparent 41px, rgba(214, 224, 229, 0.55) 42px);
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 43px, rgba(214, 224, 229, 0.55) 44px);
 }
 
-.dashboard-metric-fill {
-  display: block;
-  width: min(68px, 52%);
-  height: var(--metric-height);
-  min-height: 7px;
-  border-radius: 5px 5px 0 0;
-  box-shadow: 0 -6px 16px rgba(30, 136, 214, 0.16);
-  transform-origin: bottom center;
-  animation: dashboard-column-in 0.85s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.dashboard-trendline::before { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(30, 136, 214, 0.08), transparent 78%); content: ''; }
+
+.dashboard-trend-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.dashboard-metric-blue .dashboard-metric-fill { background: linear-gradient(180deg, #55b5e5, #1e88d6); }
-.dashboard-metric-gold .dashboard-metric-fill { background: linear-gradient(180deg, #f1c469, #d7952b); }
-.dashboard-metric-green .dashboard-metric-fill { background: linear-gradient(180deg, #71bd7a, #2d6a35); }
-
-@keyframes dashboard-column-in {
-  from { transform: scaleY(0); opacity: 0.25; }
-  to { transform: scaleY(1); opacity: 1; }
+.dashboard-trend-svg polyline {
+  fill: none;
+  stroke: #1e88d6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 3px 3px rgba(30, 136, 214, 0.2));
 }
+
+.dashboard-trend-point { position: absolute; z-index: 1; left: var(--point-position); bottom: calc(12% + var(--point-height)); display: grid; justify-items: center; width: 3rem; height: 3rem; margin: 0 0 -1.5rem -1.5rem; color: #17232d; text-decoration: none; animation: dashboard-trend-in 0.65s var(--point-delay) ease both; }
+.dashboard-trend-value { position: absolute; top: 0.45rem; font-size: 1.35rem; font-weight: 800; }
+.dashboard-trend-dot { position: absolute; bottom: 20%; display: grid; place-items: center; width: 2.65rem; height: 2.65rem; color: #fff; background: #1e88d6; border: 4px solid #fff; border-radius: 50%; box-shadow: 0 4px 14px rgba(30, 136, 214, 0.26); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.dashboard-trend-point:hover .dashboard-trend-dot, .dashboard-trend-point:focus-visible .dashboard-trend-dot { transform: scale(1.14); box-shadow: 0 6px 20px rgba(30, 136, 214, 0.38); }
+.dashboard-metric-gold .dashboard-trend-dot { background: #d7952b; }
+.dashboard-metric-green .dashboard-trend-dot { background: #2d6a35; }
+@keyframes dashboard-trend-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.dashboard-trend-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 0.85rem; }
+.dashboard-trend-metric { position: relative; display: grid; grid-template-columns: auto 1fr; column-gap: 0.65rem; align-items: center; min-width: 0; padding: 0.65rem 0.7rem; color: #26343e; text-align: left; text-decoration: none; border: 1px solid transparent; transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease; }
+.dashboard-trend-metric:hover, .dashboard-trend-metric:focus-visible { color: #17232d; background: #f6fafc; border-color: #dceaf1; transform: translateY(-2px); }
+.dashboard-trend-metric .dashboard-metric-icon { grid-row: span 2; margin: 0; }
+.dashboard-trend-metric strong { font-size: 0.84rem; line-height: 1.2; }
+.dashboard-trend-metric small { color: #7b8790; font-size: 0.7rem; line-height: 1.3; }
+.trend-metric-arrow { position: absolute; top: 0.55rem; right: 0.6rem; color: #5aa8d6; font-size: 0.75rem; }
 
 .dashboard-metric-icon {
   display: grid;
@@ -2781,19 +2765,6 @@ code {
 
 .dashboard-metric-gold .dashboard-metric-icon { color: #b67512; background: #fff5df; }
 .dashboard-metric-green .dashboard-metric-icon { color: #2d6a35; background: #eef8f0; }
-
-.dashboard-metric-column strong {
-  font-size: 0.88rem;
-  line-height: 1.25;
-}
-
-.dashboard-metric-column small {
-  min-height: 2.1rem;
-  color: #7b8790;
-  font-size: 0.72rem;
-  line-height: 1.35;
-  margin-top: 0.3rem;
-}
 
 .dashboard-page-head {
   position: relative;
@@ -3887,31 +3858,17 @@ code {
     flex-direction: column;
   }
 
-  .dashboard-metric-bars {
+  .dashboard-trendline { height: 150px; }
+
+  .dashboard-trend-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.35rem;
-    padding-left: 0;
-    padding-right: 0;
   }
 
-  .dashboard-metric-column {
-    grid-template-rows: 1.35rem 130px 2.2rem auto auto;
-  }
+  .dashboard-trend-metric { padding: 0.55rem 0.4rem; }
 
-  .dashboard-metric-track {
-    height: 130px;
-  }
-
-  .dashboard-metric-fill {
-    width: 60%;
-  }
-
-  .dashboard-metric-column strong {
-    font-size: 0.72rem;
-  }
-
-  .dashboard-metric-column small {
-    font-size: 0.63rem;
-  }
+  .dashboard-trend-metric strong { font-size: 0.72rem; }
+  .dashboard-trend-metric small { font-size: 0.63rem; }
 
   .operational-trends {
     padding: 1rem;
@@ -3962,7 +3919,6 @@ code {
   .dashboard-reveal,
   .status-donut,
   .category-bar-fill,
-  .dashboard-metric-fill,
   .dashboard-live-dot {
     animation: none;
   }
