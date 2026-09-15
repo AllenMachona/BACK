@@ -1,0 +1,4 @@
+﻿id,procurement_id,lot_id,bidder_id,evaluator_id,evaluation_stage,score,comments,evidence_references,is_consensus,consensus_reached,consensus_score,consensus_comments,passed,eliminated,elimination_reason,approved_by,approved_at,created_at,updated_at
+1,10,,7,5,technical,92.5,Demo evaluation for Alpha Contractors Ltd,Demo evidence reference,True,True,92.5,,True,False,,5,2026-08-31 00:47:56.623,2026-09-01 00:47:56.623,2026-09-01 00:47:56.623
+2,10,,8,5,technical,86.0,Demo evaluation for Bravo Supplies Botswana,Demo evidence reference,True,True,86.0,,True,False,,5,2026-08-31 00:47:56.660,2026-09-01 00:47:56.663,2026-09-01 00:47:56.663
+3,10,,9,5,technical,78.0,Demo evaluation for Charlie Works & Services,Demo evidence reference,True,True,78.0,,True,False,,5,2026-08-31 00:47:56.663,2026-09-01 00:47:56.667,2026-09-01 00:47:56.667

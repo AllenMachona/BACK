@@ -1,0 +1,12 @@
+﻿id,company_name,ppra_registration_number,ppra_grade,category,contact_email,contact_phone,registered_at,registration_expiry,active,suspended,verified
+1,Construction,,,,construction@example.com,,2026-08-31 21:27:23.967,,True,False,True
+2,Construction,,,,bids@mokwenaconstruction.co.bw,,2026-08-31 21:27:43.283,,True,False,True
+3,BURSS,,,,allenmachona6@gmail.com,,2026-08-31 21:36:32.973,,True,False,True
+4,BURS,,,,tirotsaonedaniel@gmail.com,,2026-08-31 21:56:03.853,,True,False,True
+5,BURS,,,,fonsoally@gmail.com,,2026-08-31 21:58:44.780,,True,False,True
+6,Verify Ad Bidder,,,,verifyad@example.com,,2026-08-31 22:57:10.507,,True,False,True
+7,Alpha Contractors Ltd,PPRA-SIM-001,A,WRK-EDU,alpha@example.com,,2026-09-01 00:47:56.473,,True,False,True
+8,Bravo Supplies Botswana,PPRA-SIM-002,A,SUP,bravo@example.com,,2026-09-01 00:47:56.507,,True,False,True
+9,Charlie Works & Services,PPRA-SIM-003,B,SRV,charlie@example.com,,2026-09-01 00:47:56.510,,True,False,True
+10,BURS,,,,lonemodibedi@gmail.com,,2026-09-01 12:11:25.367,,True,False,True
+11,Future,,,,futurebatoli1@gmail.com,,2026-09-14 08:56:29.993,,True,False,True

@@ -18,9 +18,9 @@ class ProcurementShare(db.Model):
     revoked_at = db.Column(db.DateTime)
     revoked_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    procurement = db.relationship('Procurement', backref=db.backref('smartshare_grants', lazy='dynamic'))
-    recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('smartshare_received', lazy='dynamic'))
-    shared_by = db.relationship('User', foreign_keys=[shared_by_id], backref=db.backref('smartshare_sent', lazy='dynamic'))
+    procurement = db.relationship('Procurement', backref=db.backref('procureshare_grants', lazy='dynamic'))
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('procureshare_received', lazy='dynamic'))
+    shared_by = db.relationship('User', foreign_keys=[shared_by_id], backref=db.backref('procureshare_sent', lazy='dynamic'))
     revoked_by = db.relationship('User', foreign_keys=[revoked_by_id])
 
     @classmethod

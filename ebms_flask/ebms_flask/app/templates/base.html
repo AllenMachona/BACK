@@ -220,9 +220,9 @@
             {% endif %}
             {% if not is_bidder %}
             <div class="ebms-nav-section">Internal access</div>
-            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('smartshare.') else '' }}"
-               href="{{ url_for('smartshare.portal') }}" data-title="SmartShare">
-                <i class="bi bi-share" aria-hidden="true"></i><span>SmartShare</span>
+            <a class="ebms-nav-item {{ 'active' if endpoint.startswith('procureshare.') else '' }}"
+               href="{{ url_for('procureshare.portal') }}" data-title="ProcureShare">
+                <i class="bi bi-share" aria-hidden="true"></i><span>ProcureShare</span>
             </a>
             {% endif %}
 {% if can_reports %}

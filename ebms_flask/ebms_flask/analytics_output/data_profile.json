@@ -1,0 +1,5167 @@
+{
+  "tables": [
+    {
+      "table": "audit_logs",
+      "rows": 894,
+      "columns": 10,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 894,
+          "non_null": 894,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 894,
+          "sample": "1"
+        },
+        {
+          "column": "user_id",
+          "dtype": "float64",
+          "rows": 894,
+          "non_null": 872,
+          "null_count": 22,
+          "null_percent": 2.46,
+          "distinct": 12,
+          "sample": "3.0"
+        },
+        {
+          "column": "action",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 894,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 40,
+          "sample": "LOGIN_SUCCESS"
+        },
+        {
+          "column": "entity_type",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 894,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 17,
+          "sample": "User"
+        },
+        {
+          "column": "entity_id",
+          "dtype": "float64",
+          "rows": 894,
+          "non_null": 858,
+          "null_count": 36,
+          "null_percent": 4.03,
+          "distinct": 36,
+          "sample": "3.0"
+        },
+        {
+          "column": "previous_value",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 45,
+          "null_count": 849,
+          "null_percent": 94.97,
+          "distinct": 7,
+          "sample": "{\"status\": \"draft\"}"
+        },
+        {
+          "column": "new_value",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 216,
+          "null_count": 678,
+          "null_percent": 75.84,
+          "distinct": 138,
+          "sample": "{\"tender_number\": \"TB-2026-611\", \"title\": \"Supplies of bed\", \"has_form_d\": false, \"has_form_e\": false, \"has_itt\": true, \"has_rfq\": false}"
+        },
+        {
+          "column": "ip_address",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 894,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "127.0.0.1"
+        },
+        {
+          "column": "reason",
+          "dtype": "str",
+          "rows": 894,
+          "non_null": 31,
+          "null_count": 863,
+          "null_percent": 96.53,
+          "distinct": 8,
+          "sample": "bad credentials"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 894,
+          "non_null": 894,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 894,
+          "sample": "2026-08-31T21:29:22.750000"
+        }
+      ]
+    },
+    {
+      "table": "awards",
+      "rows": 6,
+      "columns": 25,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "10"
+        },
+        {
+          "column": "winning_bidder_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "7"
+        },
+        {
+          "column": "decision_date",
+          "dtype": "datetime64[us]",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "2026-09-01T00:47:56.673000"
+        },
+        {
+          "column": "cooling_off_expiry",
+          "dtype": "datetime64[us]",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "2026-09-11T01:09:36.860000"
+        },
+        {
+          "column": "contract_concluded",
+          "dtype": "bool",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "contract_concluded_at",
+          "dtype": "object",
+          "rows": 6,
+          "non_null": 0,
+          "null_count": 6,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "award_value",
+          "dtype": "float64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "345000.0"
+        },
+        {
+          "column": "decision_reason",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "AO approved POU recommendation"
+        },
+        {
+          "column": "decision_notes",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "Final decision forwarded to POU"
+        },
+        {
+          "column": "published_at",
+          "dtype": "datetime64[us]",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "2026-09-01T01:09:38.067000"
+        },
+        {
+          "column": "published_by_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "13"
+        },
+        {
+          "column": "created_by_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "3"
+        },
+        {
+          "column": "pre_decision_at",
+          "dtype": "datetime64[us]",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "2026-09-01T01:09:36.860000"
+        },
+        {
+          "column": "pre_decision_by_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "13"
+        },
+        {
+          "column": "evaluation_results_filename",
+          "dtype": "object",
+          "rows": 6,
+          "non_null": 0,
+          "null_count": 6,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "ao_decision_at",
+          "dtype": "datetime64[us]",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "2026-09-01T01:09:37.493000"
+        },
+        {
+          "column": "ao_decision_by_id",
+          "dtype": "int64",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "4"
+        },
+        {
+          "column": "ao_decision_reason",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 6,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "Final decision approved by Accounting Officer"
+        },
+        {
+          "column": "pou_score_summary",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 5,
+          "null_count": 1,
+          "null_percent": 16.67,
+          "distinct": 5,
+          "sample": "Construction: 60% \u2014 exellent; BURSS: 56% \u2014 good; BURS: 34% \u2014 poor"
+        },
+        {
+          "column": "pou_score_reasons",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 5,
+          "null_count": 1,
+          "null_percent": 16.67,
+          "distinct": 5,
+          "sample": "Cont won"
+        },
+        {
+          "column": "ao_final_choice_summary",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 5,
+          "null_count": 1,
+          "null_percent": 16.67,
+          "distinct": 5,
+          "sample": "POU scores: Construction: 60% \u2014 exellent; BURSS: 56% \u2014 good; BURS: 34% \u2014 poor\nAO final choice: BURS"
+        },
+        {
+          "column": "pou_decision_document_name",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 5,
+          "null_count": 1,
+          "null_percent": 16.67,
+          "distinct": 3,
+          "sample": "EBMS_Botswana_PPRA_Procurement_Workflow_Requirements.docx"
+        },
+        {
+          "column": "ao_decision_document_name",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 5,
+          "null_count": 1,
+          "null_percent": 16.67,
+          "distinct": 3,
+          "sample": "awards_20260902_162013.xlsx"
+        },
+        {
+          "column": "pou_score_entries",
+          "dtype": "str",
+          "rows": 6,
+          "non_null": 4,
+          "null_count": 2,
+          "null_percent": 33.33,
+          "distinct": 4,
+          "sample": "{\"2\": {\"score\": 50.0, \"reason\": \"\"}, \"5\": {\"score\": 54.0, \"reason\": \"\"}}"
+        }
+      ]
+    },
+    {
+      "table": "bidder_compliance_documents",
+      "rows": 10,
+      "columns": 9,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 10,
+          "sample": "1"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "3"
+        },
+        {
+          "column": "document_type",
+          "dtype": "str",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "cipa_equivalent"
+        },
+        {
+          "column": "original_filename",
+          "dtype": "str",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "EBMS_Terms_of_Reference_AS_ORIGINAL_FORMAT.docx"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "approved"
+        },
+        {
+          "column": "review_notes",
+          "dtype": "object",
+          "rows": 10,
+          "non_null": 0,
+          "null_count": 10,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_at",
+          "dtype": "datetime64[us]",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2026-08-31T21:36:33.313000"
+        },
+        {
+          "column": "reviewed_at",
+          "dtype": "datetime64[us]",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2026-08-31T21:37:44.637000"
+        },
+        {
+          "column": "reviewed_by_id",
+          "dtype": "int64",
+          "rows": 10,
+          "non_null": 10,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2"
+        }
+      ]
+    },
+    {
+      "table": "bidder_document_accesses",
+      "rows": 30,
+      "columns": 11,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 30,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 9,
+          "sample": "2"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2"
+        },
+        {
+          "column": "document_type",
+          "dtype": "str",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "itt"
+        },
+        {
+          "column": "payment_id",
+          "dtype": "int64",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 15,
+          "sample": "2"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "active"
+        },
+        {
+          "column": "granted_by_id",
+          "dtype": "int64",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "granted_at",
+          "dtype": "datetime64[us]",
+          "rows": 30,
+          "non_null": 30,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 30,
+          "sample": "2026-08-31T21:34:02.967000"
+        },
+        {
+          "column": "revoked_by_id",
+          "dtype": "object",
+          "rows": 30,
+          "non_null": 0,
+          "null_count": 30,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "revoked_at",
+          "dtype": "object",
+          "rows": 30,
+          "non_null": 0,
+          "null_count": 30,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "revocation_reason",
+          "dtype": "object",
+          "rows": 30,
+          "non_null": 0,
+          "null_count": 30,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "bidder_payments",
+      "rows": 16,
+      "columns": 13,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 16,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 10,
+          "sample": "1"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "1"
+        },
+        {
+          "column": "submitted_by_id",
+          "dtype": "int64",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "1"
+        },
+        {
+          "column": "payment_reference",
+          "dtype": "str",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "PAY-200"
+        },
+        {
+          "column": "amount",
+          "dtype": "float64",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 10,
+          "sample": "0.0"
+        },
+        {
+          "column": "proof_filename",
+          "dtype": "str",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "proof.pdf"
+        },
+        {
+          "column": "supporting_document_filename",
+          "dtype": "str",
+          "rows": 16,
+          "non_null": 9,
+          "null_count": 7,
+          "null_percent": 43.75,
+          "distinct": 9,
+          "sample": "TB-2026-611_2_db3a1dc2_Document_3_1_2_4_2_1.pdf"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "approved"
+        },
+        {
+          "column": "notes",
+          "dtype": "str",
+          "rows": 16,
+          "non_null": 15,
+          "null_count": 1,
+          "null_percent": 6.25,
+          "distinct": 1,
+          "sample": "Payment verified and approved by Procurement."
+        },
+        {
+          "column": "submitted_at",
+          "dtype": "datetime64[us]",
+          "rows": 16,
+          "non_null": 16,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 16,
+          "sample": "2026-08-31T21:27:24.267000"
+        },
+        {
+          "column": "reviewed_by_id",
+          "dtype": "float64",
+          "rows": 16,
+          "non_null": 15,
+          "null_count": 1,
+          "null_percent": 6.25,
+          "distinct": 1,
+          "sample": "3.0"
+        },
+        {
+          "column": "reviewed_at",
+          "dtype": "datetime64[us]",
+          "rows": 16,
+          "non_null": 15,
+          "null_count": 1,
+          "null_percent": 6.25,
+          "distinct": 15,
+          "sample": "2026-08-31T21:34:02.933000"
+        }
+      ]
+    },
+    {
+      "table": "bidder_performance",
+      "rows": 0,
+      "columns": 11,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "delivery_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "quality_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "compliance_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "overall_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "notes",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "reviewed_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "reviewed_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "bidders",
+      "rows": 11,
+      "columns": 12,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "1"
+        },
+        {
+          "column": "company_name",
+          "dtype": "str",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 8,
+          "sample": "Construction"
+        },
+        {
+          "column": "ppra_registration_number",
+          "dtype": "str",
+          "rows": 11,
+          "non_null": 3,
+          "null_count": 8,
+          "null_percent": 72.73,
+          "distinct": 3,
+          "sample": "PPRA-SIM-001"
+        },
+        {
+          "column": "ppra_grade",
+          "dtype": "str",
+          "rows": 11,
+          "non_null": 3,
+          "null_count": 8,
+          "null_percent": 72.73,
+          "distinct": 2,
+          "sample": "A"
+        },
+        {
+          "column": "category",
+          "dtype": "str",
+          "rows": 11,
+          "non_null": 3,
+          "null_count": 8,
+          "null_percent": 72.73,
+          "distinct": 3,
+          "sample": "WRK-EDU"
+        },
+        {
+          "column": "contact_email",
+          "dtype": "str",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "construction@example.com"
+        },
+        {
+          "column": "contact_phone",
+          "dtype": "object",
+          "rows": 11,
+          "non_null": 0,
+          "null_count": 11,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "registered_at",
+          "dtype": "datetime64[us]",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "2026-08-31T21:27:23.967000"
+        },
+        {
+          "column": "registration_expiry",
+          "dtype": "object",
+          "rows": 11,
+          "non_null": 0,
+          "null_count": 11,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "active",
+          "dtype": "bool",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        },
+        {
+          "column": "suspended",
+          "dtype": "bool",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "verified",
+          "dtype": "bool",
+          "rows": 11,
+          "non_null": 11,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        }
+      ]
+    },
+    {
+      "table": "budget_entries",
+      "rows": 1,
+      "columns": 9,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "14"
+        },
+        {
+          "column": "entry_type",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "invoice"
+        },
+        {
+          "column": "description",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Milestone 2"
+        },
+        {
+          "column": "amount",
+          "dtype": "float64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "4000.0"
+        },
+        {
+          "column": "reference",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "P0 231"
+        },
+        {
+          "column": "entry_date",
+          "dtype": "object",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2026-09-04"
+        },
+        {
+          "column": "created_by_id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2026-09-04T19:02:48.543000"
+        }
+      ]
+    },
+    {
+      "table": "clarification_accesses",
+      "rows": 0,
+      "columns": 7,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "communication_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "accessed_by_user_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_type",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "ip_address",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "accessed_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "clarification_visibilities",
+      "rows": 0,
+      "columns": 8,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "communication_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "granted_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "granted_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "revoked_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "revoked_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "revocation_reason",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "committee_members",
+      "rows": 0,
+      "columns": 18,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "user_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "appointment_instrument_ref",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "appointment_date",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "role",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "is_voting_member",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "skills",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "conflict_of_interest_declared",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "conflict_of_interest_details",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "confidentiality_signed",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "confidentiality_signed_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_granted",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_granted_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_revoked_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_valid_from",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "access_valid_until",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "communications",
+      "rows": 14,
+      "columns": 11,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 14,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "2"
+        },
+        {
+          "column": "type",
+          "dtype": "str",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "advertisement"
+        },
+        {
+          "column": "content",
+          "dtype": "str",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "Advertisement document for Supplies of bed"
+        },
+        {
+          "column": "original_filename",
+          "dtype": "str",
+          "rows": 14,
+          "non_null": 13,
+          "null_count": 1,
+          "null_percent": 7.14,
+          "distinct": 11,
+          "sample": "EBMS_Terms_of_Reference.pdf"
+        },
+        {
+          "column": "from_user_id",
+          "dtype": "float64",
+          "rows": 14,
+          "non_null": 13,
+          "null_count": 1,
+          "null_percent": 7.14,
+          "distinct": 2,
+          "sample": "3.0"
+        },
+        {
+          "column": "from_bidder_id",
+          "dtype": "float64",
+          "rows": 14,
+          "non_null": 1,
+          "null_count": 13,
+          "null_percent": 92.86,
+          "distinct": 1,
+          "sample": "2.0"
+        },
+        {
+          "column": "is_public",
+          "dtype": "bool",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "True"
+        },
+        {
+          "column": "visibility_type",
+          "dtype": "str",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "public"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 14,
+          "sample": "2026-08-31T21:32:28.640000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 14,
+          "non_null": 14,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 14,
+          "sample": "2026-08-31T21:32:28.640000"
+        }
+      ]
+    },
+    {
+      "table": "complaints",
+      "rows": 1,
+      "columns": 10,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "12"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2"
+        },
+        {
+          "column": "grounds",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Can i get INFO about cooling off"
+        },
+        {
+          "column": "relief_sought",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Can i get INFO about cooling off"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "received"
+        },
+        {
+          "column": "decision",
+          "dtype": "object",
+          "rows": 1,
+          "non_null": 0,
+          "null_count": 1,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 1,
+          "non_null": 1,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2026-09-03T08:10:28.243000"
+        },
+        {
+          "column": "resolved_at",
+          "dtype": "object",
+          "rows": 1,
+          "non_null": 0,
+          "null_count": 1,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "resolved_by_id",
+          "dtype": "object",
+          "rows": 1,
+          "non_null": 0,
+          "null_count": 1,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "document_versions",
+      "rows": 0,
+      "columns": 15,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "document_type",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "entity_type",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "entity_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "version_number",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "is_current",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "file_name",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "file_size_bytes",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "restored_from_version",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "restored_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "restored_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "restoration_reason",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "description",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "evaluation_criteria",
+      "rows": 0,
+      "columns": 16,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "lot_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "criteria_type",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "name",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "description",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "weight",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "max_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "min_qualifying_mark",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "scoring_method",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "is_mandatory",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "locked",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "locked_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "locked_by",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "sequence",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "evaluations",
+      "rows": 3,
+      "columns": 20,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "10"
+        },
+        {
+          "column": "lot_id",
+          "dtype": "object",
+          "rows": 3,
+          "non_null": 0,
+          "null_count": 3,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "7"
+        },
+        {
+          "column": "evaluator_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "5"
+        },
+        {
+          "column": "evaluation_stage",
+          "dtype": "str",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "technical"
+        },
+        {
+          "column": "score",
+          "dtype": "float64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "92.5"
+        },
+        {
+          "column": "comments",
+          "dtype": "str",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "Demo evaluation for Alpha Contractors Ltd"
+        },
+        {
+          "column": "evidence_references",
+          "dtype": "str",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Demo evidence reference"
+        },
+        {
+          "column": "is_consensus",
+          "dtype": "bool",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        },
+        {
+          "column": "consensus_reached",
+          "dtype": "bool",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        },
+        {
+          "column": "consensus_score",
+          "dtype": "float64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "92.5"
+        },
+        {
+          "column": "consensus_comments",
+          "dtype": "object",
+          "rows": 3,
+          "non_null": 0,
+          "null_count": 3,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "passed",
+          "dtype": "bool",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        },
+        {
+          "column": "eliminated",
+          "dtype": "bool",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "elimination_reason",
+          "dtype": "object",
+          "rows": 3,
+          "non_null": 0,
+          "null_count": 3,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "approved_by",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "5"
+        },
+        {
+          "column": "approved_at",
+          "dtype": "datetime64[us]",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2026-08-31T00:47:56.623000"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2026-09-01T00:47:56.623000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2026-09-01T00:47:56.623000"
+        }
+      ]
+    },
+    {
+      "table": "evaluator_assignments",
+      "rows": 5,
+      "columns": 8,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2"
+        },
+        {
+          "column": "evaluator_id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "5"
+        },
+        {
+          "column": "document_scope",
+          "dtype": "str",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "both"
+        },
+        {
+          "column": "assigned_by_id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "assigned_at",
+          "dtype": "datetime64[us]",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2026-09-01T01:23:23.063000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2026-09-01T01:23:23.067000"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "active"
+        }
+      ]
+    },
+    {
+      "table": "evaluator_feedback",
+      "rows": 5,
+      "columns": 6,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2"
+        },
+        {
+          "column": "evaluator_id",
+          "dtype": "int64",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "5"
+        },
+        {
+          "column": "feedback_text",
+          "dtype": "str",
+          "rows": 5,
+          "non_null": 3,
+          "null_count": 2,
+          "null_percent": 40.0,
+          "distinct": 3,
+          "sample": "here is the feedback"
+        },
+        {
+          "column": "original_filename",
+          "dtype": "str",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "EBMS_Botswana_PPRA_Procurement_Workflow_Requirements.docx"
+        },
+        {
+          "column": "submitted_at",
+          "dtype": "datetime64[us]",
+          "rows": 5,
+          "non_null": 5,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "2026-09-01T01:25:26.143000"
+        }
+      ]
+    },
+    {
+      "table": "form_d_requests",
+      "rows": 0,
+      "columns": 25,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "requester_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "requisition_title",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "category",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_method",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "estimated_value",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_entity",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "justification",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "delivery_period",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "authorized_by",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "authorization_date",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_form_path",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_form_filename",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "under_review_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "under_review_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "converted_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "converted_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejected_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejected_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejection_reason",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "updated_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "form_de_requests",
+      "rows": 2,
+      "columns": 18,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "1"
+        },
+        {
+          "column": "requester_id",
+          "dtype": "int64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "6"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "under_review"
+        },
+        {
+          "column": "department",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Ministry of Health"
+        },
+        {
+          "column": "justification",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "BUY LAPTOPS"
+        },
+        {
+          "column": "form_d_filename",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "1_List_of_Registration_Codes_PPADB.pdf"
+        },
+        {
+          "column": "form_e_filename",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "EBMS_Botswana_PPRA_Procurement_Workflow_Requirements.docx"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "float64",
+          "rows": 2,
+          "non_null": 1,
+          "null_count": 1,
+          "null_percent": 50.0,
+          "distinct": 1,
+          "sample": "17.0"
+        },
+        {
+          "column": "submitted_by_id",
+          "dtype": "int64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "6"
+        },
+        {
+          "column": "under_review_by_id",
+          "dtype": "float64",
+          "rows": 2,
+          "non_null": 1,
+          "null_count": 1,
+          "null_percent": 50.0,
+          "distinct": 1,
+          "sample": "3.0"
+        },
+        {
+          "column": "under_review_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 1,
+          "null_count": 1,
+          "null_percent": 50.0,
+          "distinct": 1,
+          "sample": "2026-09-03T02:12:58.963000"
+        },
+        {
+          "column": "converted_by_id",
+          "dtype": "float64",
+          "rows": 2,
+          "non_null": 1,
+          "null_count": 1,
+          "null_percent": 50.0,
+          "distinct": 1,
+          "sample": "3.0"
+        },
+        {
+          "column": "converted_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 1,
+          "null_count": 1,
+          "null_percent": 50.0,
+          "distinct": 1,
+          "sample": "2026-09-14T13:04:50.083000"
+        },
+        {
+          "column": "rejected_by_id",
+          "dtype": "object",
+          "rows": 2,
+          "non_null": 0,
+          "null_count": 2,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejected_at",
+          "dtype": "object",
+          "rows": 2,
+          "non_null": 0,
+          "null_count": 2,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejection_reason",
+          "dtype": "object",
+          "rows": 2,
+          "non_null": 0,
+          "null_count": 2,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "2026-09-01T11:34:06.893000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "2026-09-03T02:12:58.963000"
+        }
+      ]
+    },
+    {
+      "table": "form_e_requests",
+      "rows": 0,
+      "columns": 25,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "requester_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "specification_title",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "category",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "technical_specification",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "budget_line",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "budget_allocated",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "budget_status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_entity",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "clearance_authority",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "clearance_date",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_form_path",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_form_filename",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submitted_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "under_review_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "under_review_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "converted_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "converted_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejected_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejected_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "rejection_reason",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "updated_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "lots",
+      "rows": 0,
+      "columns": 5,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "lot_number",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "description",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "estimated_value",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "message_attachments",
+      "rows": 0,
+      "columns": 8,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "message_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "filename",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "stored_name",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "file_type",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "file_size",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "storage_path",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "message_recipients",
+      "rows": 8,
+      "columns": 9,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 8,
+          "sample": "1"
+        },
+        {
+          "column": "message_id",
+          "dtype": "int64",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "1"
+        },
+        {
+          "column": "user_id",
+          "dtype": "int64",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "object",
+          "rows": 8,
+          "non_null": 0,
+          "null_count": 8,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "role_id",
+          "dtype": "object",
+          "rows": 8,
+          "non_null": 0,
+          "null_count": 8,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "delivered_at",
+          "dtype": "datetime64[us]",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "2026-09-03T02:02:58.203000"
+        },
+        {
+          "column": "read_at",
+          "dtype": "datetime64[us]",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 8,
+          "sample": "2026-09-03T02:03:09.017000"
+        },
+        {
+          "column": "archived_at",
+          "dtype": "object",
+          "rows": 8,
+          "non_null": 0,
+          "null_count": 8,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 8,
+          "non_null": 8,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "2026-09-03T02:02:58.263000"
+        }
+      ]
+    },
+    {
+      "table": "messages",
+      "rows": 4,
+      "columns": 13,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "1"
+        },
+        {
+          "column": "sender_id",
+          "dtype": "int64",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "17"
+        },
+        {
+          "column": "subject",
+          "dtype": "str",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "Clariffication"
+        },
+        {
+          "column": "body",
+          "dtype": "str",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "Hello SA"
+        },
+        {
+          "column": "message_type",
+          "dtype": "str",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "direct"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "object",
+          "rows": 4,
+          "non_null": 0,
+          "null_count": 4,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "communication_id",
+          "dtype": "object",
+          "rows": 4,
+          "non_null": 0,
+          "null_count": 4,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "attachment_filename",
+          "dtype": "object",
+          "rows": 4,
+          "non_null": 0,
+          "null_count": 4,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "reply_to_id",
+          "dtype": "float64",
+          "rows": 4,
+          "non_null": 2,
+          "null_count": 2,
+          "null_percent": 50.0,
+          "distinct": 2,
+          "sample": "1.0"
+        },
+        {
+          "column": "thread_id",
+          "dtype": "int64",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "1"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "2026-09-03T02:02:58.123000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 4,
+          "non_null": 4,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "2026-09-03T02:02:58.213000"
+        },
+        {
+          "column": "unsent_at",
+          "dtype": "datetime64[us]",
+          "rows": 4,
+          "non_null": 2,
+          "null_count": 2,
+          "null_percent": 50.0,
+          "distinct": 2,
+          "sample": "2026-09-14T14:54:54.810000"
+        }
+      ]
+    },
+    {
+      "table": "notifications",
+      "rows": 324,
+      "columns": 11,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 324,
+          "sample": "1"
+        },
+        {
+          "column": "user_id",
+          "dtype": "int64",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 17,
+          "sample": "1"
+        },
+        {
+          "column": "sender_id",
+          "dtype": "object",
+          "rows": 324,
+          "non_null": 0,
+          "null_count": 324,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "type",
+          "dtype": "str",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 10,
+          "sample": "status_change"
+        },
+        {
+          "column": "title",
+          "dtype": "str",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 74,
+          "sample": "Tender published: TB-2026-611"
+        },
+        {
+          "column": "body",
+          "dtype": "str",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 84,
+          "sample": "Supplies of bed has been published and is now visible to registered bidders."
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "float64",
+          "rows": 324,
+          "non_null": 311,
+          "null_count": 13,
+          "null_percent": 4.01,
+          "distinct": 11,
+          "sample": "2.0"
+        },
+        {
+          "column": "reply_to",
+          "dtype": "object",
+          "rows": 324,
+          "non_null": 0,
+          "null_count": 324,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "is_read",
+          "dtype": "bool",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "emailed_at",
+          "dtype": "datetime64[us]",
+          "rows": 324,
+          "non_null": 22,
+          "null_count": 302,
+          "null_percent": 93.21,
+          "distinct": 22,
+          "sample": "2026-08-31T23:34:08.017000"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 324,
+          "non_null": 324,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 316,
+          "sample": "2026-08-31T21:32:30.570000"
+        }
+      ]
+    },
+    {
+      "table": "procurement_histories",
+      "rows": 43,
+      "columns": 14,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 43,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "2"
+        },
+        {
+          "column": "action",
+          "dtype": "str",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "published"
+        },
+        {
+          "column": "previous_status",
+          "dtype": "str",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "draft"
+        },
+        {
+          "column": "new_status",
+          "dtype": "str",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "published"
+        },
+        {
+          "column": "reason",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "restored_from_history_id",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "performed_by_id",
+          "dtype": "int64",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "performed_at",
+          "dtype": "datetime64[us]",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 43,
+          "sample": "2026-08-31T21:32:30.453000"
+        },
+        {
+          "column": "requires_approval",
+          "dtype": "bool",
+          "rows": 43,
+          "non_null": 43,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "approved_by_id",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "approved_at",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "affected_submission_deadline",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "affected_opening_date",
+          "dtype": "object",
+          "rows": 43,
+          "non_null": 0,
+          "null_count": 43,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "procurement_plan_items",
+      "rows": 2,
+      "columns": 16,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_entity",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "BSB"
+        },
+        {
+          "column": "financial_year",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "2026/27"
+        },
+        {
+          "column": "title",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "SUPPLY OF TABLES"
+        },
+        {
+          "column": "description",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "SUPPLY OF TABLES"
+        },
+        {
+          "column": "ppra_code",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "100"
+        },
+        {
+          "column": "ppra_sub_code",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "03"
+        },
+        {
+          "column": "ppra_description",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "Closed protection Service (new)"
+        },
+        {
+          "column": "category",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "goods"
+        },
+        {
+          "column": "method",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "open_domestic"
+        },
+        {
+          "column": "estimated_value",
+          "dtype": "float64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "30000.0"
+        },
+        {
+          "column": "planned_quarter",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Q1"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "upcoming"
+        },
+        {
+          "column": "created_by_id",
+          "dtype": "int64",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "2026-09-01T23:42:11.523000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 2,
+          "non_null": 2,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "2026-09-01T23:42:11.523000"
+        }
+      ]
+    },
+    {
+      "table": "procurement_shares",
+      "rows": 3,
+      "columns": 9,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "14"
+        },
+        {
+          "column": "recipient_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "5"
+        },
+        {
+          "column": "shared_by_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        },
+        {
+          "column": "folder_name",
+          "dtype": "str",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "Shared procurements"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "revoked"
+        },
+        {
+          "column": "shared_at",
+          "dtype": "datetime64[us]",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2026-09-03T01:35:54.300000"
+        },
+        {
+          "column": "revoked_at",
+          "dtype": "datetime64[us]",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "2026-09-03T01:36:27.090000"
+        },
+        {
+          "column": "revoked_by_id",
+          "dtype": "int64",
+          "rows": 3,
+          "non_null": 3,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "3"
+        }
+      ]
+    },
+    {
+      "table": "procurements",
+      "rows": 18,
+      "columns": 31,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "1"
+        },
+        {
+          "column": "tender_number",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "TB-2026-1001"
+        },
+        {
+          "column": "title",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 17,
+          "sample": "Grouped Bid Tender"
+        },
+        {
+          "column": "description",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 10,
+          "sample": "beds"
+        },
+        {
+          "column": "category",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "works"
+        },
+        {
+          "column": "procurement_entity",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 7,
+          "sample": "MOG"
+        },
+        {
+          "column": "ppra_code",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 12,
+          "sample": "105-03"
+        },
+        {
+          "column": "ppra_sub_code",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 5,
+          "sample": "03"
+        },
+        {
+          "column": "method",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "open_domestic"
+        },
+        {
+          "column": "evaluation_method",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 3,
+          "sample": "least_cost_services"
+        },
+        {
+          "column": "envelope_type",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "single"
+        },
+        {
+          "column": "estimated_value",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 12,
+          "sample": "300000.0"
+        },
+        {
+          "column": "user_department",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 7,
+          "sample": "MOG"
+        },
+        {
+          "column": "submission_deadline",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 13,
+          "null_count": 5,
+          "null_percent": 27.78,
+          "distinct": 13,
+          "sample": "2026-09-01T00:32:00"
+        },
+        {
+          "column": "clarification_deadline",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 12,
+          "sample": "2026-09-01T12:33:00"
+        },
+        {
+          "column": "opening_scheduled_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 1,
+          "null_count": 17,
+          "null_percent": 94.44,
+          "distinct": 1,
+          "sample": "2026-08-25T00:47:56.523000"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 6,
+          "sample": "submission_open"
+        },
+        {
+          "column": "cancelled",
+          "dtype": "bool",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "cancelled_reason",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "cancelled_at",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "replacement_of_id",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_by_id",
+          "dtype": "int64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "1"
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "2026-08-31T21:27:24.187000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "2026-08-31T21:27:24.187000"
+        },
+        {
+          "column": "tender_fee",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 9,
+          "sample": "0.0"
+        },
+        {
+          "column": "form_d_filename",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 1,
+          "null_count": 17,
+          "null_percent": 94.44,
+          "distinct": 1,
+          "sample": "LIT VIEW2.docx"
+        },
+        {
+          "column": "form_e_filename",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 1,
+          "null_count": 17,
+          "null_percent": 94.44,
+          "distinct": 1,
+          "sample": "LIT VIEW2.docx"
+        },
+        {
+          "column": "itt_filename",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 11,
+          "null_count": 7,
+          "null_percent": 38.89,
+          "distinct": 9,
+          "sample": "EBMS_Terms_of_Reference.pdf"
+        },
+        {
+          "column": "rfq_filename",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "evaluator_feedback_released_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 4,
+          "null_count": 14,
+          "null_percent": 77.78,
+          "distinct": 4,
+          "sample": "2026-09-02T19:56:53.813000"
+        },
+        {
+          "column": "evaluator_feedback_released_by_id",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 4,
+          "null_count": 14,
+          "null_percent": 77.78,
+          "distinct": 1,
+          "sample": "3.0"
+        }
+      ]
+    },
+    {
+      "table": "roles",
+      "rows": 13,
+      "columns": 14,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "1"
+        },
+        {
+          "column": "code",
+          "dtype": "str",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "requester"
+        },
+        {
+          "column": "name",
+          "dtype": "str",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "Requester"
+        },
+        {
+          "column": "description",
+          "dtype": "str",
+          "rows": 13,
+          "non_null": 3,
+          "null_count": 10,
+          "null_percent": 76.92,
+          "distinct": 3,
+          "sample": "User department staff who submit Form D / Form E procurement requests."
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 13,
+          "sample": "2026-08-31T21:27:23.760000"
+        },
+        {
+          "column": "can_create_procurement",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_approve_procurement",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_publish",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_evaluate",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_open_bids",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_award",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_view_all_records",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_admin_system",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        },
+        {
+          "column": "can_bid",
+          "dtype": "bool",
+          "rows": 13,
+          "non_null": 13,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "False"
+        }
+      ]
+    },
+    {
+      "table": "score_sheets",
+      "rows": 0,
+      "columns": 11,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "evaluation_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "criteria_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "max_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "weight",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "weighted_score",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "comments",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "evidence_reference",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "updated_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "site_settings",
+      "rows": 72,
+      "columns": 6,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 72,
+          "sample": "1"
+        },
+        {
+          "column": "value",
+          "dtype": "str",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 52,
+          "sample": "EBMS Botswana"
+        },
+        {
+          "column": "label",
+          "dtype": "str",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 72,
+          "sample": "Application Name"
+        },
+        {
+          "column": "description",
+          "dtype": "str",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 72,
+          "sample": "Name shown in the portal header."
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 70,
+          "sample": "2026-08-31T21:27:40.840000"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 72,
+          "non_null": 72,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 70,
+          "sample": "2026-08-31T21:27:40.840000"
+        }
+      ]
+    },
+    {
+      "table": "submission_histories",
+      "rows": 0,
+      "columns": 9,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "submission_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "action",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "previous_status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "new_status",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "reason",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "performed_by_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "performed_at",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "replaced_submission_id",
+          "dtype": "object",
+          "rows": 0,
+          "non_null": 0,
+          "null_count": 0,
+          "null_percent": 0,
+          "distinct": 0,
+          "sample": null
+        }
+      ]
+    },
+    {
+      "table": "submissions",
+      "rows": 28,
+      "columns": 14,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 28,
+          "sample": "1"
+        },
+        {
+          "column": "procurement_id",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 9,
+          "sample": "1"
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 7,
+          "sample": "1"
+        },
+        {
+          "column": "envelope_type",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 3,
+          "sample": "technical"
+        },
+        {
+          "column": "original_filename",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "technical.pdf"
+        },
+        {
+          "column": "file_size_bytes",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 11,
+          "sample": "1"
+        },
+        {
+          "column": "compliance_document_filename",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 25,
+          "null_count": 3,
+          "null_percent": 10.71,
+          "distinct": 10,
+          "sample": "doc.pdf"
+        },
+        {
+          "column": "returnable_document_filename",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 25,
+          "null_count": 3,
+          "null_percent": 10.71,
+          "distinct": 10,
+          "sample": "doc.pdf"
+        },
+        {
+          "column": "version",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "1"
+        },
+        {
+          "column": "status",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 2,
+          "sample": "submitted"
+        },
+        {
+          "column": "submitted_by_id",
+          "dtype": "int64",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 5,
+          "sample": "1"
+        },
+        {
+          "column": "submitted_at",
+          "dtype": "datetime64[us]",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 27,
+          "sample": "2026-08-31T21:27:24.283000"
+        },
+        {
+          "column": "receipt_code",
+          "dtype": "str",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 28,
+          "sample": "RC-TECHNICAL"
+        },
+        {
+          "column": "declaration_accepted",
+          "dtype": "bool",
+          "rows": 28,
+          "non_null": 28,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        }
+      ]
+    },
+    {
+      "table": "users",
+      "rows": 18,
+      "columns": 34,
+      "column_profile": [
+        {
+          "column": "id",
+          "dtype": "int64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "1"
+        },
+        {
+          "column": "uuid",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "9ddcda0d-0bb3-48b6-83b3-dec16e9da120"
+        },
+        {
+          "column": "username",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "construction_user"
+        },
+        {
+          "column": "email",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "construction@example.com"
+        },
+        {
+          "column": "first_name",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 17,
+          "sample": "Construction"
+        },
+        {
+          "column": "last_name",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 16,
+          "sample": "Bidder"
+        },
+        {
+          "column": "phone",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "department",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 15,
+          "null_count": 3,
+          "null_percent": 16.67,
+          "distinct": 12,
+          "sample": "ICT"
+        },
+        {
+          "column": "designation",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 5,
+          "null_count": 13,
+          "null_percent": 72.22,
+          "distinct": 3,
+          "sample": "CEO"
+        },
+        {
+          "column": "employee_id",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "role_id",
+          "dtype": "int64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 8,
+          "sample": "11"
+        },
+        {
+          "column": "delegation_limit",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "0.0"
+        },
+        {
+          "column": "delegation_start",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "delegation_end",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "delegation_conditions",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "bidder_id",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 8,
+          "null_count": 10,
+          "null_percent": 55.56,
+          "distinct": 8,
+          "sample": "1.0"
+        },
+        {
+          "column": "is_active",
+          "dtype": "bool",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "True"
+        },
+        {
+          "column": "mfa_enabled",
+          "dtype": "bool",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "last_login",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 12,
+          "sample": "2026-09-14T15:57:28.377000"
+        },
+        {
+          "column": "last_login_ip",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 12,
+          "null_count": 6,
+          "null_percent": 33.33,
+          "distinct": 1,
+          "sample": "127.0.0.1"
+        },
+        {
+          "column": "failed_login_attempts",
+          "dtype": "int64",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "0"
+        },
+        {
+          "column": "locked_until",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "email_confirmation_expires_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 3,
+          "null_count": 15,
+          "null_percent": 83.33,
+          "distinct": 3,
+          "sample": "2026-09-01T21:56:04.130000"
+        },
+        {
+          "column": "email_confirmed_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 3,
+          "null_count": 15,
+          "null_percent": 83.33,
+          "distinct": 3,
+          "sample": "2026-09-15T10:56:03.197000"
+        },
+        {
+          "column": "preferences",
+          "dtype": "str",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 4,
+          "sample": "{}"
+        },
+        {
+          "column": "federation_id",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "federation_provider",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "conflict_of_interest_declared",
+          "dtype": "bool",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "conflict_of_interest_details",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "confidentiality_signed",
+          "dtype": "bool",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 1,
+          "sample": "False"
+        },
+        {
+          "column": "confidentiality_signed_at",
+          "dtype": "object",
+          "rows": 18,
+          "non_null": 0,
+          "null_count": 18,
+          "null_percent": 100.0,
+          "distinct": 0,
+          "sample": null
+        },
+        {
+          "column": "created_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "2026-08-31T21:27:24.153000"
+        },
+        {
+          "column": "created_by",
+          "dtype": "float64",
+          "rows": 18,
+          "non_null": 2,
+          "null_count": 16,
+          "null_percent": 88.89,
+          "distinct": 1,
+          "sample": "2.0"
+        },
+        {
+          "column": "updated_at",
+          "dtype": "datetime64[us]",
+          "rows": 18,
+          "non_null": 18,
+          "null_count": 0,
+          "null_percent": 0.0,
+          "distinct": 18,
+          "sample": "2026-08-31T21:27:24.153000"
+        }
+      ]
+    }
+  ],
+  "skipped": []
+}

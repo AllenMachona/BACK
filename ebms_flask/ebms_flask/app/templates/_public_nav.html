@@ -1,7 +1,6 @@
 <nav class="public-nav" aria-label="Public navigation">
   <a class="logo-wrap" href="{{ url_for('dashboard.index') }}" aria-label="EBMS Botswana home">
-    <span class="logo-mark">EBMS</span>
-    <span class="logo-text">BOTSWANA<span>.</span></span>
+    <img class="public-nav-logo" src="{{ url_for('static', filename='images/sally.png') }}" alt="EBMS Botswana">
   </a>
 
   <button class="public-nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="publicNavMenu">
@@ -12,7 +11,6 @@
     <ul class="nav-links">
       <li><a href="{{ url_for('dashboard.public_tenders') }}">Tenders</a></li>
       <li><a href="{{ url_for('dashboard.public_procurement_plans') }}">Procurement Plans</a></li>
-      <li><a href="{{ url_for('dashboard.index') }}#procuring-entities">Procuring Entities</a></li>
       <li><a href="{{ url_for('dashboard.about') }}">About</a></li>
     </ul>
 

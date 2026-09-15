@@ -1,0 +1,5 @@
+﻿id,sender_id,subject,body,message_type,procurement_id,communication_id,attachment_filename,reply_to_id,thread_id,created_at,updated_at,unsent_at
+1,17,Clariffication,Hello SA,direct,,,,,1,2026-09-03 02:02:58.123,2026-09-03 02:02:58.213,
+2,2,Re: Clariffication,Hello,direct,,,,1.0,1,2026-09-03 02:03:15.327,2026-09-03 02:03:15.327,
+3,2,Clariffication,Hello D.Tlou How are you,direct,,,,,3,2026-09-14 08:59:45.920,2026-09-14 14:54:54.810,2026-09-14 14:54:54.810
+4,3,Re: Clariffication,Im fine dawg,direct,,,,3.0,3,2026-09-14 09:00:12.450,2026-09-14 17:54:36.177,2026-09-14 17:54:36.163

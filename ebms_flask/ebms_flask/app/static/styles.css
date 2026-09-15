@@ -1845,7 +1845,7 @@ code {
 }
 
 .dot.active {
-  background: #2d6a35;
+  background: #d36b2d;
 }
 
 .dot:hover {
@@ -1854,8 +1854,8 @@ code {
 
 /* Hero Section */
 #public-home-page {
-  background: #f8f8f4;
-  color: #0a0a0a;
+  background: #f2f7f9;
+  color: #17384a;
 }
 
 .public-nav {
@@ -1864,7 +1864,7 @@ code {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(248, 248, 244, 0.97);
+  background: rgba(242, 247, 249, 0.97);
   backdrop-filter: blur(12px);
   padding: 0 5%;
   display: flex;
@@ -1883,7 +1883,7 @@ code {
   border: 1px solid rgba(10, 10, 10, 0.2);
   border-radius: 4px;
   background: #fff;
-  color: #0a0a0a;
+  color: #17384a;
   font-size: 1.35rem;
   cursor: pointer;
 }
@@ -1976,24 +1976,17 @@ code {
 .logo-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: bold;
+  flex: 0 1 250px;
+  min-width: 0;
 }
 
-.logo-mark {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: #0a0a0a;
-}
-
-.logo-text {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: #0a0a0a;
-}
-
-.logo-text span {
-  color: #2d6a35;
+.public-nav-logo {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 48px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .nav-links {
@@ -2005,7 +1998,7 @@ code {
 }
 
 .nav-links a {
-  color: rgba(10, 10, 10, 0.7);
+  color: rgba(23, 56, 74, 0.74);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -2015,7 +2008,7 @@ code {
 }
 
 .nav-links a:hover {
-  color: #2d6a35;
+  color: #24617f;
 }
 
 .nav-right {
@@ -2025,8 +2018,8 @@ code {
 }
 
 .nav-signin {
-  color: #0a0a0a;
-  border: 2px solid #0a0a0a;
+  color: #17384a;
+  border: 2px solid #17384a;
   padding: 0.45rem 1.25rem;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -2038,13 +2031,13 @@ code {
 }
 
 .nav-signin:hover {
-  background: #0a0a0a;
-  color: #f8f8f4;
+  background: #17384a;
+  color: #fff;
 }
 
 .nav-cta {
-  background: #2d6a35;
-  color: #f8f8f4;
+  background: #d36b2d;
+  color: #fff;
   padding: 0.5rem 1.35rem;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -2056,7 +2049,7 @@ code {
 }
 
 .nav-cta:hover {
-  background: #3a8a44;
+  background: #b95420;
 }
 
 .public-footer {
@@ -2065,7 +2058,7 @@ code {
   clear: both;
   box-sizing: border-box;
   padding: 4.5rem 5% 0;
-  background: #eef5f8;
+  background: #e8f2f5;
   color: #526b7e;
   border-top: 1px solid #d8e4ea;
 }
@@ -2085,13 +2078,13 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
-  color: #162b3c;
+  color: #17384a;
   font-size: 1.2rem;
   font-weight: 800;
   text-decoration: none;
 }
 
-.public-footer-logo strong { color: #168fd0; }
+.public-footer-logo strong { color: #d36b2d; }
 
 .public-footer-mark {
   display: grid;
@@ -2099,7 +2092,7 @@ code {
   height: 42px;
   place-items: center;
   border-radius: 10px;
-  background: #168fd0;
+  background: #24617f;
   color: #fff;
   font-size: 0.95rem;
   font-weight: 900;
@@ -2122,7 +2115,7 @@ code {
 .public-footer-column h2 {
   margin: 0 0 0.55rem;
   padding-bottom: 0.75rem;
-  border-bottom: 3px solid #168fd0;
+  border-bottom: 3px solid #d36b2d;
   color: #244055;
   font-size: 1rem;
   font-weight: 800;
@@ -2138,8 +2131,8 @@ code {
   text-decoration: none;
 }
 
-.public-footer-column a:hover { color: #168fd0; }
-.public-footer-contact i { width: 1.1rem; color: #168fd0; font-size: 1.05rem; }
+.public-footer-column a:hover { color: #24617f; }
+.public-footer-contact i { width: 1.1rem; color: #d36b2d; font-size: 1.05rem; }
 
 .public-footer-bottom {
   display: flex;
@@ -2153,7 +2146,7 @@ code {
   font-size: 0.82rem;
 }
 
-.public-footer-bottom b { padding: 0 0.35rem; color: #168fd0; }
+.public-footer-bottom b { padding: 0 0.35rem; color: #d36b2d; }
 
 .password-toggle {
   display: inline-flex;
@@ -2201,7 +2194,7 @@ code {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background: #111;
+  background: #123f58;
   z-index: 0;
 }
 
@@ -2223,9 +2216,9 @@ code {
   top: 50%;
   left: 8%;
   width: min(560px, 42%);
-  color: #d8ff3e;
+  color: #b9e6f5;
   padding: 1.25rem 1.5rem;
-  border-left: 4px solid #d8ff3e;
+  border-left: 4px solid #d36b2d;
   background: rgba(7, 19, 29, 0.38);
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
   transform: translateY(-56%);
@@ -2235,7 +2228,7 @@ code {
 .hero-intro-kicker {
   display: inline-block;
   margin-bottom: 1rem;
-  color: #d8ff3e !important;
+  color: #b9e6f5 !important;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -2249,14 +2242,14 @@ code {
   line-height: 1.04;
   letter-spacing: 0;
   font-weight: 800;
-  color: #d8ff3e !important;
+  color: #fff !important;
   text-shadow: 0 3px 14px rgba(0, 0, 0, 0.7);
 }
 
 .hero-intro p {
   max-width: 500px;
   margin: 1.25rem 0 0;
-  color: #f1ffb3 !important;
+  color: rgba(255, 255, 255, 0.82) !important;
   font-size: 1.1rem;
   line-height: 1.65;
 }
@@ -2271,27 +2264,27 @@ code {
 }
 
 .btn-apply {
-  background: #2d6a35;
-  color: #d8ff3e;
+  background: #d36b2d;
+  color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.48);
   padding: 1rem 2.75rem;
   border-radius: 5px;
-  color: #d8ff3e;
+  color: #fff;
   font-weight: 700;
   font-size: 0.9rem;
-  color: #d8ff3e;
+  color: #fff;
   text-transform: uppercase;
   transition: all 0.25s;
-  color: #efffb0;
+  color: #fff;
   border: none;
   cursor: pointer;
   display: inline-block;
 }
 
 .btn-apply:hover {
-  background: #3a8a44;
+  background: #b95420;
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(45, 106, 53, 0.55);
+  box-shadow: 0 8px 28px rgba(211, 107, 45, 0.38);
 }
 
 .btn-learn {
@@ -2323,16 +2316,16 @@ code {
 }
 
 .btn-learn:hover {
-  color: #4caf58;
+  color: #b9e6f5;
 }
 
 .btn-learn:hover::after {
-  background: #4caf58;
+  background: #b9e6f5;
 }
 
 /* Service Cards */
 .procurement-services {
-  background: #f8f8f4;
+  background: #f2f7f9;
   padding: 5rem 5% 6rem;
 }
 
@@ -2368,36 +2361,36 @@ code {
 }
 
 .icon-blue {
-  background: #e3f0fb;
-  color: #1e88d6;
+  background: #dceff6;
+  color: #24617f;
 }
 
 .icon-dark {
-  background: #eceff1;
-  color: #1a2233;
+  background: #e4eaed;
+  color: #294654;
 }
 
 .icon-green {
-  background: #e8f5ea;
-  color: #2d6a35;
+  background: #e2f0ee;
+  color: #28756f;
 }
 
 .icon-gold {
-  background: #fdf3d9;
-  color: #f0b429;
+  background: #fbe8dc;
+  color: #d36b2d;
 }
 
 .service-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #0a0a0a;
+  color: #17384a;
   margin-bottom: 1rem;
 }
 
 .service-desc {
   font-size: 0.92rem;
   line-height: 1.6;
-  color: rgba(10, 10, 10, 0.65);
+  color: #607582;
   margin-bottom: 1.75rem;
   min-height: 96px;
 }
@@ -2405,8 +2398,8 @@ code {
 .service-btn {
   display: inline-block;
   padding: 0.55rem 1.75rem;
-  border: 2px solid #1e88d6;
-  color: #1e88d6;
+  border: 2px solid #24617f;
+  color: #24617f;
   border-radius: 6px;
   text-decoration: none;
   font-size: 0.9rem;
@@ -2415,8 +2408,8 @@ code {
 }
 
 .service-btn:hover {
-  background: #1e88d6;
-  color: #f8f8f4;
+  background: #24617f;
+  color: #fff;
 }
 
 /* Procurement plan register */
@@ -2426,7 +2419,7 @@ code {
 
 .plan-kicker {
   display: block;
-  color: #1e88d6;
+  color: #24617f;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 1.5px;
@@ -2438,7 +2431,7 @@ code {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: #2d6a35;
+  color: #24617f;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -2456,7 +2449,7 @@ code {
   padding: 1rem 1.25rem;
   background: #f5f8fa;
   border: 1px solid #e3e9ed;
-  border-left: 4px solid #1e88d6;
+  border-left: 4px solid #d36b2d;
 }
 
 .plan-toolbar strong,
@@ -2499,7 +2492,7 @@ code {
 .plan-card {
   background: #fff;
   border: 1px solid #e1e7eb;
-  border-top: 3px solid #2d6a35;
+  border-top: 3px solid #24617f;
   padding: 1.35rem;
   box-shadow: 0 4px 16px rgba(25, 47, 61, 0.06);
 }
@@ -2513,7 +2506,7 @@ code {
 
 .plan-year,
 .plan-quarter {
-  color: #2d6a35;
+  color: #24617f;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 1px;
@@ -2521,8 +2514,8 @@ code {
 }
 
 .plan-quarter {
-  color: #1e88d6;
-  background: #eaf4fb;
+  color: #24617f;
+  background: #dceff6;
   padding: 0.28rem 0.5rem;
 }
 
@@ -3935,7 +3928,7 @@ code {
 
 /* Tenders Section */
 .tenders-section {
-  background: #f8f8f4;
+  background: #e9f3f6;
   padding: 4.5rem 5% 6rem;
 }
 
@@ -3947,7 +3940,7 @@ code {
 .tenders-header h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a2233;
+  color: #17384a;
   display: inline-block;
   position: relative;
   padding-bottom: 0.75rem;
@@ -3961,7 +3954,7 @@ code {
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: #1e88d6;
+  background: #24617f;
   border-radius: 2px;
 }
 
@@ -4007,7 +4000,7 @@ code {
 }
 
 .filter-pill.active {
-  background: #1e88d6;
+  background: #24617f;
   color: #fff;
 }
 
@@ -4078,7 +4071,7 @@ code {
 }
 
 .tender-entity {
-  color: #1e88d6;
+  color: #24617f;
   font-size: 0.92rem;
   font-weight: 600;
   margin-bottom: 0.45rem;
@@ -4100,7 +4093,7 @@ code {
 }
 
 .tender-meta .deadline {
-  color: #2d6a35;
+  color: #d36b2d;
   font-weight: 600;
 }
 
@@ -4128,8 +4121,8 @@ code {
 }
 
 .tag-green {
-  background: #e8f5ea;
-  color: #2d6a35;
+  background: #e2f0ee;
+  color: #28756f;
 }
 
 .tag-neutral {
@@ -4146,8 +4139,8 @@ code {
   display: inline-block;
   white-space: nowrap;
   padding: 0.55rem 1.5rem;
-  border: 2px solid #1e88d6;
-  color: #1e88d6;
+  border: 2px solid #24617f;
+  color: #24617f;
   border-radius: 6px;
   text-decoration: none;
   font-size: 0.88rem;
@@ -4158,7 +4151,7 @@ code {
 }
 
 .view-details-btn:hover {
-  background: #1e88d6;
+  background: #24617f;
   color: #fff;
 }
 
@@ -4267,7 +4260,7 @@ code {
 
 /* About Section */
 .about-section {
-  background: #f8f8f4;
+  background: #f2f7f9;
   padding: 4rem 5% 5rem;
 }
 
@@ -4293,7 +4286,7 @@ code {
 }
 
 .about-points span {
-  color: #2d6a35;
+  color: #d36b2d;
   font-weight: 700;
   min-width: 28px;
 }
@@ -4315,7 +4308,7 @@ code {
 .panel-stat strong {
   display: block;
   font-size: 1.8rem;
-  color: #2d6a35;
+  color: #24617f;
   margin-bottom: 0.25rem;
 }
 
@@ -4327,7 +4320,7 @@ code {
 
 /* Contact Section */
 .contact-section {
-  background: #2d6a35;
+  background: #24617f;
   padding: 4rem 5%;
   color: #fff;
 }
@@ -4404,6 +4397,14 @@ code {
     padding: 0 3%;
   }
 
+  .logo-wrap {
+    flex-basis: 190px;
+  }
+
+  .public-nav-logo {
+    height: 40px;
+  }
+
   .public-nav-toggle {
     display: inline-flex;
   }
@@ -4418,7 +4419,7 @@ code {
     align-items: stretch;
     gap: 0;
     padding: 1rem 5%;
-    background: rgba(248, 248, 244, 0.98);
+    background: rgba(242, 247, 249, 0.98);
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
   }

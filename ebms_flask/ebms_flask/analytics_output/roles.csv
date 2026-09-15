@@ -1,0 +1,14 @@
+﻿id,code,name,description,created_at,can_create_procurement,can_approve_procurement,can_publish,can_evaluate,can_open_bids,can_award,can_view_all_records,can_admin_system,can_bid
+1,requester,Requester,User department staff who submit Form D / Form E procurement requests.,2026-08-31 21:27:23.760,False,False,False,False,False,False,False,False,False
+2,system_admin,System Administrator,,2026-08-31 21:27:23.780,False,False,False,False,False,False,True,True,False
+3,accounting_officer,Accounting Officer,,2026-08-31 21:27:23.803,False,True,False,False,False,True,True,False,False
+4,procurement_oversight,Procurement Oversight,,2026-08-31 21:27:23.823,False,True,False,False,False,False,True,False,False
+5,procurement_unit,Procurement Unit,,2026-08-31 21:27:23.847,True,False,True,False,False,True,True,False,False
+6,user_department,User Department,,2026-08-31 21:27:23.863,True,False,False,False,False,False,False,False,False
+7,committee_chair,Committee Chair,,2026-08-31 21:27:23.877,False,False,False,True,False,False,False,False,False
+8,committee_secretary,Committee Secretary,,2026-08-31 21:27:23.893,False,False,False,True,False,False,False,False,False
+9,evaluator,Evaluator,,2026-08-31 21:27:23.913,False,False,False,True,False,False,False,False,False
+10,opening_panel,Opening Panel,,2026-08-31 21:27:23.930,False,False,False,False,True,False,False,False,False
+11,bidder,Bidder,,2026-08-31 21:27:23.933,False,False,False,False,False,False,False,False,True
+12,pou,Procurement Oversight Unit,Read-only oversight unit to vet tender and evaluation submissions without changing records.,2026-08-31 23:07:32.577,False,False,False,False,False,False,True,False,False
+13,finance_planning,Finance / Planning,"Certifies budgets and funds, confirms future-year provisions and financial codes, monitors commitments and payments, and performs procurement budget analysis.",2026-09-02 20:42:11.433,False,True,False,False,False,False,True,False,False

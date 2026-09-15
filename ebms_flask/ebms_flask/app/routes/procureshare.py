@@ -8,7 +8,7 @@ from app.models.user import User
 from app.utils.audit import log_action
 from app.utils.notify import notify_user
 
-smartshare_bp = Blueprint('smartshare', __name__, url_prefix='/smartshare')
+procureshare_bp = Blueprint('procureshare', __name__, url_prefix='/procureshare')
 
 
 def _is_internal(user):
@@ -29,7 +29,7 @@ def _recipient_users():
     return [user for user in users if user.id != current_user.id and _is_internal(user)]
 
 
-@smartshare_bp.route('/')
+@procureshare_bp.route('/')
 @login_required
 def portal():
     if not _is_internal(current_user):
@@ -41,10 +41,10 @@ def portal():
     folders = defaultdict(list)
     for grant in grants:
         folders[grant.folder_name or 'Shared procurements'].append(grant)
-    return render_template('smartshare_portal.html', folders=dict(folders))
+    return render_template('procureshare_portal.html', folders=dict(folders))
 
 
-@smartshare_bp.route('/manage')
+@procureshare_bp.route('/manage')
 @login_required
 def manage():
     if not _can_manage():
@@ -56,7 +56,7 @@ def manage():
     if not current_user.has_permission('can_admin_system'):
         grants = [grant for grant in grants if grant.shared_by_id == current_user.id or current_user.can_access_procurement(grant.procurement)]
     return render_template(
-        'smartshare_manage.html',
+        'procureshare_manage.html',
         procurements=procurements,
         recipients=_recipient_users(),
         grants=grants,
@@ -64,7 +64,7 @@ def manage():
     )
 
 
-@smartshare_bp.route('/share', methods=['POST'])
+@procureshare_bp.route('/share', methods=['POST'])
 @login_required
 def share():
     if not _can_manage():
@@ -74,8 +74,8 @@ def share():
     if not _can_manage(procurement):
         abort(403)
     if not _is_internal(recipient) or recipient.id == current_user.id:
-        flash('SmartShare recipients must be active internal portal users, not bidders.', 'danger')
-        return redirect(url_for('smartshare.manage'))
+        flash('ProcureShare recipients must be active internal portal users, not bidders.', 'danger')
+        return redirect(url_for('procureshare.manage'))
 
     folder_name = (request.form.get('folder_name') or 'Shared procurements').strip()[:120]
     if not folder_name:
@@ -101,38 +101,38 @@ def share():
     db.session.commit()
     notify_user(
         recipient,
-        'smartshare_access_granted',
+        'procureshare_access_granted',
         f'Procurement shared with you: {procurement.tender_number}',
-        f'{current_user.full_name()} shared {procurement.title} with you in SmartShare.',
+        f'{current_user.full_name()} shared {procurement.title} with you in ProcureShare.',
         procurement_id=procurement.id,
         email=False,
     )
-    log_action('SMARTSHARE_ACCESS_GRANTED', entity_type='Procurement', entity_id=procurement.id,
+    log_action('PROCURESHARE_ACCESS_GRANTED', entity_type='Procurement', entity_id=procurement.id,
                new_value={'recipient_id': recipient.id, 'folder': folder_name})
     flash(f'{procurement.tender_number} shared with {recipient.full_name()}.', 'success')
-    return redirect(url_for('smartshare.manage'))
+    return redirect(url_for('procureshare.manage'))
 
 
-@smartshare_bp.route('/<int:share_id>/revoke', methods=['POST'])
+@procureshare_bp.route('/<int:share_id>/revoke', methods=['POST'])
 @login_required
 def revoke(share_id):
     grant = ProcurementShare.query.get_or_404(share_id)
     if not _can_manage(grant.procurement):
         abort(403)
     if grant.status != 'active':
-        flash('This SmartShare access has already been revoked.', 'info')
-        return redirect(url_for('smartshare.manage'))
+        flash('This ProcureShare access has already been revoked.', 'info')
+        return redirect(url_for('procureshare.manage'))
     grant.revoke(current_user)
     db.session.commit()
     notify_user(
         grant.recipient,
-        'smartshare_access_revoked',
-        f'SmartShare access revoked: {grant.procurement.tender_number}',
+        'procureshare_access_revoked',
+        f'ProcureShare access revoked: {grant.procurement.tender_number}',
         f'Your access to {grant.procurement.title} has been revoked by {current_user.full_name()}.',
         procurement_id=grant.procurement_id,
         email=False,
     )
-    log_action('SMARTSHARE_ACCESS_REVOKED', entity_type='Procurement', entity_id=grant.procurement_id,
+    log_action('PROCURESHARE_ACCESS_REVOKED', entity_type='Procurement', entity_id=grant.procurement_id,
                new_value={'recipient_id': grant.recipient_id})
-    flash('SmartShare access revoked immediately.', 'success')
-    return redirect(url_for('smartshare.manage'))
+    flash('ProcureShare access revoked immediately.', 'success')
+    return redirect(url_for('procureshare.manage'))

@@ -1,0 +1,325 @@
+﻿id,user_id,sender_id,type,title,body,procurement_id,reply_to,is_read,emailed_at,created_at
+1,1,,status_change,Tender published: TB-2026-611,Supplies of bed has been published and is now visible to registered bidders.,2.0,,False,,2026-08-31 21:32:30.570
+2,8,,status_change,Tender published: TB-2026-611,Supplies of bed has been published and is now visible to registered bidders.,2.0,,True,,2026-08-31 21:32:30.620
+3,1,,status_change,Submissions open: TB-2026-611,Bid submission is now open for Supplies of bed. Deadline: 2026-09-01 00:32:00.,2.0,,False,,2026-08-31 21:32:32.220
+4,8,,status_change,Submissions open: TB-2026-611,Bid submission is now open for Supplies of bed. Deadline: 2026-09-01 00:32:00.,2.0,,True,,2026-08-31 21:32:32.253
+5,2,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder Construction has submitted proof of payment (Ref: REF/123, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 21:33:32.267
+6,3,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder Construction has submitted proof of payment (Ref: REF/123, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 21:33:32.283
+7,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-611),Your payment (Ref: REF/123) for Supplies of bed has been verified and approved. You now have access to view and download the ITT document.,2.0,,True,2026-08-31 23:34:08.017,2026-08-31 21:34:03.100
+8,2,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder BURSS has submitted proof of payment (Ref: REF/123, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 21:38:46.387
+9,3,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder BURSS has submitted proof of payment (Ref: REF/123, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 21:38:46.400
+10,9,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-611),Your payment (Ref: REF/123) for Supplies of bed has been verified and approved. You now have access to view and download the ITT document.,2.0,,False,2026-08-31 23:39:30.530,2026-08-31 21:39:26.683
+11,2,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 22:00:31.417
+12,3,,payment_submitted,Payment Proof Submitted: TB-2026-611,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 555.00) for Supplies of bed. Please review and verify.",2.0,,True,,2026-08-31 22:00:31.467
+13,11,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-611),Your payment (Ref: Allen Machona) for Supplies of bed has been verified and approved. You now have access to view and download the ITT document.,2.0,,False,2026-09-01 00:01:19.890,2026-08-31 22:01:16.283
+14,1,,status_change,Tender published: TB-2026-301,TOURISIM EQUIPMENT has been published and is now visible to registered bidders.,3.0,,False,,2026-08-31 22:40:03.190
+15,8,,status_change,Tender published: TB-2026-301,TOURISIM EQUIPMENT has been published and is now visible to registered bidders.,3.0,,True,,2026-08-31 22:40:03.207
+16,9,,status_change,Tender published: TB-2026-301,TOURISIM EQUIPMENT has been published and is now visible to registered bidders.,3.0,,False,,2026-08-31 22:40:03.220
+17,10,,status_change,Tender published: TB-2026-301,TOURISIM EQUIPMENT has been published and is now visible to registered bidders.,3.0,,False,,2026-08-31 22:40:03.223
+18,11,,status_change,Tender published: TB-2026-301,TOURISIM EQUIPMENT has been published and is now visible to registered bidders.,3.0,,False,,2026-08-31 22:40:03.233
+19,1,,status_change,Submissions open: TB-2026-301,Bid submission is now open for TOURISIM EQUIPMENT. Deadline: 2026-09-03 00:39:00.,3.0,,False,,2026-08-31 22:40:04.407
+20,8,,status_change,Submissions open: TB-2026-301,Bid submission is now open for TOURISIM EQUIPMENT. Deadline: 2026-09-03 00:39:00.,3.0,,True,,2026-08-31 22:40:04.440
+21,9,,status_change,Submissions open: TB-2026-301,Bid submission is now open for TOURISIM EQUIPMENT. Deadline: 2026-09-03 00:39:00.,3.0,,False,,2026-08-31 22:40:04.457
+22,10,,status_change,Submissions open: TB-2026-301,Bid submission is now open for TOURISIM EQUIPMENT. Deadline: 2026-09-03 00:39:00.,3.0,,False,,2026-08-31 22:40:04.487
+23,11,,status_change,Submissions open: TB-2026-301,Bid submission is now open for TOURISIM EQUIPMENT. Deadline: 2026-09-03 00:39:00.,3.0,,False,,2026-08-31 22:40:04.503
+24,2,,payment_submitted,Payment Proof Submitted: TB-2026-301,"Bidder Construction has submitted proof of payment (Ref: Ref/78891, Amount: BWP 300.00) for TOURISIM EQUIPMENT. Please review and verify.",3.0,,True,,2026-08-31 22:40:41.913
+25,3,,payment_submitted,Payment Proof Submitted: TB-2026-301,"Bidder Construction has submitted proof of payment (Ref: Ref/78891, Amount: BWP 300.00) for TOURISIM EQUIPMENT. Please review and verify.",3.0,,True,,2026-08-31 22:40:41.920
+26,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-301),Your payment (Ref: Ref/78891) for TOURISIM EQUIPMENT has been verified and approved. You now have access to view and download the ITT document.,3.0,,True,2026-09-01 00:41:19.010,2026-08-31 22:41:13.987
+27,1,,status_change,Tender published: TB-2026-979,GUIDE US has been published and is now visible to registered bidders.,4.0,,False,,2026-08-31 22:47:03.653
+28,8,,status_change,Tender published: TB-2026-979,GUIDE US has been published and is now visible to registered bidders.,4.0,,True,,2026-08-31 22:47:03.670
+29,9,,status_change,Tender published: TB-2026-979,GUIDE US has been published and is now visible to registered bidders.,4.0,,False,,2026-08-31 22:47:03.670
+30,10,,status_change,Tender published: TB-2026-979,GUIDE US has been published and is now visible to registered bidders.,4.0,,False,,2026-08-31 22:47:03.687
+31,11,,status_change,Tender published: TB-2026-979,GUIDE US has been published and is now visible to registered bidders.,4.0,,False,,2026-08-31 22:47:03.687
+32,1,,status_change,Submissions open: TB-2026-979,Bid submission is now open for GUIDE US. Deadline: 2026-09-02 00:46:00.,4.0,,False,,2026-08-31 22:47:05.240
+33,8,,status_change,Submissions open: TB-2026-979,Bid submission is now open for GUIDE US. Deadline: 2026-09-02 00:46:00.,4.0,,True,,2026-08-31 22:47:05.253
+34,9,,status_change,Submissions open: TB-2026-979,Bid submission is now open for GUIDE US. Deadline: 2026-09-02 00:46:00.,4.0,,False,,2026-08-31 22:47:05.253
+35,10,,status_change,Submissions open: TB-2026-979,Bid submission is now open for GUIDE US. Deadline: 2026-09-02 00:46:00.,4.0,,False,,2026-08-31 22:47:05.270
+36,11,,status_change,Submissions open: TB-2026-979,Bid submission is now open for GUIDE US. Deadline: 2026-09-02 00:46:00.,4.0,,False,,2026-08-31 22:47:05.270
+37,1,,status_change,Tender published: TB-2026-261,WEB has been published and is now visible to registered bidders.,5.0,,False,,2026-08-31 22:51:33.207
+38,8,,status_change,Tender published: TB-2026-261,WEB has been published and is now visible to registered bidders.,5.0,,True,,2026-08-31 22:51:33.223
+39,9,,status_change,Tender published: TB-2026-261,WEB has been published and is now visible to registered bidders.,5.0,,False,,2026-08-31 22:51:33.240
+40,10,,status_change,Tender published: TB-2026-261,WEB has been published and is now visible to registered bidders.,5.0,,False,,2026-08-31 22:51:33.257
+41,11,,status_change,Tender published: TB-2026-261,WEB has been published and is now visible to registered bidders.,5.0,,False,,2026-08-31 22:51:33.273
+42,1,,status_change,Submissions open: TB-2026-261,Bid submission is now open for WEB. Deadline: 2026-09-02 13:51:00.,5.0,,False,,2026-08-31 22:51:34.693
+43,8,,status_change,Submissions open: TB-2026-261,Bid submission is now open for WEB. Deadline: 2026-09-02 13:51:00.,5.0,,True,,2026-08-31 22:51:34.703
+44,9,,status_change,Submissions open: TB-2026-261,Bid submission is now open for WEB. Deadline: 2026-09-02 13:51:00.,5.0,,False,,2026-08-31 22:51:34.717
+45,10,,status_change,Submissions open: TB-2026-261,Bid submission is now open for WEB. Deadline: 2026-09-02 13:51:00.,5.0,,False,,2026-08-31 22:51:34.727
+46,11,,status_change,Submissions open: TB-2026-261,Bid submission is now open for WEB. Deadline: 2026-09-02 13:51:00.,5.0,,False,,2026-08-31 22:51:34.733
+47,2,,payment_submitted,Payment Proof Submitted: TB-2026-261,"Bidder BURS has submitted proof of payment (Ref: REF/123, Amount: BWP 32.84) for WEB. Please review and verify.",5.0,,True,,2026-08-31 22:59:19.290
+48,3,,payment_submitted,Payment Proof Submitted: TB-2026-261,"Bidder BURS has submitted proof of payment (Ref: REF/123, Amount: BWP 32.84) for WEB. Please review and verify.",5.0,,True,,2026-08-31 22:59:19.333
+49,11,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-261),Your payment (Ref: REF/123) for WEB has been verified and approved. You now have access to view and download the ITT document.,5.0,,False,2026-09-01 00:59:56.123,2026-08-31 22:59:51.340
+50,1,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,False,,2026-09-01 01:16:02.090
+51,8,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,True,,2026-09-01 01:16:02.123
+52,9,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,False,,2026-09-01 01:16:02.153
+53,10,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,False,,2026-09-01 01:16:02.177
+54,11,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,False,,2026-09-01 01:16:02.197
+55,12,,status_change,Tender published: TB-2026-759,SUPPLY FOR COOKING OIL has been published and is now visible to registered bidders.,11.0,,False,,2026-09-01 01:16:02.220
+56,1,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,False,,2026-09-01 01:16:03.567
+57,8,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,True,,2026-09-01 01:16:03.587
+58,9,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,False,,2026-09-01 01:16:03.610
+59,10,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,False,,2026-09-01 01:16:03.623
+60,11,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,False,,2026-09-01 01:16:03.653
+61,12,,status_change,Submissions open: TB-2026-759,Bid submission is now open for SUPPLY FOR COOKING OIL. Deadline: 2026-09-02 11:00:00.,11.0,,False,,2026-09-01 01:16:03.673
+62,2,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder Construction has submitted proof of payment (Ref: Ref/78891, Amount: BWP 400.00) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-01 01:16:47.640
+63,3,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder Construction has submitted proof of payment (Ref: Ref/78891, Amount: BWP 400.00) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-01 01:16:47.693
+64,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-759),Your payment (Ref: Ref/78891) for SUPPLY FOR COOKING OIL has been verified and approved. You now have access to view and download the ITT document.,11.0,,True,2026-09-01 03:17:48.457,2026-09-01 01:17:43.387
+65,1,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,False,,2026-09-01 01:23:03.250
+66,8,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,True,,2026-09-01 01:23:03.280
+67,9,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,False,,2026-09-01 01:23:03.300
+68,10,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,False,,2026-09-01 01:23:03.317
+69,11,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,False,,2026-09-01 01:23:03.337
+70,12,,status_change,Submissions closed: TB-2026-611,Bid submissions for Supplies of bed are now closed and the procurement is moving to evaluation preparation.,2.0,,False,,2026-09-01 01:23:03.350
+71,5,,evaluator_assignment,Assigned to TB-2026-611,"You were assigned to evaluate ""Supplies of bed"" (TB-2026-611) with scope: Both.",2.0,,True,2026-09-01 03:23:28.120,2026-09-01 01:23:23.130
+72,1,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,False,,2026-09-01 11:20:43.953
+73,8,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,True,,2026-09-01 11:20:43.977
+74,9,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,False,,2026-09-01 11:20:43.990
+75,10,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,False,,2026-09-01 11:20:44.003
+76,11,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,False,,2026-09-01 11:20:44.020
+77,12,,status_change,Tender published: TB-2026-431,Internet Services has been published and is now visible to registered bidders.,12.0,,False,,2026-09-01 11:20:44.033
+78,1,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,False,,2026-09-01 11:21:40.103
+79,8,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,True,,2026-09-01 11:21:40.123
+80,9,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,False,,2026-09-01 11:21:40.137
+81,10,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,False,,2026-09-01 11:21:40.147
+82,11,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,False,,2026-09-01 11:21:40.157
+83,12,,status_change,Submissions open: TB-2026-431,Bid submission is now open for Internet Services. Deadline: 2026-09-02 12:18:00.,12.0,,False,,2026-09-01 11:21:40.170
+84,2,,payment_submitted,Payment Proof Submitted: TB-2026-431,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for Internet Services. Please review and verify.",12.0,,True,,2026-09-01 11:23:02.733
+85,3,,payment_submitted,Payment Proof Submitted: TB-2026-431,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for Internet Services. Please review and verify.",12.0,,True,,2026-09-01 11:23:02.760
+86,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-431),Your payment (Ref: Allen Machona) for Internet Services has been verified and approved. You now have access to view and download the ITT document.,12.0,,True,2026-09-01 13:24:08.800,2026-09-01 11:24:04.717
+87,1,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,False,,2026-09-01 11:32:59.220
+88,8,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,True,,2026-09-01 11:32:59.243
+89,9,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,False,,2026-09-01 11:32:59.257
+90,10,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,False,,2026-09-01 11:32:59.270
+91,11,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,False,,2026-09-01 11:32:59.283
+92,12,,status_change,Procurement under evaluation: TB-2026-611,Bid submissions for Supplies of bed are now under evaluation.,2.0,,False,,2026-09-01 11:32:59.300
+93,2,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-01 11:34:07.033
+94,3,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-01 11:34:07.050
+95,4,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-01 11:34:07.060
+96,13,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-01 11:34:07.073
+97,14,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-01 11:34:07.080
+98,1,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,False,,2026-09-02 16:15:30.010
+99,8,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,True,,2026-09-02 16:15:30.043
+100,9,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,False,,2026-09-02 16:15:30.063
+101,10,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,False,,2026-09-02 16:15:30.080
+102,11,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,False,,2026-09-02 16:15:30.090
+103,12,,status_change,Submissions closed: TB-2026-979,Bid submissions for GUIDE US are now closed and the procurement is moving to evaluation preparation.,4.0,,False,,2026-09-02 16:15:30.097
+104,1,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,False,,2026-09-02 16:16:34.107
+105,8,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,True,,2026-09-02 16:16:34.133
+106,9,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,False,,2026-09-02 16:16:34.150
+107,10,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,False,,2026-09-02 16:16:34.160
+108,11,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,False,,2026-09-02 16:16:34.167
+109,12,,status_change,Tender reopened: TB-2026-979,GUIDE US has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:20:00.,4.0,,False,,2026-09-02 16:16:34.183
+110,8,,award_published,Award Published: TB-2026-611,Your bid for Supplies of bed has been selected. The cooling-off period ends on 11 Sep 2026.,2.0,,True,,2026-09-02 16:34:48.703
+111,1,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,False,,2026-09-02 16:43:40.893
+112,8,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,True,,2026-09-02 16:43:40.920
+113,9,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,False,,2026-09-02 16:43:40.927
+114,10,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,False,,2026-09-02 16:43:40.947
+115,11,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,False,,2026-09-02 16:43:40.953
+116,12,,status_change,Submissions open: TB-2026-VERIFY-9B379249,Bid submission is now open for Verify Advertisement Access. Deadline: 2026-09-02 18:43:00.,8.0,,False,,2026-09-02 16:43:40.960
+117,2,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURSS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-02 18:22:08.040
+118,3,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURSS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-02 18:22:08.103
+119,16,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURSS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,False,,2026-09-02 18:22:08.153
+120,2,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 199.96) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-02 18:22:58.820
+121,3,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 199.96) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,True,,2026-09-02 18:22:58.880
+122,16,,payment_submitted,Payment Proof Submitted: TB-2026-759,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 199.96) for SUPPLY FOR COOKING OIL. Please review and verify.",11.0,,False,,2026-09-02 18:22:58.930
+123,11,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-759),Your payment (Ref: Allen Machona) for SUPPLY FOR COOKING OIL has been verified and approved. You now have access to view and download the ITT document.,11.0,,False,2026-09-02 20:25:41.853,2026-09-02 18:25:32.417
+124,9,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-759),Your payment (Ref: Allen Machona) for SUPPLY FOR COOKING OIL has been verified and approved. You now have access to view and download the ITT document.,11.0,,False,2026-09-02 20:25:58.590,2026-09-02 18:25:51.233
+125,1,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-02 18:38:15.060
+126,8,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,True,,2026-09-02 18:38:15.093
+127,9,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-02 18:38:15.110
+128,10,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-02 18:38:15.110
+129,11,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-02 18:38:15.127
+130,12,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-02 18:38:15.143
+131,1,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,False,,2026-09-02 18:38:48.447
+132,8,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,True,,2026-09-02 18:38:48.460
+133,9,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,False,,2026-09-02 18:38:48.477
+134,10,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,False,,2026-09-02 18:38:48.490
+135,11,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,False,,2026-09-02 18:38:48.493
+136,12,,status_change,Tender reopened: TB-2026-431,Internet Services has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 20:42:00.,12.0,,False,,2026-09-02 18:38:48.510
+137,2,,payment_submitted,Payment Proof Submitted: TB-2026-431,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for Internet Services. Please review and verify.",12.0,,True,,2026-09-02 18:40:23.920
+138,3,,payment_submitted,Payment Proof Submitted: TB-2026-431,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for Internet Services. Please review and verify.",12.0,,True,,2026-09-02 18:40:23.940
+139,16,,payment_submitted,Payment Proof Submitted: TB-2026-431,"Bidder BURS has submitted proof of payment (Ref: Allen Machona, Amount: BWP 400.00) for Internet Services. Please review and verify.",12.0,,False,,2026-09-02 18:40:23.957
+140,11,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-431),Your payment (Ref: Allen Machona) for Internet Services has been verified and approved. You now have access to view and download the ITT document.,12.0,,False,2026-09-02 20:40:50.580,2026-09-02 18:40:46.803
+141,1,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:17:49.940
+142,8,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,True,,2026-09-02 19:17:49.957
+143,9,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:17:49.970
+144,10,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:17:49.977
+145,11,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:17:49.993
+146,12,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:17:50.000
+147,1,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,False,,2026-09-02 19:18:02.673
+148,8,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,True,,2026-09-02 19:18:02.690
+149,9,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,False,,2026-09-02 19:18:02.707
+150,10,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,False,,2026-09-02 19:18:02.707
+151,11,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,False,,2026-09-02 19:18:02.727
+152,12,,status_change,Tender reopened: TB-2026-759,SUPPLY FOR COOKING OIL has been reopened for bidding. You may submit or resubmit your bid before the new deadline: 2026-09-02 21:25:00.,11.0,,False,,2026-09-02 19:18:02.737
+153,1,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:25:59.063
+154,8,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,True,,2026-09-02 19:25:59.080
+155,9,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:25:59.093
+156,10,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:25:59.107
+157,11,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:25:59.123
+158,12,,status_change,Submissions closed: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now closed and the procurement is moving to evaluation preparation.,11.0,,False,,2026-09-02 19:25:59.133
+159,5,,evaluator_assignment,Assigned to TB-2026-759,"You were assigned to evaluate ""SUPPLY FOR COOKING OIL"" (TB-2026-759) with scope: Both.",11.0,,True,2026-09-02 21:26:19.670,2026-09-02 19:26:14.247
+160,1,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,False,,2026-09-02 19:31:12.350
+161,8,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,True,,2026-09-02 19:31:12.370
+162,9,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,False,,2026-09-02 19:31:12.377
+163,10,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,False,,2026-09-02 19:31:12.383
+164,11,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,False,,2026-09-02 19:31:12.393
+165,12,,status_change,Procurement under evaluation: TB-2026-759,Bid submissions for SUPPLY FOR COOKING OIL are now under evaluation.,11.0,,False,,2026-09-02 19:31:12.400
+166,11,,award_published,Award Published: TB-2026-759,Your bid for SUPPLY FOR COOKING OIL has been selected. The cooling-off period ends on 12 Sep 2026.,11.0,,False,,2026-09-02 19:38:21.100
+167,1,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,False,,2026-09-02 21:32:19.217
+168,8,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,True,,2026-09-02 21:32:19.273
+169,9,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,False,,2026-09-02 21:32:19.307
+170,10,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,False,,2026-09-02 21:32:19.350
+171,11,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,False,,2026-09-02 21:32:19.387
+172,12,,status_change,Tender published: TB-2026-148,SUPPLY FOR CARS has been published and is now visible to registered bidders.,14.0,,False,,2026-09-02 21:32:19.397
+173,1,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,False,,2026-09-02 21:32:21.380
+174,8,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,True,,2026-09-02 21:32:21.400
+175,9,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,False,,2026-09-02 21:32:21.417
+176,10,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,False,,2026-09-02 21:32:21.417
+177,11,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,False,,2026-09-02 21:32:21.433
+178,12,,status_change,Submissions open: TB-2026-148,Bid submission is now open for SUPPLY FOR CARS. Deadline: 2026-09-03 00:05:00.,14.0,,False,,2026-09-02 21:32:21.450
+179,2,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,True,,2026-09-02 21:33:04.947
+180,3,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,True,,2026-09-02 21:33:04.977
+181,16,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,False,,2026-09-02 21:33:04.997
+182,2,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder BURS has submitted proof of payment (Ref: Ref/78891, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,True,,2026-09-02 21:33:23.787
+183,3,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder BURS has submitted proof of payment (Ref: Ref/78891, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,True,,2026-09-02 21:33:23.827
+184,16,,payment_submitted,Payment Proof Submitted: TB-2026-148,"Bidder BURS has submitted proof of payment (Ref: Ref/78891, Amount: BWP 1,000.00) for SUPPLY FOR CARS. Please review and verify.",14.0,,False,,2026-09-02 21:33:23.860
+185,11,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-148),Your payment (Ref: Ref/78891) for SUPPLY FOR CARS has been verified and approved. You now have access to view and download the ITT document.,14.0,,False,2026-09-02 23:34:31.850,2026-09-02 21:34:27.177
+186,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-148),Your payment (Ref: Allen Machona) for SUPPLY FOR CARS has been verified and approved. You now have access to view and download the ITT document.,14.0,,True,2026-09-02 23:34:39.450,2026-09-02 21:34:35.610
+187,1,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,False,,2026-09-02 22:07:18.360
+188,8,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,True,,2026-09-02 22:07:18.403
+189,9,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,False,,2026-09-02 22:07:18.437
+190,10,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,False,,2026-09-02 22:07:18.453
+191,11,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,False,,2026-09-02 22:07:18.463
+192,12,,status_change,Submissions closed: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now closed and the procurement is moving to evaluation preparation.,14.0,,False,,2026-09-02 22:07:18.470
+193,5,,evaluator_assignment,Assigned to TB-2026-148,"You were assigned to evaluate ""SUPPLY FOR CARS"" (TB-2026-148) with scope: Both.",14.0,,True,2026-09-03 00:07:40.513,2026-09-02 22:07:36.270
+194,1,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,False,,2026-09-02 22:12:23.057
+195,8,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,True,,2026-09-02 22:12:23.103
+196,9,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,False,,2026-09-02 22:12:23.140
+197,10,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,False,,2026-09-02 22:12:23.193
+198,11,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,False,,2026-09-02 22:12:23.203
+199,12,,status_change,Procurement under evaluation: TB-2026-148,Bid submissions for SUPPLY FOR CARS are now under evaluation.,14.0,,False,,2026-09-02 22:12:23.220
+200,11,,award_published,Award Published: TB-2026-148,Your bid for SUPPLY FOR CARS has been selected. The cooling-off period ends on 12 Sep 2026.,14.0,,False,,2026-09-02 22:19:36.137
+201,5,,smartshare_access_granted,Procurement shared with you: TB-2026-148,David Tlou shared SUPPLY FOR CARS with you in SmartShare.,14.0,,True,,2026-09-03 01:35:54.347
+202,5,,smartshare_access_revoked,SmartShare access revoked: TB-2026-148,Your access to SUPPLY FOR CARS has been revoked by David Tlou.,14.0,,True,,2026-09-03 01:36:27.130
+203,5,,smartshare_access_granted,Procurement shared with you: TB-2026-759,David Tlou shared SUPPLY FOR COOKING OIL with you in SmartShare.,11.0,,True,,2026-09-03 01:40:59.387
+204,5,,smartshare_access_revoked,SmartShare access revoked: TB-2026-759,Your access to SUPPLY FOR COOKING OIL has been revoked by David Tlou.,11.0,,False,,2026-09-03 01:42:34.890
+205,1,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.570
+206,8,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,True,,2026-09-03 08:01:19.603
+207,9,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.630
+208,10,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.670
+209,11,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.703
+210,12,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.733
+211,15,,status_change,Submissions closed: TB-2026-431,Bid submissions for Internet Services are now closed and the procurement is moving to evaluation preparation.,12.0,,False,,2026-09-03 08:01:19.750
+212,5,,evaluator_assignment,Assigned to TB-2026-431,"You were assigned to evaluate ""Internet Services"" (TB-2026-431) with scope: Both.",12.0,,False,2026-09-03 10:01:42.467,2026-09-03 08:01:28.493
+213,1,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.630
+214,8,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,True,,2026-09-03 08:04:22.650
+215,9,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.660
+216,10,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.667
+217,11,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.680
+218,12,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.680
+219,15,,status_change,Procurement under evaluation: TB-2026-431,Bid submissions for Internet Services are now under evaluation.,12.0,,False,,2026-09-03 08:04:22.693
+220,8,,award_published,Award Published: TB-2026-431,Your bid for Internet Services has been selected. The cooling-off period ends on 13 Sep 2026.,12.0,,True,,2026-09-03 08:08:06.293
+221,2,,complaint_received,Complaint Received: TB-2026-431,Construction submitted a complaint for Internet Services.,12.0,,True,,2026-09-03 08:10:28.343
+222,3,,complaint_received,Complaint Received: TB-2026-431,Construction submitted a complaint for Internet Services.,12.0,,True,,2026-09-03 08:10:28.377
+223,16,,complaint_received,Complaint Received: TB-2026-431,Construction submitted a complaint for Internet Services.,12.0,,False,,2026-09-03 08:10:28.393
+224,1,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.317
+225,8,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.340
+226,9,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.353
+227,10,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.363
+228,11,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.373
+229,12,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.387
+230,15,,status_change,Tender published: TB-2026-960,SUPPLY FO TABLES has been published and is now visible to registered bidders.,15.0,,False,,2026-09-07 19:15:25.403
+231,1,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.860
+232,8,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.880
+233,9,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.897
+234,10,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.907
+235,11,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.923
+236,12,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.940
+237,15,,status_change,Submissions open: TB-2026-960,Bid submission is now open for SUPPLY FO TABLES. Deadline: 2026-09-09 03:02:00.,15.0,,False,,2026-09-07 19:15:26.963
+238,2,,payment_submitted,Payment Proof Submitted: TB-2026-960,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 299.83) for SUPPLY FO TABLES. Please review and verify.",15.0,,True,,2026-09-07 19:16:23.993
+239,3,,payment_submitted,Payment Proof Submitted: TB-2026-960,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 299.83) for SUPPLY FO TABLES. Please review and verify.",15.0,,True,,2026-09-07 19:16:24.027
+240,16,,payment_submitted,Payment Proof Submitted: TB-2026-960,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 299.83) for SUPPLY FO TABLES. Please review and verify.",15.0,,False,,2026-09-07 19:16:24.057
+241,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-960),Your payment (Ref: Allen Machona) for SUPPLY FO TABLES has been verified and approved. You now have access to view and download the ITT document.,15.0,,False,2026-09-07 21:17:24.553,2026-09-07 19:17:19.950
+242,1,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.060
+243,8,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.087
+244,9,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.103
+245,10,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.123
+246,11,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.140
+247,12,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.157
+248,15,,status_change,Submissions closed: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now closed and the procurement is moving to evaluation preparation.,15.0,,False,,2026-09-07 19:28:38.177
+249,5,,evaluator_assignment,Assigned to TB-2026-960,"You were assigned to evaluate ""SUPPLY FO TABLES"" (TB-2026-960) with scope: Technical only.",15.0,,False,2026-09-07 21:29:33.490,2026-09-07 19:29:29.307
+250,5,,evaluator_assignment,Assigned to TB-2026-960,"You were assigned to evaluate ""SUPPLY FO TABLES"" (TB-2026-960) with scope: Single only (financial/commercial).",15.0,,False,2026-09-07 21:32:54.147,2026-09-07 19:32:49.443
+251,1,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:57.930
+252,8,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:57.963
+253,9,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:57.980
+254,10,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:58.000
+255,11,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:58.017
+256,12,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:58.033
+257,15,,status_change,Procurement under evaluation: TB-2026-960,Bid submissions for SUPPLY FO TABLES are now under evaluation.,15.0,,False,,2026-09-07 19:35:58.050
+258,8,,award_published,Award Published: TB-2026-960,Your bid for SUPPLY FO TABLES has been selected. The cooling-off period ends on 17 Sep 2026.,15.0,,False,,2026-09-07 19:39:48.307
+259,6,,smartshare_access_granted,Procurement shared with you: TB-2026-960,David Tlou shared SUPPLY FO TABLES with you in SmartShare.,15.0,,False,,2026-09-07 19:45:19.953
+260,6,,smartshare_access_revoked,SmartShare access revoked: TB-2026-960,Your access to SUPPLY FO TABLES has been revoked by David Tlou.,15.0,,False,,2026-09-07 19:45:49.050
+261,2,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-14 12:59:24.460
+262,3,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,True,,2026-09-14 12:59:24.490
+263,4,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-14 12:59:24.510
+264,13,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-14 12:59:24.523
+265,14,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-14 12:59:24.543
+266,16,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-14 12:59:24.563
+267,17,,request_submitted,New procurement request from Thabo Mmutle,Thabo Mmutle (Ministry of Health) submitted a combined Form D & Form E request with justification. Review it in the Incoming Requests queue.,,,False,,2026-09-14 12:59:24.580
+268,6,,request_converted,Your Form D & E request was converted (TB-2026-372),Your procurement request from Ministry of Health has been converted into procurement record TB-2026-372. Track it under Procurements.,,,False,2026-09-14 15:04:56.097,2026-09-14 13:04:50.160
+269,1,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:24.753
+270,8,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:24.847
+271,9,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:24.880
+272,10,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:24.927
+273,11,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:24.970
+274,12,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:25.020
+275,15,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:25.043
+276,18,,status_change,Tender published: TB-2026-372,SUPPLY OF SMART PHONES has been published and is now visible to registered bidders.,17.0,,False,,2026-09-14 13:05:25.063
+277,1,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.867
+278,8,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.897
+279,9,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.917
+280,10,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.937
+281,11,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.953
+282,12,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:39.983
+283,15,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:40.003
+284,18,,status_change,Submissions open: TB-2026-372,Bid submission is now open for SUPPLY OF SMART PHONES. Deadline: 2026-09-18 15:03:00.,17.0,,False,,2026-09-14 13:06:40.017
+285,2,,payment_submitted,Payment Proof Submitted: TB-2026-372,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 150.00) for SUPPLY OF SMART PHONES. Please review and verify.",17.0,,True,,2026-09-14 13:08:22.540
+286,3,,payment_submitted,Payment Proof Submitted: TB-2026-372,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 150.00) for SUPPLY OF SMART PHONES. Please review and verify.",17.0,,True,,2026-09-14 13:08:22.603
+287,16,,payment_submitted,Payment Proof Submitted: TB-2026-372,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 150.00) for SUPPLY OF SMART PHONES. Please review and verify.",17.0,,False,,2026-09-14 13:08:22.667
+288,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-372),Your payment (Ref: Allen Machona) for SUPPLY OF SMART PHONES has been verified and approved. You now have access to view and download the ITT document.,17.0,,False,2026-09-14 15:09:55.467,2026-09-14 13:09:50.437
+289,1,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.483
+290,8,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.503
+291,9,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.510
+292,10,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.533
+293,11,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.573
+294,12,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.620
+295,15,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.650
+296,18,,status_change,Submissions closed: TB-2026-372,Bid submissions for SUPPLY OF SMART PHONES are now closed and the procurement is moving to evaluation preparation.,17.0,,False,,2026-09-14 17:03:51.687
+297,1,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.223
+298,8,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.357
+299,9,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.403
+300,10,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.423
+301,11,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.470
+302,12,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.510
+303,15,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.543
+304,18,,status_change,Tender published: TB-2026-703,SUPPLY WENA has been published and is now visible to registered bidders.,18.0,,False,,2026-09-14 17:06:39.557
+305,1,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.667
+306,8,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.723
+307,9,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.773
+308,10,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.817
+309,11,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.850
+310,12,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.883
+311,15,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.900
+312,18,,status_change,Submissions open: TB-2026-703,Bid submission is now open for SUPPLY WENA. Deadline: 2026-09-16 19:06:00.,18.0,,False,,2026-09-14 17:06:40.920
+313,2,,payment_submitted,Payment Proof Submitted: TB-2026-703,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 200.00) for SUPPLY WENA. Please review and verify.",18.0,,False,,2026-09-14 17:08:26.650
+314,3,,payment_submitted,Payment Proof Submitted: TB-2026-703,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 200.00) for SUPPLY WENA. Please review and verify.",18.0,,True,,2026-09-14 17:08:26.700
+315,16,,payment_submitted,Payment Proof Submitted: TB-2026-703,"Bidder Construction has submitted proof of payment (Ref: Allen Machona, Amount: BWP 200.00) for SUPPLY WENA. Please review and verify.",18.0,,False,,2026-09-14 17:08:26.730
+316,8,,payment_approved,Payment Approved — Tender Documents Unlocked (TB-2026-703),Your payment (Ref: Allen Machona) for SUPPLY WENA has been verified and approved. You now have access to view and download the ITT document.,18.0,,False,2026-09-14 19:08:53.833,2026-09-14 17:08:43.183
+317,1,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:36.160
+318,8,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:36.683
+319,9,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:36.957
+320,10,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:37.117
+321,11,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:37.377
+322,12,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:37.450
+323,15,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:39.997
+324,18,,status_change,Submissions closed: TB-2026-703,Bid submissions for SUPPLY WENA are now closed and the procurement is moving to evaluation preparation.,18.0,,False,,2026-09-15 07:34:40.013

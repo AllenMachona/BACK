@@ -102,38 +102,6 @@
     </div>
   </section>
 
-  <section class="entity-section" id="procuring-entities">
-    <div class="section-shell">
-      <div class="section-heading section-heading-inline">
-        <div>
-          <span class="eyebrow">Our partners</span>
-          <h2>Procuring Entities</h2>
-        </div>
-        <a href="{{ url_for('dashboard.public_tenders') }}" class="text-link">Browse all tenders</a>
-      </div>
-
-      <div class="entities-grid">
-        {% for entity in procurement_entities[:8] %}
-        <div class="entity-card">
-          <div class="entity-icon">{{ entity.name[:1] | upper }}</div>
-          <div>
-            <h3>{{ entity.name }}</h3>
-            <p>Active procurement opportunities</p>
-          </div>
-        </div>
-        {% else %}
-        <div class="entity-card">
-          <div class="entity-icon">B</div>
-          <div>
-            <h3>Botswana Public Entities</h3>
-            <p>Public procurement opportunities</p>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </section>
-
   <section class="about-section" id="about">
     <div class="section-shell about-grid">
       <div>

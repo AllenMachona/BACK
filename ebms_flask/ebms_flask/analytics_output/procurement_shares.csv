@@ -1,0 +1,4 @@
+﻿id,procurement_id,recipient_id,shared_by_id,folder_name,status,shared_at,revoked_at,revoked_by_id
+1,14,5,3,Shared procurements,revoked,2026-09-03 01:35:54.300,2026-09-03 01:36:27.090,3
+2,11,5,3,Shared procurements,revoked,2026-09-03 01:40:59.320,2026-09-03 01:42:34.857,3
+3,15,6,3,Shared procurements,revoked,2026-09-07 19:45:19.907,2026-09-07 19:45:49.010,3

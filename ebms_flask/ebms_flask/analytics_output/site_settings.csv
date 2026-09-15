@@ -1,0 +1,73 @@
+﻿id,value,label,description,created_at,updated_at
+1,EBMS Botswana,Application Name,Name shown in the portal header.,2026-08-31 21:27:40.840,2026-08-31 21:27:40.840
+2,Secure Procurement and Bid Management,Tagline,Short description shown on public pages.,2026-08-31 21:27:40.873,2026-08-31 21:27:40.873
+3,Secure Procurement and Bid Management,System Description,Description used in public portal metadata.,2026-08-31 21:27:40.893,2026-08-31 21:27:40.893
+4,support@your-domain.example,Support Email,Address users should contact for support.,2026-08-31 21:27:40.907,2026-08-31 21:27:40.907
+5,+267 000 0000,Support Phone,Support telephone number shown to users.,2026-08-31 21:27:40.920,2026-08-31 21:27:40.920
+6,Your office address,Address,Organisation address shown on public pages.,2026-08-31 21:27:40.937,2026-08-31 21:27:40.937
+7,,Website URL,Public organisation website.,2026-08-31 21:27:40.950,2026-08-31 21:27:40.950
+8,Botswana,Country,Default country for public-facing content.,2026-08-31 21:27:40.950,2026-08-31 21:27:40.950
+9,Africa/Gaborone,Default Timezone,Timezone used for displayed dates.,2026-08-31 21:27:40.967,2026-08-31 21:27:40.967
+10,BWP,Currency,Currency label used for procurement values.,2026-08-31 21:27:40.990,2026-08-31 21:27:40.990
+11,%d %b %Y,Date Format,Display format for dates.,2026-08-31 21:27:41.000,2026-08-31 21:27:41.000
+12,%H:%M,Time Format,Display format for times.,2026-08-31 21:27:41.010,2026-08-31 21:27:41.010
+13,#0f766e,Portal Primary Colour,Primary accent colour used across the public portal.,2026-08-31 21:27:41.020,2026-08-31 21:27:41.020
+14,#1f2937,Portal Secondary Colour,Secondary accent colour used in headings and cards.,2026-08-31 21:27:41.037,2026-08-31 21:27:41.037
+15,EBMS Procurement Portal,Public Home Title,Header title shown on the public landing page.,2026-08-31 21:27:41.037,2026-08-31 21:27:41.037
+16,Transparent procurement for public-sector delivery.,Public Home Intro,Intro copy for the public landing page.,2026-08-31 21:27:41.050,2026-08-31 21:27:41.050
+17,false,Maintenance Mode,Blocks public and non-administrator access while maintenance is in progress.,2026-08-31 21:27:41.070,2026-09-01 11:39:43.193
+18,The system is temporarily undergoing maintenance. Please try again later.,Maintenance Message,Message shown during maintenance mode.,2026-08-31 21:27:41.083,2026-08-31 21:27:41.083
+19,true,Allow Registration,Controls whether new bidder registrations are accepted.,2026-08-31 21:27:41.110,2026-08-31 21:27:41.110
+20,true,Enable Supplier Registration,Feature flag for public supplier registration.,2026-08-31 21:27:41.117,2026-08-31 21:27:41.117
+21,true,Supplier Approval Required,Require administrator approval before bidder access is activated.,2026-08-31 21:27:41.137,2026-08-31 21:27:41.137
+22,true,Supplier Verification Required,Require email and compliance verification for suppliers.,2026-08-31 21:27:41.153,2026-08-31 21:27:41.153
+23,compliance_document,Required Supplier Documents,Comma-separated documents required at supplier registration.,2026-08-31 21:27:41.183,2026-08-31 21:27:41.183
+24,"goods,works,consultancy,non_consultancy",Supplier Categories,Comma-separated supplier categories.,2026-08-31 21:27:41.193,2026-08-31 21:27:41.193
+25,3,Reminder Days,Days before a deadline when reminder notifications are sent.,2026-08-31 21:27:41.203,2026-08-31 21:27:41.203
+26,500000,Direct Procurement Threshold,Maximum value allowed for direct procurement.,2026-08-31 21:27:41.217,2026-08-31 21:27:41.217
+27,500000,Open Procurement Threshold,Value threshold used for open procurement governance.,2026-08-31 21:27:41.227,2026-08-31 21:27:41.227
+28,500000,Lot Splitting Warning Threshold,Value at which lot-splitting risks require review.,2026-08-31 21:27:41.233,2026-08-31 21:27:41.233
+29,"open_domestic,open_international,restricted,rfq,direct,rfp",Enabled Procurement Methods,Comma-separated methods available when creating procurements.,2026-08-31 21:27:41.253,2026-08-31 21:27:41.253
+30,advertisement,Required Procurement Documents,Comma-separated document types required before publication.,2026-08-31 21:27:41.270,2026-08-31 21:27:41.270
+31,draft,Default Procurement Status,Initial status for newly created procurements.,2026-08-31 21:27:41.283,2026-08-31 21:27:41.283
+32,1,Approval Levels,Number of approval levels required for configured workflows.,2026-08-31 21:27:41.303,2026-08-31 21:27:41.303
+33,TB,Tender Number Prefix,Prefix used for generated tender numbers.,2026-08-31 21:27:41.323,2026-08-31 21:27:41.323
+34,24,Minimum Bid Deadline (Hours),Minimum time allowed between publication and bid deadline.,2026-08-31 21:27:41.343,2026-08-31 21:27:41.343
+35,return_for_correction,Workflow Rejection Behaviour,Behaviour after a workflow rejection.,2026-08-31 21:27:41.350,2026-08-31 21:27:41.350
+36,3,Workflow Escalation Days,Days before an outstanding approval is escalated.,2026-08-31 21:27:41.377,2026-08-31 21:27:41.377
+37,"draft,submitted,under_review,converted,rejected",Request Statuses,Allowed internal lifecycle states for procurement requests.,2026-08-31 21:27:41.383,2026-08-31 21:27:41.383
+38,"works,services,consultancy,supplies,combination",Request Categories,Comma-separated categories used in request forms.,2026-08-31 21:27:41.400,2026-08-31 21:27:41.400
+39,"open_domestic,open_international,restricted,rfq,direct,rfp",Request Methods,Comma-separated procurement methods used in request forms.,2026-08-31 21:27:41.407,2026-08-31 21:27:41.407
+40,"pdf,doc,docx,xls,xlsx",Request Document Extensions,Comma-separated signed document extensions accepted for requests.,2026-08-31 21:27:41.417,2026-08-31 21:27:41.417
+41,25,Request Document Max MB,Maximum size of each uploaded signed request document.,2026-08-31 21:27:41.430,2026-08-31 21:27:41.430
+42,"pdf,doc,docx,xls,xlsx,png,jpg,jpeg",Allowed Document Extensions,Comma-separated upload extensions accepted by the platform.,2026-08-31 21:27:41.440,2026-08-31 21:27:41.440
+43,2048,Maximum Upload Size (MB),Maximum size of any uploaded file.,2026-08-31 21:27:41.450,2026-08-31 21:27:41.450
+44,8,Session Lifetime (Hours),How long users may remain signed in.,2026-08-31 21:27:41.460,2026-08-31 21:27:41.460
+45,5,Login Attempts Before Lock,Failed attempts before an account is temporarily locked.,2026-08-31 21:27:41.467,2026-08-31 21:27:41.467
+46,15,Login Lockout (Minutes),Duration of a temporary login lockout.,2026-08-31 21:27:41.483,2026-08-31 21:27:41.483
+47,90,Password Expiry (Days),Maximum age of user passwords.,2026-08-31 21:27:41.493,2026-08-31 21:27:41.493
+48,10,Minimum Password Length,Minimum characters required for passwords.,2026-08-31 21:27:41.503,2026-08-31 21:27:41.503
+49,true,Require Uppercase,Require an uppercase character in passwords.,2026-08-31 21:27:41.507,2026-08-31 21:27:41.507
+50,true,Require Number,Require a number in passwords.,2026-08-31 21:27:41.517,2026-08-31 21:27:41.517
+51,true,Require Special Character,Require a special character in passwords.,2026-08-31 21:27:41.533,2026-08-31 21:27:41.533
+52,3650,Document Retention (Days),Retention policy reference for document maintenance.,2026-08-31 21:27:41.553,2026-08-31 21:27:41.553
+53,safe_unique,File Naming Rule,Safe naming policy for uploaded files.,2026-08-31 21:27:41.570,2026-08-31 21:27:41.570
+54,smtp.gmail.com,SMTP Host,SMTP host override; password remains in deployment secrets.,2026-08-31 21:27:41.587,2026-08-31 21:27:41.587
+55,587,SMTP Port,SMTP port override.,2026-08-31 21:27:41.603,2026-08-31 21:27:41.603
+56,EBMS Botswana,Email Sender Name,Display name used in system emails.,2026-08-31 21:27:41.620,2026-08-31 21:27:41.620
+57,fonsoally@gmail.com,Sender Email,Verified sender email address; SMTP password remains a deployment secret.,2026-08-31 21:27:41.633,2026-08-31 21:27:41.633
+58,tls,Email Encryption,"SMTP encryption mode: none, tls, or ssl.",2026-08-31 21:27:41.650,2026-08-31 21:27:41.650
+59,true,Enable Email Notifications,Enable outgoing email notifications.,2026-08-31 21:27:41.667,2026-08-31 21:27:41.667
+60,true,Enable System Notifications,Enable in-application notifications.,2026-08-31 21:27:41.683,2026-08-31 21:27:41.683
+61,true,Enable Notifications,Feature flag for in-app and email notification workflows.,2026-08-31 21:27:41.693,2026-08-31 21:27:41.693
+62,immediate,Notification Frequency,Notification frequency: immediate or digest.,2026-08-31 21:27:41.707,2026-08-31 21:27:41.707
+63,365,Notification Retention (Days),Age after which old read notifications may be removed.,2026-08-31 21:27:41.717,2026-08-31 21:27:41.717
+64,Your EBMS Botswana bidder account has been activated.,Approved Account Email,Body text for account approval emails.,2026-08-31 21:27:41.730,2026-08-31 21:27:41.730
+65,Your EBMS Botswana bidder account was rejected.,Rejected Account Email,Body text for account rejection emails.,2026-08-31 21:27:41.733,2026-08-31 21:27:41.733
+66,true,Enable Bid Submission,Feature flag for bidder submissions.,2026-08-31 21:27:41.747,2026-08-31 21:27:41.747
+67,true,Enable Audit Log,Audit logging is mandatory and cannot be disabled by the GUI.,2026-08-31 21:27:41.757,2026-08-31 21:27:41.757
+68,3650,Audit Log Retention (Days),How long audit records are retained before review or cleanup.,2026-08-31 21:27:41.767,2026-08-31 21:27:41.767
+69,pending,Default Bidder Status,Default approval state assigned to new bidder records.,2026-08-31 21:27:41.787,2026-08-31 21:27:41.787
+70,true,Require Bidder Document Review,Require compliance review for newly registered bidders before activation.,2026-08-31 21:27:41.800,2026-08-31 21:27:41.800
+71,active,Default Public Entity Status,Default status for public entities on the portal.,2026-08-31 21:27:41.803,2026-08-31 21:27:41.803
+72,true,Show Financial Year in Portal,Display financial year labels on public procurement and plan pages.,2026-08-31 21:27:41.817,2026-08-31 21:27:41.817

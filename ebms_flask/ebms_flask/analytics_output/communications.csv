@@ -1,0 +1,15 @@
+﻿id,procurement_id,type,content,original_filename,from_user_id,from_bidder_id,is_public,visibility_type,created_at,updated_at
+1,2,advertisement,Advertisement document for Supplies of bed,EBMS_Terms_of_Reference.pdf,3.0,,True,public,2026-08-31 21:32:28.640,2026-08-31 21:32:28.640
+2,3,advertisement,Advertisement document for TOURISIM EQUIPMENT,TB-2026-611_5_b281cba4_1_List_of_Registration_Codes_PPADB.pdf,3.0,,True,public,2026-08-31 22:40:00.943,2026-08-31 22:40:00.943
+3,4,advertisement,Advertisement document for GUIDE US,Final ToR Template (1) - Copy (1).docx,3.0,,True,public,2026-08-31 22:47:00.953,2026-08-31 22:47:00.953
+4,5,advertisement,Advertisement document for WEB,TB-2026-611_3_db4d3dd3_1_List_of_Registration_Codes_PPADB.pdf,3.0,,True,public,2026-08-31 22:51:00.977,2026-08-31 22:51:00.977
+5,7,advertisement,Public advertisement,verify_advertisement.pdf,2.0,,True,public,2026-08-31 22:57:10.690,2026-08-31 22:57:10.690
+6,8,advertisement,Public advertisement,verify_advertisement.pdf,2.0,,True,public,2026-08-31 22:57:48.030,2026-08-31 22:57:48.030
+7,11,advertisement,Advertisement document for SUPPLY FOR COOKING OIL,1_List_of_Registration_Codes_PPADB.pdf,3.0,,True,public,2026-09-01 01:16:00.210,2026-09-01 01:16:00.210
+8,12,advertisement,Advertisement document for Internet Services,EBMS_Botswana_PPRA_Procurement_Workflow_Requirements.docx,3.0,,True,public,2026-09-01 11:20:06.830,2026-09-01 11:20:06.830
+9,12,question,Please send me money,,,2.0,False,public,2026-09-01 11:26:01.493,2026-09-01 11:26:01.493
+10,14,advertisement,Advertisement document for SUPPLY FOR CARS,TB-2026-611_5_b281cba4_1_List_of_Registration_Codes_PPADB (1).pdf,3.0,,True,public,2026-09-02 21:32:17.343,2026-09-02 21:32:17.343
+11,15,advertisement,Advertisement document for SUPPLY FO TABLES,EBMS_Project_Review_Record_Sheet.docx,3.0,,True,public,2026-09-07 19:15:14.820,2026-09-07 19:15:14.820
+12,16,advertisement,Advertisement document for SUPPLY OF SHOES,LIT VIEW2.docx,3.0,,True,public,2026-09-14 08:51:21.000,2026-09-14 08:51:21.000
+13,17,advertisement,Advertisement document for SUPPLY OF SMART PHONES,P REVIEW 1.docx,3.0,,True,public,2026-09-14 13:04:49.987,2026-09-14 13:04:49.987
+14,18,advertisement,Advertisement document for SUPPLY WENA,LIT VIEW2.docx,3.0,,True,public,2026-09-14 17:06:37.190,2026-09-14 17:06:37.190
