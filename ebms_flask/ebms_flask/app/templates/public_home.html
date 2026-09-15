@@ -14,8 +14,8 @@
 
       <div class="hero-intro">
         <span class="hero-intro-kicker">Electronic Bid Management System</span>
-        <h1>Transparent procurement for a stronger Botswana.</h1>
-        <p>Discover opportunities and manage every tender response in one secure digital platform.</p>
+        <h1 aria-label="Transparent procurement for a stronger Botswana."><span class="hero-typing-text" data-text="Transparent procurement for a stronger Botswana."></span></h1>
+        <p aria-label="Discover opportunities and manage every tender response in one secure digital platform."><span class="hero-typing-text" data-text="Discover opportunities and manage every tender response in one secure digital platform."></span></p>
       </div>
 
       <div class="carousel-dots" aria-label="Carousel navigation">
@@ -140,6 +140,47 @@
 </script>
 <script src="{{ url_for('static', filename='public_home.js') }}"></script>
 <script>
+  (() => {
+    const typingElements = [...document.querySelectorAll('.hero-typing-text')];
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let typingRun = 0;
+
+    const startHeroTyping = () => {
+      typingRun += 1;
+      const currentRun = typingRun;
+      typingElements.forEach((element) => {
+        element.textContent = '';
+        element.classList.remove('is-complete');
+      });
+
+      if (reduceMotion) {
+        typingElements.forEach((element) => {
+          element.textContent = element.dataset.text;
+          element.classList.add('is-complete');
+        });
+        return;
+      }
+
+      const typeElement = (element, delay, characterIndex = 0) => {
+        window.setTimeout(() => {
+          if (currentRun !== typingRun) return;
+          element.textContent = element.dataset.text.slice(0, characterIndex);
+          if (characterIndex < element.dataset.text.length) {
+            typeElement(element, 48, characterIndex + 1);
+          } else {
+            element.classList.add('is-complete');
+          }
+        }, delay);
+      };
+
+      typeElement(typingElements[0], 180);
+      typeElement(typingElements[1], 2300);
+    };
+
+    startHeroTyping();
+    window.setInterval(startHeroTyping, 30000);
+  })();
+
   const carouselSlides = document.querySelectorAll('.carousel-slide');
   const heroDots = document.querySelectorAll('.dot');
   let carouselIndex = 0;
