@@ -2,7 +2,7 @@ services:
   - type: web
     name: ebms-flask
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render.txt
     startCommand: gunicorn --workers 2 --threads 4 --timeout 120 wsgi:app
     healthCheckPath: /
     envVars:
