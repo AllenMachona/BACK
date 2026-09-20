@@ -110,5 +110,3 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', '').strip()
     MAIL_CONFIGURED = bool(MAIL_SERVER and MAIL_DEFAULT_SENDER)
 
-    if APP_ENV == 'production' and not MAIL_CONFIGURED:
-        raise RuntimeError('MAIL_SERVER and MAIL_DEFAULT_SENDER must be configured in production.')

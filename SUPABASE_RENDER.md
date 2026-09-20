@@ -1,5 +1,9 @@
 # Supabase + Render deployment
 
+If Render asks for payment details, use the no-card alternative in
+[SUPABASE_HUGGINGFACE.md](SUPABASE_HUGGINGFACE.md). It uses the same Supabase
+database and the included Dockerfile.
+
 This app can use Supabase PostgreSQL through SQLAlchemy and run on Render as a
 Python web service.
 
