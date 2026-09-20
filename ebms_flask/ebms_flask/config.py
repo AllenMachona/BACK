@@ -24,6 +24,18 @@ def _required_env(name, dev_default=None):
     return ''
 
 
+def _database_url():
+    database_url = os.environ.get('DATABASE_URL', '').strip()
+    if database_url:
+        # Some hosting dashboards still expose the legacy PostgreSQL scheme.
+        if database_url.startswith('postgres://'):
+            return 'postgresql://' + database_url[len('postgres://'):]
+        return database_url
+    if _is_production():
+        raise RuntimeError('Missing required environment variable: DATABASE_URL. Set it to the Supabase PostgreSQL connection string.')
+    return f"sqlite:///{os.path.join(basedir, 'instance', 'ebms.db')}"
+
+
 def _development_submission_key():
     """Keep the local encryption key stable across development restarts."""
     key_path = os.path.join(basedir, 'instance', 'submission_encryption.key')
@@ -53,11 +65,8 @@ class Config:
     SECRET_KEY = SECRET_KEY
     APP_ENV = os.environ.get('APP_ENV', os.environ.get('FLASK_ENV', 'development')).lower()
 
-    # SQL Server is the active local development database after migration.
-    # The original SQLite URI remains available for rollback/testing.
-    # Uses `or` rather than get(key, default) so an empty DATABASE_URL= line
-    # in .env (present but blank) still falls through to the SQLite default,
-    # rather than handing Flask-SQLAlchemy an empty string as the URI.
+    # DATABASE_URL is used by hosted PostgreSQL providers such as Supabase.
+    # Local development keeps using the SQLite file unless DATABASE_URL is set.
     SQLITE_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'ebms.db')}"
     SQLSERVER_DATABASE_URI = os.environ.get(
         'SQLSERVER_DATABASE_URL',
@@ -66,7 +75,7 @@ class Config:
         'SERVER%3Dlocalhost%255CSQLEXPRESS%3BDATABASE%3DProcurementDB%3B'
         'Trusted_Connection%3Dyes%3BTrustServerCertificate%3Dyes',
     )
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or SQLSERVER_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
