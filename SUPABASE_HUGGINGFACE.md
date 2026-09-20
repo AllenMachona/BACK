@@ -3,6 +3,9 @@
 This is the no-card hosting option for the Flask app. Supabase provides the
 PostgreSQL database and Hugging Face Spaces runs the application in Docker.
 
+If Docker hardware is paid in your account, use the no-card PythonAnywhere
+deployment in [PYTHONANYWHERE.md](PYTHONANYWHERE.md) instead.
+
 ## Create the database
 
 1. Create a project at [supabase.com](https://supabase.com/).
